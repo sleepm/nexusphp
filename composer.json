@@ -9,15 +9,6 @@
             "email": "1939737565@qq.com"
         }
     ],
-    "autoload": {
-        "psr-4": {
-            "Nexus\\": "nexus/",
-            "App\\": "app/",
-            "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
-        },
-        "files": []
-    },
     "require": {
         "php": "^8.2",
         "ext-bcmath": "*",
@@ -34,6 +25,8 @@
         "ext-zend-opcache": "*",
         "ext-zip": "*",
         "ext-posix": "*",
+        "laravel/framework": "^11.31",
+        "laravel/tinker": "^2.9",
         "calebporzio/sushi": "^2.5",
         "elasticsearch/elasticsearch": "^7.16",
         "filament/filament": "^3.2",
@@ -42,10 +35,8 @@
         "google/auth": "1.44.0",
         "imdbphp/imdbphp": "^8.0",
         "irazasyed/telegram-bot-sdk": "^3.11",
-        "laravel/framework": "^11.0",
         "laravel/passport": "^12.0",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.5",
         "league/flysystem-sftp-v3": "^3.0",
         "meilisearch/meilisearch-php": "^1.0",
         "orangehill/iseed": "^3.0",
@@ -54,14 +45,26 @@
         "rlanvin/php-ip": "^3.0"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.9.1",
+        "fakerphp/faker": "^1.23",
         "kitloong/laravel-migrations-generator": "^7.0",
         "laravel-lang/lang": "^15.10",
         "laravel-lang/publisher": "^16.0",
-        "mockery/mockery": "^1.4.2",
+        "laravel/pail": "^1.1",
+        "laravel/pint": "^1.13",
+        "laravel/sail": "^1.26",
+        "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.1",
-        "phpunit/phpunit": "^10.0",
+        "phpunit/phpunit": "^11.0.1",
         "spatie/laravel-ignition": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\": "nexus/",
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        },
+        "files": []
     },
     "autoload-dev": {
         "psr-4": {
@@ -74,6 +77,10 @@
             "@php artisan package:discover --ansi",
             "@php artisan filament:upgrade"
         ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
+            "@php artisan filament:upgrade"
+        ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan passport:keys"
@@ -81,8 +88,9 @@
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
         ],
-        "post-update-cmd": [
-            "@php artisan filament:upgrade"
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite"
         ]
     },
     "extra": {

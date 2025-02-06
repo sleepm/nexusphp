@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
  *     version="1.0"
  * )
  */
-class Controller extends BaseController
+abstract class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
