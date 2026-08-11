@@ -1,0 +1,290 @@
+# NexusPHP 迁移路线图（Legacy → Laravel）
+
+> 目标：将 `public/*.php` 遗留脚本逐步迁移到 Laravel（Controller + Route + Blade / Filament）。
+> 策略：Strangler Fig（绞杀者），一次一个页面，双轨长期共存。
+> 状态图例：`✅ 已完成` / `🔄 进行中` / `⬜ 未开始` / `🔒 保留legacy` / `🗑 可下线`
+
+---
+
+## 0. 迁移总览
+
+| 统计项 | 数量 |
+| --- | --- |
+| 遗留页面总数 (`public/*.php`) | 158 |
+| 已完成迁移 | 0 |
+| 保留 legacy（tracker/特殊脚本） | 约 15 |
+| 待迁移页面 | 约 143 |
+| 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
+| 已有 Repository | 37 个 |
+| 已有 Controller | 44 个（多数仅 API，路由未启用） |
+
+**完成判定标准（DoD）：**
+1. 页面逻辑已由 Controller 方法承载，路由注册于 `routes/web.php` 或 `routes/admin.php`
+2. 数据库访问使用 Eloquent Model / Repository，不再使用 `sql_query()` / `mysql_*`
+3. 登录鉴权使用 `auth.nexus` 中间件 + `Auth::id()`，不再依赖 `$CURUSER` / `loggedinorreturn()`
+4. 视图为 Blade（或 Filament），不再使用 `stdhead()` / `stderr()` / `stdtail()`
+5. 遗留 `public/*.php` 文件已删除，请求经 `/nexus.php`（Laravel）路由处理
+6. 配套 `tests/Feature/` 测试通过
+
+**迁移切换机制**：nginx 中 `location ~ \.php$` 优先于 Laravel 前端控制器，
+故切换动作 = **删除/重命名遗留 `.php` 文件**，让 `try_files` 落到 `/nexus.php`。
+
+---
+
+## 1. 认证与会话（Auth）
+
+> Phase 1 优先完成，其余批次依赖此处打通的 `auth.nexus` 中间件。
+
+| 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
+| --- | --- | --- | --- | --- |
+| login.php | 139 | ⬜ | P0 | `AuthenticateController::showLoginForm()`（已有 controller 骨架），Blade 表单 |
+| takelogin.php | 117 | ⬜ | P0 | `AuthenticateController::login()` |
+| logout.php | 8 | ⬜ | P0 | `AuthenticateController::logout()` |
+| signup.php | 134 | ⬜ | P1 | 注册表单 + 验证码（`App\Services\Captcha`） |
+| takesignup.php | 263 | ⬜ | P1 | 注册提交，联动 `get_setting('signup')` 规则 |
+| confirm.php | 48 | ⬜ | P2 | 邮箱确认 |
+| takeconfirm.php | 48 | ⬜ | P2 | 确认提交 |
+| confirm_resend.php | 128 | ⬜ | P2 | 重发确认邮件 |
+| confirmemail.php | 35 | ⬜ | P2 | 邮箱更换确认 |
+| recover.php | 152 | ⬜ | P1 | 找回密码 |
+| reset.php | 64 | ⬜ | P1 | 重置密码 |
+| self-enable.php | 62 | ⬜ | P2 | 自助恢复账号 |
+| checkuser.php | 62 | ⬜ | P2 | 状态检查 |
+| maxlogin.php | 165 | ⬜ | P3 | 登录限制管理（admin） |
+
+## 2. 首页与主列表（高流量只读）
+
+| 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
+| --- | --- | --- | --- | --- |
+| index.php | 666 | ⬜ | P0 | 首页：新闻、轮播、统计。`routes/web.php` 根路由已 `redirect('index.php')`，迁移后改为直接渲染 |
+| details.php | 759 | ⬜ | P0 | 种子详情。`TorrentController::show()` 已有 API 实现，需补 Blade 视图 |
+| torrents.php | 1344 | ⬜ | P0 | 种子列表/搜索。`TorrentController::index()` 已有 API 实现 |
+| userdetails.php | 685 | ⬜ | P1 | 用户详情。`UserController::show()` 已有 |
+| topten.php | 767 | ⬜ | P2 | 排行榜 |
+| usersearch.php | 859 | ⬜ | P2 | 用户搜索 |
+| userhistory.php | 263 | ⬜ | P2 | 用户历史 |
+| viewsnatches.php | 67 | ⬜ | P3 | 做种记录，`SnatchController` 已有 |
+| viewpeerlist.php | 239 | ⬜ | P3 | Peer 列表，`PeerController` 已有 |
+| viewfilelist.php | 26 | ⬜ | P3 | 文件列表，`FileController` 已有 |
+| viewnfo.php | 88 | ⬜ | P3 | NFO 查看 |
+| torrent_info.php | 99 | 🔒 | 保留 | tracker 结构信息，保留 legacy 或转 API |
+
+## 3. RSS / 搜索 / Ajax
+
+| 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
+| --- | --- | --- | --- | --- |
+| getrss.php | 388 | ⬜ | P2 | RSS。可改为独立 Route + XML 响应 |
+| torrentrss.php | 299 | ⬜ | P2 | 同 getrss，保留其一即可 |
+| search.php | 163 | ⬜ | P2 | 搜索。`SearchBoxController` / `TorrentController::searchBox()` 已有 |
+| searchsuggest.php | 19 | ⬜ | P3 | 搜索联想，API 化 |
+| ajax.php | 243 | ⬜ | P2 | 通用 ajax 分发，拆为多个 API 路由 |
+| getusertorrentlistajax.php | 363 | ⬜ | P2 | 用户种子列表 ajax |
+| getextinfoajax.php | 27 | ⬜ | P3 | IMDb 信息 ajax |
+| opensearch.php | 57 | ⬜ | P3 | OpenSearch 描述 XML |
+| page.php | 29 | 🔒 | 保留 | 动态页面（可能被插件使用） |
+
+## 4. 种子操作（写）
+
+| 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
+| --- | --- | --- | --- | --- |
+| upload.php | 258 | ⬜ | P1 | 上传表单。`UploadController` 已有骨架 |
+| takeupload.php | 532 | ⬜ | P1 | 上传提交，`TorrentController::store()` 已有 API 实现 |
+| takeamountupload.php | 41 | ⬜ | P3 | 批量加量上传 |
+| edit.php | 331 | ⬜ | P1 | 编辑种子表单 |
+| takeedit.php | 312 | ⬜ | P1 | 编辑提交，`TorrentController::update()` |
+| takeflush.php | 29 | ⬜ | P3 | 清空 peer |
+| fastdelete.php | 67 | ⬜ | P2 | 快速删除（admin） |
+| delete.php | 97 | ⬜ | P2 | 删除种子 |
+| download.php | 212 | 🔒 | 保留 | 种子下载，保留 legacy 或转专有 Route（涉及 Passkey 校验） |
+| downloadnotice.php | 161 | ⬜ | P3 | 下载须知 |
+| downloadsubs.php | 63 | 🔒 | 保留 | 字幕下载 |
+| getattachment.php | 57 | 🔒 | 保留 | 附件下载，`AttachmentController` 可承接 |
+| attachment.php | 291 | 🔒 | 保留 | 附件展示 |
+| bitbucket-upload.php | 93 | 🔒 | 保留 | 附件上传 |
+| bitbucketlog.php | 53 | ⬜ | P3 | 附件记录 |
+| torrentrss/getrss | — | — | — | （见 RSS 节） |
+| freeleech.php | 49 | ⬜ | P3 | 免种列表 |
+
+## 5. 评论 / 收藏 / 感谢 / 签到（轻量互动）
+
+> 此批 Repository / Controller 已基本齐全，优先做示范批次。
+
+| 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
+| --- | --- | --- | --- | --- |
+| comment.php | 309 | ⬜ | P0 | `CommentController` + `CommentRepository` 已有 ✅，接 Blade |
+| bookmark.php | 31 | ⬜ | P0 | `BookmarkController` + Repository 已有 ✅ |
+| thanks.php | 26 | ⬜ | P0 | `ThankController` 已有 |
+| attendance.php | 191 | ⬜ | P0 | `AttendanceController` + Repository 已有 ✅ |
+| claim.php | 177 | ⬜ | P1 | `ClaimRepository` 已有 |
+| medal.php | 148 | ⬜ | P1 | `MedalController` + Repository 已有 |
+| myhr.php | 131 | ⬜ | P1 | `HitAndRunController` + Repository 已有 |
+
+## 6. 积分 / 捐赠 / 等级
+
+| 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
+| --- | --- | --- | --- | --- |
+| mybonus.php | 823 | ⬜ | P1 | 积分中心。`BonusRepository` 已有 |
+| bonus-log.php | 110 | ⬜ | P2 | 积分日志，`BonusLogResource`(Filament) 已有 |
+| donate.php | 106 | ⬜ | P2 | 捐赠 |
+| donated.php | 31 | ⬜ | P3 | 捐赠提交 |
+| donorlist.php | 43 | ⬜ | P3 | 捐赠榜 |
+| promotionlink.php | 71 | ⬜ | P3 | 推广链接 |
+| mybar.php | 109 | ⬜ | P3 | 签名档 |
+| cc98bar.php | 129 | ⬜ | P3 | 外站签名档 |
+
+## 7. 消息系统
+
+| 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
+| --- | --- | --- | --- | --- |
+| messages.php | 725 | ⬜ | P1 | 站内信。`MessageController` + Repository 已有 |
+| takemessage.php | 192 | ⬜ | P1 | 发送消息 |
+| sendmessage.php | 60 | ⬜ | P2 | 发消息页 |
+| deletemessage.php | 43 | ⬜ | P3 | 删除消息 |
+| staffmess.php | 72 | ⬜ | P2 | 管理组消息 |
+| takestaffmess.php | 57 | ⬜ | P2 | 发管理组消息 |
+| staffbox.php | 275 | ⬜ | P2 | 管理信箱 |
+| staffpanel.php | 86 | ⬜ | P3 | 管理面板 |
+| contactstaff.php | 14 | ⬜ | P3 | 联系管理组 |
+| massmail.php | 81 | ⬜ | P2 | 群发邮件（admin） |
+
+## 8. 论坛
+
+> 论坛是单体最大的页面群（forums.php 1645 行），建议整体独立迁移。
+
+| 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
+| --- | --- | --- | --- | --- |
+| forums.php | 1645 | ⬜ | P1 | 论坛首页/版块。`ForumController` + `OverForumController` 已有 |
+| moforums.php | 215 | ⬜ | P1 | 版块帖子列表。`TopicController` 已有 |
+| forummanage.php | 302 | ⬜ | P2 | 版块管理（admin → Filament `ForumResource`） |
+| modtask.php | 496 | ⬜ | P2 | 版主操作 |
+| makepoll.php | 177 | ⬜ | P2 | 建投票。`PollController` 已有 |
+| polloverview.php | 80 | ⬜ | P3 | 投票结果 |
+| shoutbox.php | 147 | ⬜ | P3 | 聊天室 |
+| friends.php | 356 | ⬜ | P2 | 好友 |
+| tags.php | 303 | ⬜ | P2 | 标签。`TagController` + `TagResource`(Filament) 已有 |
+| fun.php | 304 | ⬜ | P3 | 趣味页面（`funmanage` 权限） |
+
+## 9. 请求 / 求种 / Offer
+
+| 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
+| --- | --- | --- | --- | --- |
+| offers.php | 905 | ⬜ | P2 | Offer 管理。无对应 Repository，需新增 |
+| viewrequests.php | 498 | ⬜ | P2 | 求种列表。`Request.php` Model 已有 |
+| takeupload（请求相关） | — | — | — | 见种子操作 |
+| suggest.php | 27 | ⬜ | P3 | 建议 |
+
+## 10. 举报 / 投诉 / 申诉
+
+| 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
+| --- | --- | --- | --- | --- |
+| report.php | 237 | ⬜ | P2 | 举报。`Complain.php` Model 已有 |
+| reports.php | 154 | ⬜ | P2 | 举报处理（admin） |
+| complains.php | 181 | ⬜ | P2 | 投诉 |
+
+## 11. 管理后台（→ Filament）
+
+> 以下页面迁移目标为 Filament Resource。部分已有对应 Resource，无对应则新建。
+
+| 页面 | 行数 | 状态 | 优先级 | 已有 Filament 对应 |
+| --- | --- | --- | --- | --- |
+| catmanage.php | 836 | ⬜ | P1 | `Section\CategoryResource` ✅ |
+| admanage.php | 427 | ⬜ | P2 | `Advertisement`（需新建 Resource） |
+| faqmanage.php | 118 | ⬜ | P2 | `FaqResource`（需新建） |
+| forummanage.php | 302 | ⬜ | P2 | `ForumResource`（需新建） |
+| linksmanage.php | 167 | ⬜ | P2 | `LinksResource`（需新建） |
+| medals.php → medal.php | 148 | ⬜ | P1 | `MedalResource` ✅ |
+| tags.php | 303 | ⬜ | P1 | `TagResource` ✅ |
+| cheaters.php | 111 | ⬜ | P2 | `Cheater`（需新建） |
+| cheaterbox.php | 84 | ⬜ | P3 | 同上 |
+| bans.php | 71 | ⬜ | P2 | `BansResource`（需新建） |
+| bannedemails.php | 29 | ⬜ | P3 | `BannedEmailsResource`（需新建） |
+| allowedemails.php | 32 | ⬜ | P3 | `AllowedEmailsResource`（需新建） |
+| adduser.php | 70 | ⬜ | P2 | `UserResource` ✅（部分） |
+| delacctadmin.php | 36 | ⬜ | P3 | 用户禁用，并入 `UserResource` |
+| deletedisabled.php | 45 | ⬜ | P3 | 同上 |
+| users.php | 144 | ⬜ | P1 | `UserResource` ✅ |
+| user-ban-log.php | 37 | ⬜ | P2 | `UserBanLog`（需新建） |
+| modrules.php | 107 | ⬜ | P3 | 版规管理（需新建） |
+| fields.php | 57 | ⬜ | P3 | 自定义字段，`TorrentCustomFieldResource` ✅ |
+| formats.php | 215 | ⬜ | P3 | 格式化设置，`Section` 相关 Resource ✅ |
+| videoformats.php | 204 | ⬜ | P3 | 同上 |
+| allagents.php | 16 | ⬜ | P3 | `AgentAllowResource` / `AgentDenyResource` ✅ |
+| ipsearch.php | 170 | ⬜ | P2 | IP 搜索 |
+| ipcheck.php | 97 | ⬜ | P3 | IP 检查 |
+| iphistory.php | 90 | ⬜ | P3 | IP 历史 |
+| testip.php | 47 | ⬜ | P3 | IP 测试 |
+| location.php | 247 | ⬜ | P3 | 地区管理 |
+| nowarn.php | 53 | ⬜ | P3 | 撤销警告 |
+| warned.php | 68 | ⬜ | P3 | 警告列表 |
+| unco.php | 53 | ⬜ | P3 | 作弊未达标用户 |
+| log.php | 451 | ⬜ | P2 | 站点日志。`SiteLog` Model 已有 |
+| stats.php | 122 | ⬜ | P3 | 统计。`DashboardController` + Widgets 已有 |
+| mysql_stats.php | 370 | 🔒 | 保留 | MySQL 状态页，转 ops 工具 |
+| clearcache.php | 32 | ⬜ | P3 | 缓存清理，`clearcache` CLI/按钮化 |
+| mailtest.php | 45 | ⬜ | P3 | 邮件测试，并入 `SettingResource` |
+| task.php | 116 | ⬜ | P3 | 任务列表 |
+| take-increment-bulk.php | 80 | ⬜ | P3 | 批量增减（并入 `UserResource` 批量操作） |
+| increment-bulk.php | 79 | ⬜ | P3 | 同上 |
+| uploaders.php | 126 | ⬜ | P3 | 上传者统计 |
+| subtitles.php | 405 | ⬜ | P2 | 字幕管理（需新建） |
+
+## 12. 静态 / 信息页
+
+| 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
+| --- | --- | --- | --- | --- |
+| rules.php | 30 | ⬜ | P1 | 规则。改静态 Blade 页 |
+| faq.php | 108 | ⬜ | P1 | FAQ。`Faq.php` Model 已有 |
+| faqactions.php | 206 | ⬜ | P2 | FAQ 管理（admin → Filament） |
+| useragreement.php | 101 | ⬜ | P2 | 用户协议 |
+| aboutnexus.php | 65 | ⬜ | P3 | 关于 |
+| staff.php | 216 | ⬜ | P2 | 管理团队页 |
+| news.php | 130 | ⬜ | P1 | 新闻列表。`NewsController` + Repository 已有 |
+| ok.php | 60 | ⬜ | P3 | 通用提示页，并入 Blade `error/notification` 视图 |
+| preview.php | 9 | ⬜ | P3 | 预览 |
+| magic.php | 40 | ⬜ | P3 | 通用跳转 |
+| special.php | 3 | 🔒 | 保留 | 特殊占位页 |
+| smilies.php | 9 | ⬜ | P3 | 表情列表 |
+| moresmilies.php | 45 | ⬜ | P3 | 表情扩展 |
+| retriver.php | 69 | ⬜ | P3 | IMDb/信息回填（admin） |
+| image.php | 22 | 🔒 | 保留 | 图片代理，保留 legacy 或转专用 Route |
+
+## 13. Tracker / CLI / 特殊脚本（保留 legacy）
+
+> 不建议迁移，风险高、收益低。仅保证与 Laravel 共存可用。
+
+| 页面 | 行数 | 说明 |
+| --- | --- | --- |
+| announce.php | 644 | Tracker 核心，走独立 nginx 规则 + Lua 过滤 |
+| scrape.php | 73 | Tracker scrape |
+| cron.php | 13 | 定时入口（CLI） |
+| docleanup.php | 30 | 清理任务（CLI），可迁移为 Laravel Command |
+| email-gateway.php | 68 | 邮件网关 |
+| adredir.php | 25 | 广告跳转 |
+| torrent_info.php | 99 | 结构信息 |
+
+---
+
+## 14. 迁移执行顺序（建议）
+
+| 阶段 | 内容 | 预估 |
+| --- | --- | --- |
+| Phase 1 | 认证打通（第 1 节）+ 基础 Blade layout 替代 `stdhead/stdtail` | 1-2 周 |
+| Phase 2 | 轻量互动示范批（第 5 节：comment/bookmark/thanks/attendance/claim/medal/myhr） | 1-2 周 |
+| Phase 3 | 高流量只读（第 2 节：index/details/torrents + RSS） | 2-3 周 |
+| Phase 4 | 种子操作 + 消息系统（第 4、7 节） | 2-3 周 |
+| Phase 5 | 论坛群 + 请求/举报（第 8、9、10 节） | 3-4 周 |
+| Phase 6 | 管理后台补完（第 11 节剩余 Filament Resource） | 2-3 周 |
+| Phase 7 | 静态页 + 收尾清理（第 12 节 + 下线残留 `include/` 函数） | 1-2 周 |
+
+**每阶段完成后**：删除对应 `public/*.php` → 验证路由接管 → 跑 `php artisan test` 全量回归。
+
+---
+
+## 15. 配套任务清单
+
+- [ ] 建立 `docs/migration-map.md` 对应 issue 看板，逐页勾选
+- [ ] 打通 `auth.nexus` 中间件在 Blade 视图的 `Auth::user()` 用法
+- [ ] 编写 Blade 基础 layout（header/nav/footer/`stderr` 等价物）
+- [ ] 迁移 `lang/`：Blade 读取现有 `lang_*.php` 或逐步换 `__()`
+- [ ] 为每批迁移补 `tests/Feature/` 测试
+- [ ] 最后移除 `include/` 中已无引用的全局函数（`loggedinorreturn`、`stdhead` 等）
