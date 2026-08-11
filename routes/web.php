@@ -17,6 +17,31 @@ Route::get('/', function () {
     return redirect('index.php');
 });
 
+// =============================================================
+// 认证与会话（Auth）—— Phase 1 迁移，替代 public/login.php 等遗留页面
+// =============================================================
+Route::get('/login.php', [\App\Http\Controllers\AuthenticateController::class, 'showLoginForm']);
+Route::get('/login', [\App\Http\Controllers\AuthenticateController::class, 'showLoginForm'])->name('nexus.login');
+Route::post('/takelogin.php', [\App\Http\Controllers\AuthenticateController::class, 'webLogin']);
+Route::post('/login', [\App\Http\Controllers\AuthenticateController::class, 'webLogin']);
+Route::any('/logout.php', [\App\Http\Controllers\AuthenticateController::class, 'webLogout']);
+Route::get('/logout', [\App\Http\Controllers\AuthenticateController::class, 'webLogout']);
+
+Route::get('/signup.php', [\App\Http\Controllers\AuthenticateController::class, 'showSignupForm']);
+Route::get('/signup', [\App\Http\Controllers\AuthenticateController::class, 'showSignupForm'])->name('nexus.signup');
+Route::post('/takesignup.php', [\App\Http\Controllers\AuthenticateController::class, 'signup']);
+Route::post('/signup', [\App\Http\Controllers\AuthenticateController::class, 'signup']);
+
+Route::get('/recover.php', [\App\Http\Controllers\AuthenticateController::class, 'showRecoverForm']);
+Route::get('/recover', [\App\Http\Controllers\AuthenticateController::class, 'showRecoverForm'])->name('nexus.recover');
+Route::post('/recover.php', [\App\Http\Controllers\AuthenticateController::class, 'recover']);
+Route::post('/recover', [\App\Http\Controllers\AuthenticateController::class, 'recover']);
+
+Route::get('/reset.php', [\App\Http\Controllers\AuthenticateController::class, 'showResetForm']);
+Route::get('/reset', [\App\Http\Controllers\AuthenticateController::class, 'showResetForm'])->name('nexus.reset');
+Route::post('/reset.php', [\App\Http\Controllers\AuthenticateController::class, 'reset']);
+Route::post('/reset', [\App\Http\Controllers\AuthenticateController::class, 'reset']);
+
 Route::get("/error", [\App\Http\Controllers\ToolController::class, "error"]);
 
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {

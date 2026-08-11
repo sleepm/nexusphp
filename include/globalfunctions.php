@@ -1,5 +1,76 @@
 <?php
 
+function get_legacy_lang_file(string $script): array
+{
+    $langFolder = get_langfolder_cookie();
+    $file = ROOT_PATH . 'lang/' . $langFolder . '/lang_' . $script . '.php';
+    if (!is_file($file)) {
+        $file = ROOT_PATH . 'lang/en/lang_' . $script . '.php';
+    }
+    $langVar = 'lang_' . $script;
+    require $file;
+    return isset($$langVar) && is_array($$langVar) ? $$langVar : [];
+}
+
+function image_code_markup(): string
+{
+    if (get_setting('security.iv') !== 'yes') {
+        return '';
+    }
+    $manager = captcha_manager();
+    $driver = $manager->driver();
+    if (!$driver->isEnabled()) {
+        return '';
+    }
+    $langFunctions = $GLOBALS['lang_functions'] ?? get_legacy_lang_file('functions');
+    $labelKey = $driver instanceof \App\Services\Captcha\Drivers\ImageCaptchaDriver
+        ? 'row_security_image'
+        : 'row_security_challenge';
+    return $driver->render([
+        'labels' => [
+            'image' => $langFunctions[$labelKey] ?? ($langFunctions['row_security_image'] ?? ''),
+            'code' => $langFunctions['row_security_code'] ?? '',
+        ],
+        'secret' => $_GET['secret'] ?? '',
+    ]);
+}
+
+function render_passkey_login(): string
+{
+    if (!\Illuminate\Support\Facades\Schema::hasTable('passkeys')) {
+        return '';
+    }
+    ob_start();
+    \App\Repositories\UserPasskeyRepository::renderLogin();
+    return (string)ob_get_clean();
+}
+
+function verify_captcha(array $payload, string $where = 'signup.php', bool $maxattemptlog = false, bool $head = true): void
+{
+    if (get_setting('security.iv') !== 'yes') {
+        return;
+    }
+    $manager = captcha_manager();
+    if (!$manager->isEnabled()) {
+        return;
+    }
+    $context = [
+        'where' => $where,
+        'maxattemptlog' => $maxattemptlog,
+        'head' => $head,
+        'ip' => getip(),
+    ];
+    if ($manager->verify($payload, $context)) {
+        return;
+    }
+    $message = $payload['imagestring'] ?? '';
+    if ($message === '' || $message === 'Invalid captcha response.' || $message === 'Missing captcha parameters.') {
+        $langFunctions = $GLOBALS['lang_functions'] ?? get_legacy_lang_file('functions');
+        $message = $langFunctions['std_invalid_image_code'] . "<a href=\"" . htmlspecialchars($where) . "\">" . $langFunctions['std_here_to_request_new'];
+    }
+    throw new \App\Exceptions\NexusException(strip_tags($message));
+}
+
 function get_global_sp_state()
 {
 	static $global_promotion_state;
