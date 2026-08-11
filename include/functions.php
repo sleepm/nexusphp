@@ -1727,6 +1727,21 @@ function remaining ($type = 'login') {
 function registration_check($type = "invitesystem", $maxuserscheck = true, $ipcheck = true) {
 	global $lang_functions;
 	global $invitesystem, $registration, $maxusers, $SITENAME, $maxip;
+	if (empty($invitesystem)) {
+		$invitesystem = get_setting('main.invitesystem', 'no');
+	}
+	if (empty($registration)) {
+		$registration = get_setting('main.registration', 'yes');
+	}
+	if (empty($maxusers)) {
+		$maxusers = (int) get_setting('main.maxusers', 50000);
+	}
+	if (empty($maxip)) {
+		$maxip = (int) get_setting('security.maxip', 2);
+	}
+	if (empty($lang_functions)) {
+		$lang_functions = get_legacy_lang_file('functions');
+	}
 	if ($type == "invitesystem") {
 		if ($invitesystem == "no") {
 			stderr($lang_functions['std_oops'], $lang_functions['std_invite_system_disabled'], 0, true);

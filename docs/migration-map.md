@@ -11,7 +11,7 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 0 |
+| 已完成迁移 | 14 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
 | 待迁移页面 | 约 143 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
@@ -37,20 +37,20 @@
 
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
-| login.php | 139 | ⬜ | P0 | `AuthenticateController::showLoginForm()`（已有 controller 骨架），Blade 表单 |
-| takelogin.php | 117 | ⬜ | P0 | `AuthenticateController::login()` |
-| logout.php | 8 | ⬜ | P0 | `AuthenticateController::logout()` |
-| signup.php | 134 | ⬜ | P1 | 注册表单 + 验证码（`App\Services\Captcha`） |
-| takesignup.php | 263 | ⬜ | P1 | 注册提交，联动 `get_setting('signup')` 规则 |
-| confirm.php | 48 | ⬜ | P2 | 邮箱确认 |
-| takeconfirm.php | 48 | ⬜ | P2 | 确认提交 |
-| confirm_resend.php | 128 | ⬜ | P2 | 重发确认邮件 |
-| confirmemail.php | 35 | ⬜ | P2 | 邮箱更换确认 |
-| recover.php | 152 | ⬜ | P1 | 找回密码 |
-| reset.php | 64 | ⬜ | P1 | 重置密码 |
-| self-enable.php | 62 | ⬜ | P2 | 自助恢复账号 |
-| checkuser.php | 62 | ⬜ | P2 | 状态检查 |
-| maxlogin.php | 165 | ⬜ | P3 | 登录限制管理（admin） |
+| login.php | 139 | ✅ | P0 | `AuthenticateController::showLoginForm()` + Blade `auth/login`，登录尝试跟踪 |
+| takelogin.php | 117 | ✅ | P0 | `AuthenticateController::webLogin()`，挑战响应/验证码/失败锁定 |
+| logout.php | 8 | ✅ | P0 | `AuthenticateController::webLogout()` |
+| signup.php | 134 | ✅ | P1 | `showSignupForm()` + Blade `auth/signup`，联动 `get_setting('main.*')` 规则 |
+| takesignup.php | 263 | ✅ | P1 | `AuthenticateController::signup()`，`main.enableschool` / `main.verification` |
+| confirm.php | 48 | ✅ | P2 | `AuthenticateController::confirm()`，无效参数 404 |
+| takeconfirm.php | 48 | ✅ | P2 | `AuthenticateController::confirmUser()`（POST，CSRF 豁免） |
+| confirm_resend.php | 128 | ✅ | P2 | `showConfirmResendForm()` / `resendConfirmation()` + Blade `auth/confirm_resend` |
+| confirmemail.php | 35 | ✅ | P2 | `confirmEmailChange()`，路由 `/confirmemail.php/{id}/{md5}/{email}` |
+| recover.php | 152 | ✅ | P1 | `showRecoverForm()` / `recover()` + Blade `auth/recover` |
+| reset.php | 64 | ✅ | P1 | `showResetForm()` / `reset()` + Blade `auth/reset` |
+| self-enable.php | 62 | ✅ | P2 | `showSelfEnable()` / `selfEnable()` + Blade `auth/self-enable`（auth.nexus:nexus） |
+| checkuser.php | 62 | ✅ | P2 | `showCheckUser()` + Blade `auth/checkuser`（auth.nexus:nexus-web） |
+| maxlogin.php | 165 | ✅ | P3 | `showMaxLogin()` + Blade `auth/maxlogin`（auth.nexus:nexus-web） |
 
 ## 2. 首页与主列表（高流量只读）
 

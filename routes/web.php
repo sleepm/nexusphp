@@ -42,6 +42,23 @@ Route::get('/reset', [\App\Http\Controllers\AuthenticateController::class, 'show
 Route::post('/reset.php', [\App\Http\Controllers\AuthenticateController::class, 'reset']);
 Route::post('/reset', [\App\Http\Controllers\AuthenticateController::class, 'reset']);
 
+// ---- 注册确认 / 找回密码续接（Phase 1）----
+Route::get('/confirm.php', [\App\Http\Controllers\AuthenticateController::class, 'confirm']);
+Route::post('/takeconfirm.php', [\App\Http\Controllers\AuthenticateController::class, 'confirmUser'])
+    ->middleware('auth.nexus:nexus-web');
+Route::get('/confirm_resend.php', [\App\Http\Controllers\AuthenticateController::class, 'showConfirmResendForm']);
+Route::post('/confirm_resend.php', [\App\Http\Controllers\AuthenticateController::class, 'resendConfirmation']);
+Route::get('/confirmemail.php/{id}/{md5}/{email}', [\App\Http\Controllers\AuthenticateController::class, 'confirmEmailChange'])
+    ->where('email', '.*');
+Route::get('/self-enable.php', [\App\Http\Controllers\AuthenticateController::class, 'showSelfEnable'])
+    ->middleware('auth.nexus:nexus');
+Route::post('/self-enable.php', [\App\Http\Controllers\AuthenticateController::class, 'selfEnable'])
+    ->middleware('auth.nexus:nexus');
+Route::get('/checkuser.php', [\App\Http\Controllers\AuthenticateController::class, 'showCheckUser'])
+    ->middleware('auth.nexus:nexus-web');
+Route::any('/maxlogin.php', [\App\Http\Controllers\AuthenticateController::class, 'showMaxLogin'])
+    ->middleware('auth.nexus:nexus-web');
+
 Route::get("/error", [\App\Http\Controllers\ToolController::class, "error"]);
 
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {

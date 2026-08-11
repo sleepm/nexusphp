@@ -5,13 +5,17 @@ namespace App\Http\Controllers;
 use App\Exceptions\NexusException;
 use App\Http\Resources\ExamResource;
 use App\Http\Resources\UserResource;
+use App\Models\BonusLogs;
 use App\Models\Invite;
 use App\Models\Language;
+use App\Models\LoginAttempt;
 use App\Models\LoginLog;
 use App\Models\PersonalAccessTokenPlain;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\UserBanLog;
 use App\Repositories\AuthenticateRepository;
+use App\Repositories\BonusRepository;
 use App\Repositories\LoginAttemptRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +25,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Validation\Rule;
 use Nexus\Database\NexusDB;
+use Nexus\Database\NexusLock;
 
 class AuthenticateController extends Controller
 {
@@ -613,6 +618,421 @@ EOD;
         }
         write_log("Password Reset For $username by " . (Auth::check() ? Auth::user()->username : ''));
         return back()->with('notice', "The password of account <b>$username</b> is reset, please inform user of this change.");
+    }
+
+    /**
+     * Confirm a pending user account via the emailed link. (legacy public/confirm.php)
+     */
+    public function confirm(Request $request)
+    {
+        $id = (int) $request->query('id', 0);
+        $confirmMd5 = (string) $request->query('secret', '');
+        if (!$id) {
+            abort(404);
+        }
+        $user = User::query()->where('id', $id)->first(['id', 'passhash', 'secret', 'auth_key', 'editsecret', 'status']);
+        if (!$user) {
+            abort(404);
+        }
+        if ($user->status != User::STATUS_PENDING) {
+            return redirect('ok.php?type=confirmed');
+        }
+        $confirmSec = hash_pad($user->secret);
+        if ($confirmMd5 != md5($confirmSec)) {
+            abort(404);
+        }
+        $affected = User::query()
+            ->where('id', $id)
+            ->where('status', User::STATUS_PENDING)
+            ->update(['status' => User::STATUS_CONFIRMED, 'editsecret' => '']);
+        if (!$affected) {
+            abort(404);
+        }
+        publish_model_event(\App\Enums\ModelEventEnum::USER_UPDATED, $id);
+        if (empty($user->auth_key)) {
+            $authKey = hash('sha256', mksecret(32));
+            User::query()->where('id', $id)->update(['auth_key' => $authKey]);
+            $user->auth_key = $authKey;
+        }
+        logincookie($id, $user->auth_key);
+        return redirect('ok.php?type=confirm');
+    }
+
+    /**
+     * Confirm invitee users as inviter / admin. (legacy public/takeconfirm.php)
+     */
+    public function confirmUser(Request $request)
+    {
+        $langTakeConfirm = get_legacy_lang_file('takeconfirm');
+        $langFunctions = get_legacy_lang_file('functions');
+        $id = (int) $request->input('id', $request->query('id', 0));
+        if (!is_valid_id($id)) {
+            abort(404);
+        }
+        /** @var User $operator */
+        $operator = Auth::user();
+        if (!$operator) {
+            return redirect()->route('nexus.login');
+        }
+        if ($operator->id != $id && !user_can('viewinvite')) {
+            abort(403, $langFunctions['std_permission_denied'] ?? 'Permission denied');
+        }
+
+        $email = trim((string) $request->input('email', ''));
+        $conusr = (array) $request->input('conusr', []);
+        $conusr = array_filter(array_map('intval', $conusr));
+        if (empty($conusr)) {
+            return $this->confirmUserFailed($langTakeConfirm, $id);
+        }
+        $userList = User::query()
+            ->whereIn('id', $conusr)
+            ->where('status', User::STATUS_PENDING)
+            ->where('invited_by', $id)
+            ->get(User::$commonFields);
+        if ($userList->isEmpty()) {
+            return $this->confirmUserFailed($langTakeConfirm, $id);
+        }
+        $uidArr = [];
+        foreach ($userList as $user) {
+            $uidArr[] = $user->id;
+            fire_event(\App\Enums\ModelEventEnum::USER_UPDATED, $user);
+        }
+        User::query()->whereIn('id', $uidArr)->update(['status' => User::STATUS_CONFIRMED, 'editsecret' => '']);
+
+        $title = Setting::getSiteName() . ($langTakeConfirm['mail_title'] ?? '');
+        $baseUrl = getSchemeAndHttpHost();
+        $siteName = Setting::getSiteName();
+        $reportMail = get_setting('main.reportemail');
+        $mailContentTwo = sprintf($langTakeConfirm['mail_content_two'] ?? '', $siteName, $reportMail, $siteName);
+        $body = ($langTakeConfirm['mail_content_1'] ?? '')
+            . '<b><a href="' . $baseUrl . '/login.php">' . ($langTakeConfirm['mail_here'] ?? 'HERE') . '</a></b><br />'
+            . $baseUrl . '/login.php'
+            . $mailContentTwo;
+        sent_mail($email, $siteName, get_setting('main.SITEEMAIL'), $title, $body, "invite confirm", false, false, '');
+
+        return redirect('invite.php?id=' . htmlspecialchars($id));
+    }
+
+    private function confirmUserFailed(array $langTakeConfirm, int $id): RedirectResponse
+    {
+        return redirect('invite.php?id=' . htmlspecialchars($id))
+            ->with('error', ($langTakeConfirm['std_no_buddy_to_confirm'] ?? '') . ($langTakeConfirm['std_here_to_go_back'] ?? ''));
+    }
+
+    /**
+     * Show the resend-confirmation-mail form. (legacy public/confirm_resend.php GET)
+     */
+    public function showConfirmResendForm(Request $request)
+    {
+        $lang = get_legacy_lang_file('confirm_resend');
+        $verification = get_setting('main.verification');
+        if ($verification == 'admin') {
+            return view('auth/confirm_resend', ['request' => $request, 'error' => $lang['std_need_admin_verification'] ?? '']);
+        }
+        $switched = $this->switchSiteLanguage($request);
+        if ($switched) {
+            return $switched;
+        }
+        return view('auth/confirm_resend', ['request' => $request, 'error' => '']);
+    }
+
+    /**
+     * Resend the confirmation mail. (legacy public/confirm_resend.php POST)
+     */
+    public function resendConfirmation(Request $request)
+    {
+        NexusLock::lockOrFail("confirm_resend:lock:" . getip(), 10);
+        $lang = get_legacy_lang_file('confirm_resend');
+
+        try {
+            $this->loginAttemptRepository->checkAndThrow('Re-send confirmation');
+            verify_captcha(
+                ['imagehash' => $request->input('imagehash'), 'imagestring' => $request->input('imagestring')],
+                'confirm_resend.php',
+                true
+            );
+        } catch (NexusException $exception) {
+            $this->loginAttemptRepository->recordFailure('confirm_resend', true);
+            return back()->with('error', $exception->getMessage());
+        }
+
+        $email = trim((string) $request->input('email', ''));
+        $email = safe_email($email);
+        $wantpassword = (string) $request->input('wantpassword', '');
+        $passagain = (string) $request->input('passagain', '');
+
+        if ($email === '' || $wantpassword === '' || $passagain === '') {
+            return back()->with('error', $lang['std_fields_blank']);
+        }
+        if (!check_email($email)) {
+            $this->loginAttemptRepository->recordFailure('confirm_resend', true);
+            return back()->with('error', $lang['std_invalid_email_address']);
+        }
+        $user = User::query()->where('email', $email)->first();
+        if (!$user) {
+            $this->loginAttemptRepository->recordFailure('confirm_resend', true);
+            return back()->with('error', $lang['std_email_not_found']);
+        }
+        if ($user->status != User::STATUS_PENDING) {
+            $this->loginAttemptRepository->recordFailure('confirm_resend', true);
+            return back()->with('error', $lang['std_user_already_confirm']);
+        }
+        if ($wantpassword != $passagain) {
+            return back()->with('error', $lang['std_passwords_unmatched']);
+        }
+        if (strlen($wantpassword) < 6) {
+            return back()->with('error', $lang['std_password_too_short']);
+        }
+        if (strlen($wantpassword) > 40) {
+            return back()->with('error', $lang['std_password_too_long']);
+        }
+        if ($wantpassword == $user->username) {
+            return back()->with('error', $lang['std_password_equals_username']);
+        }
+
+        $secret = mksecret();
+        $wantpasshash = md5($secret . $wantpassword . $secret);
+        $verification = get_setting('main.verification');
+        $editsecret = ($verification == 'admin' ? '' : $secret);
+        $affected = User::query()->where('id', $user->id)->update([
+            'passhash' => $wantpasshash,
+            'secret' => $secret,
+            'editsecret' => $editsecret,
+        ]);
+        if (!$affected) {
+            return back()->with('error', $lang['std_database_error']);
+        }
+
+        $psecret = md5($editsecret);
+        $ip = getip();
+        $siteName = Setting::getSiteName();
+        $baseUrl = getSchemeAndHttpHost();
+        $title = $siteName . ($lang['mail_title'] ?? '');
+        $mailTwo = sprintf($lang['mail_two'] ?? '', $siteName);
+        $mailFive = sprintf($lang['mail_five'] ?? '', $siteName, $siteName, get_setting('main.reportemail'), $siteName);
+        $body = ($lang['mail_one'] ?? '') . $user->username . $mailTwo . '(' . $email . ')'
+            . ($lang['mail_three'] ?? '') . $ip . ($lang['mail_four'] ?? '')
+            . '<b><a href="' . $baseUrl . '/confirm.php?id=' . $user->id . '&secret=' . $psecret . '">' . ($lang['mail_this_link'] ?? 'THIS LINK') . '</a></b><br />'
+            . $baseUrl . '/confirm.php?id=' . $user->id . '&secret=' . $psecret
+            . ($lang['mail_four_1'] ?? '')
+            . '<b><a href="' . $baseUrl . '/confirm_resend.php">' . ($lang['mail_here'] ?? 'HERE') . '</a></b><br />'
+            . $baseUrl . '/confirm_resend.php'
+            . '<br />'
+            . $mailFive;
+        sent_mail($email, $siteName, get_setting('main.SITEEMAIL'), $title, $body, "signup", false, false, '');
+        return redirect('/ok.php?type=signup&email=' . rawurlencode($email));
+    }
+
+    /**
+     * Confirm an email change from the emailed link. (legacy public/confirmemail.php)
+     */
+    public function confirmEmailChange(Request $request, $id, $md5, $email)
+    {
+        $id = (int) $id;
+        if (!$id) {
+            abort(404);
+        }
+        $email = urldecode($email);
+        $user = User::query()->where('id', $id)->first(['id', 'editsecret']);
+        if (!$user) {
+            abort(404);
+        }
+        $sec = hash_pad($user->editsecret);
+        if (preg_match('/^ *$/s', $sec)) {
+            abort(404);
+        }
+        if ($md5 != md5($sec . $email . $sec)) {
+            abort(404);
+        }
+        $affected = User::query()
+            ->where('id', $id)
+            ->where('editsecret', $user->editsecret)
+            ->update(['editsecret' => '', 'email' => $email]);
+        if (!$affected) {
+            abort(404);
+        }
+        return redirect(get_protocol_prefix() . Setting::getBaseUrl() . '/usercp.php?action=security&type=saved');
+    }
+
+    /**
+     * Show self-service account enabling page. (legacy public/self-enable.php GET)
+     */
+    public function showSelfEnable(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $unit = Setting::getSelfEnableBonus();
+        $data = [
+            'user' => $user,
+            'unit' => $unit,
+        ];
+        if ($unit <= 0) {
+            $data['enabledNormal'] = false;
+            $data['latestBanLog'] = null;
+            return view('auth/self-enable', $data);
+        }
+        if ($user->enabled == User::ENABLED_YES) {
+            $data['enabledNormal'] = true;
+            $data['latestBanLog'] = null;
+            return view('auth/self-enable', $data);
+        }
+        $latestBanLog = UserBanLog::query()->where('uid', $user->id)->orderBy('id', 'desc')->first();
+        $data['enabledNormal'] = false;
+        $data['latestBanLog'] = $latestBanLog;
+        if (!$latestBanLog) {
+            return view('auth/self-enable', $data);
+        }
+        $elapsedDay = ceil((time() - $latestBanLog->created_at->getTimestamp()) / 86400);
+        $data['elapsedDay'] = (int) $elapsedDay;
+        $data['total'] = $unit * $elapsedDay;
+        $data['bonusEnough'] = $user->seedbonus >= $data['total'];
+        return view('auth/self-enable', $data);
+    }
+
+    /**
+     * Deduct bonus and enable the disabled account. (legacy public/self-enable.php POST)
+     */
+    public function selfEnable(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $unit = Setting::getSelfEnableBonus();
+        if ($unit <= 0 || $user->enabled == User::ENABLED_YES) {
+            return redirect('index.php');
+        }
+        $latestBanLog = UserBanLog::query()->where('uid', $user->id)->orderBy('id', 'desc')->first();
+        if (!$latestBanLog) {
+            return redirect('index.php');
+        }
+        $elapsedDay = ceil((time() - $latestBanLog->created_at->getTimestamp()) / 86400);
+        $total = $unit * $elapsedDay;
+        if ($user->seedbonus < $total) {
+            return back()->with('error', nexus_trans('self-enable.bonus_not_enough', ['bonus' => $user->seedbonus]));
+        }
+        $title = nexus_trans('self-enable.title');
+        $bonusRep = new BonusRepository();
+        $operator = User::query()->find($user->id);
+        $bonusRep->consumeUserBonus($user->id, $total, BonusLogs::BUSINESS_TYPE_SELF_ENABLE, $title);
+        $userRep = new UserRepository();
+        $userRep->enableUser($operator, $user->id, $title);
+        return redirect('index.php');
+    }
+
+    /**
+     * Show pending invitee details for the inviter / moderator. (legacy public/checkuser.php)
+     */
+    public function showCheckUser(Request $request)
+    {
+        $lang = get_legacy_lang_file('checkuser');
+        $id = (int) $request->query('id', 0);
+        if (!is_valid_id($id)) {
+            abort(404);
+        }
+        $user = User::query()->where('status', User::STATUS_PENDING)->where('id', $id)->first();
+        if (!$user) {
+            abort(404, $lang['std_no_user_id'] ?? 'No user with this ID!');
+        }
+        /** @var User $operator */
+        $operator = Auth::user();
+        if (($operator->class ?? User::CLASS_PEASANT) < User::CLASS_MODERATOR && $user->invited_by != $operator->id) {
+            abort(403, $lang['std_no_permission'] ?? 'You have no permission');
+        }
+        $country = $user->country ? \Illuminate\Support\Facades\DB::table('countries')->where('id', $user->country)->first() : null;
+        return view('auth/checkuser', [
+            'request' => $request,
+            'lang' => $lang,
+            'user' => $user,
+            'country' => $country,
+            'operator' => $operator,
+        ]);
+    }
+
+    /**
+     * Failed login attempts management (admin). (legacy public/maxlogin.php)
+     */
+    public function showMaxLogin(Request $request)
+    {
+        if (get_user_class() < User::CLASS_SYSOP) {
+            abort(403, 'Permission denied.');
+        }
+        $action = (string) $request->input('action', $request->query('action', 'showlist'));
+        $id = (int) $request->input('id', $request->query('id', 0));
+        $update = (string) $request->input('update', $request->query('update', ''));
+        if ($id && !is_valid_id($id)) {
+            abort(400, 'Invalid ID');
+        }
+
+        switch ($action) {
+            case 'ban':
+            case 'unban':
+                LoginAttempt::query()->where('id', $id)->update(['banned' => $action == 'ban' ? 'yes' : 'no']);
+                return redirect('maxlogin.php?update=' . ($action == 'ban' ? 'Ban' : 'Unban'));
+
+            case 'delete':
+                LoginAttempt::query()->where('id', $id)->delete();
+                return redirect('maxlogin.php?update=Delete');
+
+            case 'edit':
+                $attempt = LoginAttempt::query()->findOrFail($id);
+                return view('auth/maxlogin', [
+                    'action' => 'edit',
+                    'attempt' => $attempt,
+                    'update' => $update,
+                ]);
+
+            case 'save':
+                $attempts = (int) $request->input('attempts', 0);
+                $type = (string) $request->input('type', 'login');
+                $banned = (string) $request->input('banned', 'no');
+                if (!in_array($type, ['login', 'recover'])) {
+                    $type = 'login';
+                }
+                if (!in_array($banned, ['yes', 'no'])) {
+                    $banned = 'no';
+                }
+                LoginAttempt::query()->where('id', $id)->update([
+                    'attempts' => $attempts,
+                    'type' => $type,
+                    'banned' => $banned,
+                ]);
+                $returnto = (string) $request->input('returnto', '');
+                if ($returnto !== '') {
+                    return redirect($returnto);
+                }
+                return redirect('maxlogin.php?update=Edit');
+
+            case 'searchip':
+                $ip = (string) $request->input('ip', '');
+                $list = LoginAttempt::query()->where('ip', 'like', "%$ip%")->orderBy('id', 'desc')->get();
+                return view('auth/maxlogin', [
+                    'action' => 'searchip',
+                    'list' => $list,
+                    'searchIp' => $ip,
+                    'update' => '',
+                ]);
+
+            case 'showlist':
+            default:
+                $order = (string) $request->query('order', '');
+                $orderMap = [
+                    'id' => 'id',
+                    'ip' => 'ip',
+                    'added' => 'added',
+                    'attempts' => 'attempts',
+                    'type' => 'type',
+                    'status' => 'banned',
+                ];
+                $orderby = $orderMap[$order] ?? 'attempts';
+                $perPage = 50;
+                $query = LoginAttempt::query()->orderBy($orderby, 'desc');
+                $list = $query->paginate($perPage, ['*'], 'page')->withQueryString();
+                return view('auth/maxlogin', [
+                    'action' => 'showlist',
+                    'list' => $list,
+                    'update' => $update,
+                    'order' => $order,
+                ]);
+        }
     }
 
     private function loginFailedRedirect(string $heading, string $message)

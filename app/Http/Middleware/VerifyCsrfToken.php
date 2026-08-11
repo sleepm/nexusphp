@@ -15,5 +15,7 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         self::TG_WEBHOOK_PREFIX . "/*",
         "web/token/*",
+        // legacy invite.php posts to takeconfirm.php without a CSRF token
+        "takeconfirm.php",
     ];
 }
