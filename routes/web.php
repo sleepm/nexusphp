@@ -89,6 +89,18 @@ Route::get('/medal.php', [\App\Http\Controllers\MedalController::class, 'showPag
 Route::get('/myhr.php', [\App\Http\Controllers\HitAndRunController::class, 'showPage'])
     ->middleware('auth.nexus:nexus');
 
+// =============================================================
+// 首页与主列表（Phase 2 P2）—— topten / usersearch / userhistory
+// =============================================================
+Route::get('/topten.php', [\App\Http\Controllers\ToptenController::class, 'index'])
+    ->middleware('auth.nexus:nexus');
+
+Route::get('/usersearch.php', [\App\Http\Controllers\UserSearchController::class, 'index'])
+    ->middleware('auth.nexus:nexus');
+
+Route::get('/userhistory.php', [\App\Http\Controllers\UserHistoryController::class, 'index'])
+    ->middleware('auth.nexus:nexus');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);

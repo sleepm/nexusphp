@@ -11,7 +11,7 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 21 |
+| 已完成迁移 | 24 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
 | 待迁移页面 | 约 140 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
@@ -60,9 +60,9 @@
 | details.php | 759 | ⬜ | P0 | 种子详情。`TorrentController::show()` 已有 API 实现，需补 Blade 视图 |
 | torrents.php | 1344 | ⬜ | P0 | 种子列表/搜索。`TorrentController::index()` 已有 API 实现 |
 | userdetails.php | 685 | ⬜ | P1 | 用户详情。`UserController::show()` 已有 |
-| topten.php | 767 | ⬜ | P2 | 排行榜 |
-| usersearch.php | 859 | ⬜ | P2 | 用户搜索 |
-| userhistory.php | 263 | ⬜ | P2 | 用户历史 |
+| topten.php | 767 | ✅ | P2 | `ToptenController` 排行榜（type 1/2/3/5/6），数据缓存 60 分钟 |
+| usersearch.php | 859 | ✅ | P2 | `UserSearchController` 管理组用户搜索（>=MODERATOR），筛选闭包参数化 |
+| userhistory.php | 263 | ✅ | P2 | `UserHistoryController` 帖子/评论历史，`viewhistory` 权限 |
 | viewsnatches.php | 67 | ⬜ | P3 | 做种记录，`SnatchController` 已有 |
 | viewpeerlist.php | 239 | ⬜ | P3 | Peer 列表，`PeerController` 已有 |
 | viewfilelist.php | 26 | ⬜ | P3 | 文件列表，`FileController` 已有 |
