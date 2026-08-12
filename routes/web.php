@@ -77,6 +77,18 @@ Route::get('/attendance.php', [\App\Http\Controllers\AttendanceController::class
 Route::post('/attendance.php', [\App\Http\Controllers\AttendanceController::class, 'attendPage'])
     ->middleware('auth.nexus:nexus');
 
+// =============================================================
+// 轻量互动（Phase 2 P1）—— claim / medal / myhr
+// =============================================================
+Route::get('/claim.php', [\App\Http\Controllers\ClaimController::class, 'index'])
+    ->middleware('auth.nexus:nexus');
+
+Route::get('/medal.php', [\App\Http\Controllers\MedalController::class, 'showPage'])
+    ->middleware('auth.nexus:nexus');
+
+Route::get('/myhr.php', [\App\Http\Controllers\HitAndRunController::class, 'showPage'])
+    ->middleware('auth.nexus:nexus');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);

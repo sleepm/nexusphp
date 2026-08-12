@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 18 |
+| 已完成迁移 | 21 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 143 |
+| 待迁移页面 | 约 140 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 44 个（多数仅 API，路由未启用） |
@@ -115,9 +115,9 @@
 | bookmark.php | 31 | ✅ | P0 | `BookmarkController::toggle()` 纯文本 added/deleted/failed |
 | thanks.php | 26 | ✅ | P0 | `ThankController::sayThanks()`，复用 `createThanks()` 事务 |
 | attendance.php | 191 | ✅ | P0 | `AttendanceController::showPage()/attendPage()` + Blade `attendance`（fullcalendar） |
-| claim.php | 177 | ⬜ | P1 | `ClaimRepository` 已有 |
-| medal.php | 148 | ⬜ | P1 | `MedalController` + Repository 已有 |
-| myhr.php | 131 | ⬜ | P1 | `HitAndRunController` + Repository 已有 |
+| claim.php | 177 | ✅ | P1 | `ClaimController::index()` + Blade `claim`，sort/order + torrent_id/uid 双入口 |
+| medal.php | 148 | ✅ | P1 | `MedalController::showPage()` + Blade `medal`，沿用 ajax.php buyMedal/giftMedal |
+| myhr.php | 131 | ✅ | P1 | `HitAndRunController::showPage()` + Blade `myhr`，沿用 ajax.php removeHitAndRun |
 
 ## 6. 积分 / 捐赠 / 等级
 
