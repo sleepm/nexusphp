@@ -19,7 +19,7 @@ class LogUserIp
         $response = $next($request);
         $user = $request->user();
         if ($user) {
-            IpLogRepository::saveToCache($user->id);
+            IpLogRepository::saveToCache($user->id, $request->getRequestUri());
         }
         return $response;
     }

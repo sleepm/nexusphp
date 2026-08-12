@@ -11,6 +11,7 @@
     $pageTitle = isset($title) ? $title : $siteName;
     $yearFounded = substr(get_setting('tweak.datefounded', '2007'), 0, 4);
     $langFunctions = get_legacy_lang_file('functions');
+    $isLoggedIn = Auth::guard('nexus')->check() || Auth::guard('nexus-web')->check();
 @endphp
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -60,7 +61,7 @@
 
 <table class="mainouter" width="{{ constant('CONTENT_WIDTH') }}" cellspacing="0" cellpadding="5" align="center">
     <tr><td id="nav_block" class="text" align="center">
-@if (!Auth::check())
+@if (!$isLoggedIn)
             <a href="{{ url('/login.php') }}"><font class="big"><b>{{ $langFunctions['text_login'] }}</b></font></a> / <a href="{{ url('/signup.php') }}"><font class="big"><b>{{ $langFunctions['text_signup'] }}</b></font></a>
 @else
             <a href="{{ url('/') }}"><font class="big"><b>{{ $langFunctions['text_home'] }}</b></font></a>

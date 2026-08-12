@@ -95,15 +95,13 @@ class CommentRepository extends BaseRepository
 
     private function getNoticeMessage($target, $type): array
     {
-        $allTrans = require_once base_path('lang/_target/lang_comment.php');
-        $lang = $target->user->language->site_lang_folder ?? 'en';
-        $trans = $allTrans[$lang];
-        $subject = $trans['msg_new_comment'];
+        $locale = $target->user->language->site_lang_folder ?? 'en';
+        $subject = nexus_trans("comment.msg_new_comment", [], $locale);
         $targetScript = Comment::TYPE_MAPS[$type]['target_script'];
         $targetNameField = Comment::TYPE_MAPS[$type]['target_name_field'];
         $body = sprintf(
             '%s [url=%s]%s[/url]',
-            $trans['msg_torrent_receive_comment'],
+            nexus_trans("comment.msg_torrent_receive_comment", [], $locale),
             sprintf($targetScript, $target->id),
             $target->{$targetNameField}
         );

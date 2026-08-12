@@ -23,6 +23,45 @@ class BookmarkController extends Controller
     }
 
     /**
+     * Toggle a torrent bookmark. Mirrors legacy public/bookmark.php.
+     * Returns a plain-text "added" / "deleted" / "failed" response used by the
+     * legacy details page AJAX (see public/js/common.js bookmark toggle).
+     */
+    public function toggle(Request $request)
+    {
+        $torrentId = (int) $request->input('torrentid', 0);
+        $user = Auth::guard('nexus')->user();
+        if (!$user) {
+            return response('failed');
+        }
+        $torrent = Torrent::query()->find($torrentId);
+        if (!$torrent) {
+            return response('failed');
+        }
+        try {
+            $bookmarked = $user->bookmarks()->where('torrentid', $torrentId)->exists();
+            if ($bookmarked) {
+                $this->repository->remove($user, $torrentId);
+                $this->clearBookmarkCache($user->id);
+                return response('deleted');
+            }
+            $this->repository->add($user, $torrentId);
+            $this->clearBookmarkCache($user->id);
+            return response('added');
+        } catch (\Throwable $exception) {
+            do_log(sprintf("bookmark toggle fail, torrentId: %s, error: %s", $torrentId, $exception->getMessage()), 'error');
+            return response('failed');
+        }
+    }
+
+    private function clearBookmarkCache(int $userId)
+    {
+        if (!empty($GLOBALS['Cache'])) {
+            $GLOBALS['Cache']->delete_value('user_' . $userId . '_bookmark_array');
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request

@@ -61,6 +61,22 @@ Route::any('/maxlogin.php', [\App\Http\Controllers\AuthenticateController::class
 
 Route::get("/error", [\App\Http\Controllers\ToolController::class, "error"]);
 
+// =============================================================
+// 轻量互动（Phase 2 P0）—— comment / bookmark / thanks / attendance
+// =============================================================
+Route::match(['get', 'post'], '/comment.php', [\App\Http\Controllers\CommentController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+Route::get('/bookmark.php', [\App\Http\Controllers\BookmarkController::class, 'toggle']);
+
+Route::post('/thanks.php', [\App\Http\Controllers\ThankController::class, 'sayThanks'])
+    ->middleware('auth.nexus:nexus');
+
+Route::get('/attendance.php', [\App\Http\Controllers\AttendanceController::class, 'showPage'])
+    ->middleware('auth.nexus:nexus');
+Route::post('/attendance.php', [\App\Http\Controllers\AttendanceController::class, 'attendPage'])
+    ->middleware('auth.nexus:nexus');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);

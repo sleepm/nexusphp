@@ -11,7 +11,7 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 14 |
+| 已完成迁移 | 18 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
 | 待迁移页面 | 约 143 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
@@ -111,10 +111,10 @@
 
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
-| comment.php | 309 | ⬜ | P0 | `CommentController` + `CommentRepository` 已有 ✅，接 Blade |
-| bookmark.php | 31 | ⬜ | P0 | `BookmarkController` + Repository 已有 ✅ |
-| thanks.php | 26 | ⬜ | P0 | `ThankController` 已有 |
-| attendance.php | 191 | ⬜ | P0 | `AttendanceController` + Repository 已有 ✅ |
+| comment.php | 309 | ✅ | P0 | `CommentController::web()` 分发 add/edit/delete/vieworiginal + Blade `comment` |
+| bookmark.php | 31 | ✅ | P0 | `BookmarkController::toggle()` 纯文本 added/deleted/failed |
+| thanks.php | 26 | ✅ | P0 | `ThankController::sayThanks()`，复用 `createThanks()` 事务 |
+| attendance.php | 191 | ✅ | P0 | `AttendanceController::showPage()/attendPage()` + Blade `attendance`（fullcalendar） |
 | claim.php | 177 | ⬜ | P1 | `ClaimRepository` 已有 |
 | medal.php | 148 | ⬜ | P1 | `MedalController` + Repository 已有 |
 | myhr.php | 131 | ⬜ | P1 | `HitAndRunController` + Repository 已有 |

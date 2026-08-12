@@ -42,9 +42,33 @@ class ThankController extends Controller
      */
     public function store(Request $request)
     {
-        $user = Auth::user();
         $request->validate(['torrent_id' => 'required']);
-        $torrentId = $request->torrent_id;
+        $result = $this->createThanks((int) $request->torrent_id, Auth::user());
+        $resource = new ThankResource($result);
+        return $this->success($resource, '说谢谢成功！');
+    }
+
+    /**
+     * Say thanks via the legacy AJAX endpoint (public/js/common.js saythanks).
+     * Mirrors legacy public/thanks.php POST, returns a plain text response.
+     */
+    public function sayThanks(Request $request)
+    {
+        $torrentId = (int) $request->input('id', 0);
+        $user = Auth::user();
+        if (!$user) {
+            return response('unauthenticated', 401);
+        }
+        try {
+            $this->createThanks($torrentId, $user);
+            return response('thanks');
+        } catch (\Throwable $exception) {
+            return response($exception->getMessage(), 409);
+        }
+    }
+
+    private function createThanks(int $torrentId, User $user): Thank
+    {
         $torrent = Torrent::query()->findOrFail($torrentId, Torrent::$commentFields);
         $torrent->checkIsNormal();
         $torrentOwner = User::query()->findOrFail($torrent->owner);
@@ -56,7 +80,7 @@ class ThankController extends Controller
             throw new \LogicException("you already thank this torrent");
         }
 
-        $result = DB::transaction(function () use ($user, $torrentOwner, $torrent) {
+        return DB::transaction(function () use ($user, $torrentOwner, $torrent) {
             $thank = $user->thank_torrent_logs()->create(['torrentid' => $torrent->id]);
             $sayThanksBonus = Setting::get('bonus.saythanks');
             $receiveThanksBonus = Setting::get('bonus.receivethanks');
@@ -82,8 +106,6 @@ class ThankController extends Controller
             }
             return $thank;
         });
-        $resource = new ThankResource($result);
-        return $this->success($resource, '说谢谢成功！');
     }
 
     /**
