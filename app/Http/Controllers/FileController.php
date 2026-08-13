@@ -5,9 +5,40 @@ namespace App\Http\Controllers;
 use App\Http\Resources\FileResource;
 use App\Models\File;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FileController extends Controller
 {
+    /**
+     * File list fragment, replaces legacy public/viewfilelist.php (Phase 2 P3).
+     *
+     * Loaded synchronously via ajax.gets() into the details page (#filelist).
+     */
+    public function web(Request $request)
+    {
+        $torrentId = (int) $request->get('id', 0);
+        if ($torrentId <= 0 || !Auth::guard('nexus')->check()) {
+            return response('');
+        }
+        $lang = get_legacy_lang_file('viewfilelist');
+        $files = File::query()->where('torrent', $torrentId)->orderBy('id')->get();
+
+        $rows = $files->map(function (File $file) {
+            return [
+                'filename' => $file->filename,
+                'size' => mksize($file->size),
+            ];
+        });
+
+        return response(view('viewfilelist', [
+            'lang' => $lang,
+            'rows' => $rows,
+        ]))->header('Content-Type', 'text/xml; charset=utf-8')
+            ->header('Cache-Control', 'no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT');
+    }
+
     /**
      * torrent file list
      *

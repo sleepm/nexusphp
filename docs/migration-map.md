@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 24 |
+| 已完成迁移 | 28 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 140 |
+| 待迁移页面 | 约 136 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 44 个（多数仅 API，路由未启用） |
@@ -63,10 +63,10 @@
 | topten.php | 767 | ✅ | P2 | `ToptenController` 排行榜（type 1/2/3/5/6），数据缓存 60 分钟 |
 | usersearch.php | 859 | ✅ | P2 | `UserSearchController` 管理组用户搜索（>=MODERATOR），筛选闭包参数化 |
 | userhistory.php | 263 | ✅ | P2 | `UserHistoryController` 帖子/评论历史，`viewhistory` 权限 |
-| viewsnatches.php | 67 | ⬜ | P3 | 做种记录，`SnatchController` 已有 |
-| viewpeerlist.php | 239 | ⬜ | P3 | Peer 列表，`PeerController` 已有 |
-| viewfilelist.php | 26 | ⬜ | P3 | 文件列表，`FileController` 已有 |
-| viewnfo.php | 88 | ⬜ | P3 | NFO 查看 |
+| viewsnatches.php | 67 | ✅ | P3 | 做种记录，`SnatchController::web()` + Blade `viewsnatches`，Eloquent 分页 |
+| viewpeerlist.php | 239 | ✅ | P3 | Peer 列表片段，`PeerController::web()` 移植 `dltable()`/`get_location_column()`，text/xml |
+| viewfilelist.php | 26 | ✅ | P3 | 文件列表片段，`FileController::web()`，text/xml |
+| viewnfo.php | 88 | ✅ | P3 | `ViewNfoController::show()` NFO 查看（magic/latin-1/fonthack），`code_new()` + `format_urls()` |
 | torrent_info.php | 99 | 🔒 | 保留 | tracker 结构信息，保留 legacy 或转 API |
 
 ## 3. RSS / 搜索 / Ajax

@@ -101,6 +101,19 @@ Route::get('/usersearch.php', [\App\Http\Controllers\UserSearchController::class
 Route::get('/userhistory.php', [\App\Http\Controllers\UserHistoryController::class, 'index'])
     ->middleware('auth.nexus:nexus');
 
+// =============================================================
+// 首页与主列表（Phase 2 P3）—— viewsnatches / viewpeerlist / viewfilelist / viewnfo
+// =============================================================
+Route::get('/viewsnatches.php', [\App\Http\Controllers\SnatchController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// AJAX fragments (text/xml), guarded by the nexus session inside the controllers
+Route::get('/viewpeerlist.php', [\App\Http\Controllers\PeerController::class, 'web']);
+Route::get('/viewfilelist.php', [\App\Http\Controllers\FileController::class, 'web']);
+
+Route::get('/viewnfo.php', [\App\Http\Controllers\ViewNfoController::class, 'show'])
+    ->middleware('auth.nexus:nexus');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);
