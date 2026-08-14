@@ -137,6 +137,9 @@ Route::get('/getusertorrentlistajax.php', [\App\Http\Controllers\GetUserTorrentL
 Route::get('/search.php', [\App\Http\Controllers\SearchController::class, 'index'])
     ->middleware('auth.nexus:nexus');
 
+Route::get('/details.php', [\App\Http\Controllers\TorrentController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);
