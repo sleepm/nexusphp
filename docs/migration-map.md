@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 28 |
+| 已完成迁移 | 33 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 136 |
+| 待迁移页面 | 约 131 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 44 个（多数仅 API，路由未启用） |
@@ -73,12 +73,12 @@
 
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
-| getrss.php | 388 | ⬜ | P2 | RSS。可改为独立 Route + XML 响应 |
-| torrentrss.php | 299 | ⬜ | P2 | 同 getrss，保留其一即可 |
-| search.php | 163 | ⬜ | P2 | 搜索。`SearchBoxController` / `TorrentController::searchBox()` 已有 |
+| getrss.php | 388 | ✅ | P2 | RSS 订阅表单，`RssController::index()` + Blade `getrss` |
+| torrentrss.php | 299 | ✅ | P2 | `RssController::feed()` passkey 门控 RSS 2.0 XML，`whereIn` 参数化 |
+| search.php | 163 | ✅ | P2 | `SearchController::index()` 搜索（Meili 或 Eloquent）|
 | searchsuggest.php | 19 | ⬜ | P3 | 搜索联想，API 化 |
-| ajax.php | 243 | ⬜ | P2 | 通用 ajax 分发，拆为多个 API 路由 |
-| getusertorrentlistajax.php | 363 | ⬜ | P2 | 用户种子列表 ajax |
+| ajax.php | 243 | ✅ | P2 | `AjaxController::web()` 通用 ajax 分发，action 级登录校验 |
+| getusertorrentlistajax.php | 363 | ✅ | P2 | `GetUserTorrentListAjaxController::web()` 用户种子列表（上传/做种/下载），权限分级 |
 | getextinfoajax.php | 27 | ⬜ | P3 | IMDb 信息 ajax |
 | opensearch.php | 57 | ⬜ | P3 | OpenSearch 描述 XML |
 | page.php | 29 | 🔒 | 保留 | 动态页面（可能被插件使用） |
