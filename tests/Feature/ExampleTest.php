@@ -14,9 +14,11 @@ class ExampleTest extends TestCase
      */
     public function testBasicTest()
     {
+        // The legacy index.php has been migrated to the Laravel home route;
+        // unauthenticated visitors are sent to the login page.
         $response = $this->get('/');
 
         $response->assertStatus(302);
-        $response->assertLocation('http://localhost/index.php');
+        $response->assertLocation('http://localhost/login.php?returnto=http%3A%2F%2Flocalhost');
     }
 }

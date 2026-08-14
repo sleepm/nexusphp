@@ -13,9 +13,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return redirect('index.php');
-});
+Route::get('/', [\App\Http\Controllers\IndexController::class, 'show'])
+    ->middleware('auth.nexus:nexus');
+
+Route::get('/index.php', [\App\Http\Controllers\IndexController::class, 'show'])
+    ->middleware('auth.nexus:nexus');
+Route::post('/index.php', [\App\Http\Controllers\IndexController::class, 'vote'])
+    ->middleware('auth.nexus:nexus');
 
 // =============================================================
 // 认证与会话（Auth）—— Phase 1 迁移，替代 public/login.php 等遗留页面

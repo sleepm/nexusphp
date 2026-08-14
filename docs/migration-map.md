@@ -56,7 +56,7 @@
 
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
-| index.php | 666 | ⬜ | P0 | 首页：新闻、轮播、统计。`routes/web.php` 根路由已 `redirect('index.php')`，迁移后改为直接渲染 |
+| index.php | 666 | ✅ | P0 | 首页：新闻、轮播、统计。`IndexController::show()` 渲染 Blade `index`，`vote()` 处理投票 POST；根路由 `/` 与 `/index.php` 直接渲染 |
 | details.php | 759 | ⬜ | P0 | 种子详情。`TorrentController::show()` 已有 API 实现，需补 Blade 视图 |
 | torrents.php | 1344 | ⬜ | P0 | 种子列表/搜索。`TorrentController::index()` 已有 API 实现 |
 | userdetails.php | 685 | ⬜ | P1 | 用户详情。`UserController::show()` 已有 |
