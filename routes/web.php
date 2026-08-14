@@ -114,6 +114,25 @@ Route::get('/viewfilelist.php', [\App\Http\Controllers\FileController::class, 'w
 Route::get('/viewnfo.php', [\App\Http\Controllers\ViewNfoController::class, 'show'])
     ->middleware('auth.nexus:nexus');
 
+// =============================================================
+// RSS（Phase 2 P2）—— getrss form + torrentrss XML feed
+// =============================================================
+Route::match(['get', 'post'], '/getrss.php', [\App\Http\Controllers\RssController::class, 'index'])
+    ->middleware('auth.nexus:nexus');
+
+// passkey-gated feed, no session required (mirrors legacy torrentrss.php)
+Route::get('/torrentrss.php', [\App\Http\Controllers\RssController::class, 'feed']);
+
+// legacy AJAX JSON interface (no CSRF, session-checked per action inside the controller)
+Route::post('/ajax.php', [\App\Http\Controllers\AjaxController::class, 'web']);
+
+// user torrent lists (uploaded/seeding/leeching/completed/incomplete), AJAX fragment
+Route::get('/getusertorrentlistajax.php', [\App\Http\Controllers\GetUserTorrentListAjaxController::class, 'web']);
+
+// torrent search (Meili or Eloquent)
+Route::get('/search.php', [\App\Http\Controllers\SearchController::class, 'index'])
+    ->middleware('auth.nexus:nexus');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);

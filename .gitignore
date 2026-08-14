@@ -39,3 +39,6 @@ attachments
 bitbucket
 /public/attachments
 /public/bitbucket
+
+# Redis
+/dump.rdb

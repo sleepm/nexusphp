@@ -19,5 +19,6 @@ class VerifyCsrfToken extends Middleware
         "takeconfirm.php",
         // legacy AJAX (public/js/common.js ajax.post) sends no CSRF token
         "thanks.php",
+        "ajax.php",
     ];
 }
