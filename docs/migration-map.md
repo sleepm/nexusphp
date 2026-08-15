@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 34 |
+| 已完成迁移 | 35 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 130 |
+| 待迁移页面 | 约 108 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 44 个（多数仅 API，路由未启用） |
@@ -58,7 +58,7 @@
 | --- | --- | --- | --- | --- |
 | index.php | 666 | ✅ | P0 | 首页：新闻、轮播、统计。`IndexController::show()` 渲染 Blade `index`，`vote()` 处理投票 POST；根路由 `/` 与 `/index.php` 直接渲染 |
 | details.php | 759 | ✅ | P0 | 种子详情。`TorrentController::web()` 迁移遗留 `public/details.php`，渲染 Blade `torrent/details`（下载/魔力值/感谢/字幕/描述/评论等整页），路由 `/details.php` |
-| torrents.php | 1344 | ⬜ | P0 | 种子列表/搜索。`TorrentController::index()` 已有 API 实现 |
+| torrents.php | 1344 | ✅ | P0 | 种子列表/搜索/特殊区。`TorrentController::browse()` 迁移遗留 `public/torrents.php`，渲染 Blade `torrent/browse`（搜索/分类/子类筛选、排序、分页、热门搜索），内含 `torrenttable()` 兼容层与 `UC_*` 常量引导；路由 `/torrents.php` 与 `/special.php`（`section=special`） |
 | userdetails.php | 685 | ⬜ | P1 | 用户详情。`UserController::show()` 已有 |
 | topten.php | 767 | ✅ | P2 | `ToptenController` 排行榜（type 1/2/3/5/6），数据缓存 60 分钟 |
 | usersearch.php | 859 | ✅ | P2 | `UserSearchController` 管理组用户搜索（>=MODERATOR），筛选闭包参数化 |
@@ -242,7 +242,7 @@
 | ok.php | 60 | ⬜ | P3 | 通用提示页，并入 Blade `error/notification` 视图 |
 | preview.php | 9 | ⬜ | P3 | 预览 |
 | magic.php | 40 | ⬜ | P3 | 通用跳转 |
-| special.php | 3 | 🔒 | 保留 | 特殊占位页 |
+| special.php | 3 | ✅ | P3 | 特殊区占位页，改走 `TorrentController::browse()`（`/special.php` 路由 `section=special`），遗留文件已删 |
 | smilies.php | 9 | ⬜ | P3 | 表情列表 |
 | moresmilies.php | 45 | ⬜ | P3 | 表情扩展 |
 | retriver.php | 69 | ⬜ | P3 | IMDb/信息回填（admin） |

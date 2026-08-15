@@ -815,6 +815,957 @@ JS;
     }
 
     /**
+     * Torrent list page. Mirrors legacy public/torrents.php.
+     *
+     * @param  string  $section  'torrents' (browse) or 'special'
+     */
+    public function browse(Request $request, string $section = 'torrents')
+    {
+        /** @var \App\Models\User $currentUser */
+        $currentUser = Auth::guard('nexus')->user();
+        if (! $currentUser) {
+            abort(401);
+        }
+        if ($currentUser->parked == 'yes') {
+            abort(403, 'Your account is parked.');
+        }
+        $curUser = $currentUser->toArray();
+
+        // In the real web stack PHP populates $_GET/$_REQUEST from the query
+        // string; under the test HTTP kernel they are not auto-filled. Mirror it
+        // so the legacy query building below behaves identically in both worlds.
+$_GET = $request->query();
+$_REQUEST = $request->all();
+
+        // legacy user-class constants are defined in include/core.php (not loaded
+        // in the Laravel bootstrap); legacy helpers like torrenttable() rely on them
+        foreach ([
+            'UC_PEASANT' => 0, 'UC_USER' => 1, 'UC_POWER_USER' => 2, 'UC_ELITE_USER' => 3,
+            'UC_CRAZY_USER' => 4, 'UC_INSANE_USER' => 5, 'UC_VETERAN_USER' => 6,
+            'UC_EXTREME_USER' => 7, 'UC_ULTIMATE_USER' => 8, 'UC_NEXUS_MASTER' => 9,
+            'UC_VIP' => 10, 'UC_RETIREE' => 11, 'UC_UPLOADER' => 12, 'UC_MODERATOR' => 13,
+            'UC_ADMINISTRATOR' => 14, 'UC_SYSOP' => 15, 'UC_STAFFLEADER' => 16,
+        ] as $constant => $value) {
+            defined($constant) || define($constant, $value);
+        }
+
+        // globals the shared legacy helpers expect (mirrors public/details.php bootstrap)
+        $langFunctions = get_legacy_lang_file('functions');
+        $GLOBALS['CURUSER'] = $curUser;
+        $GLOBALS['lang_functions'] = $langFunctions;
+        $GLOBALS['CURLANGDIR'] = get_langfolder_cookie();
+        $GLOBALS['BASEURL'] = Setting::getBaseUrl();
+        $GLOBALS['SITENAME'] = Setting::getSiteName();
+        $GLOBALS['waitsystem'] = get_setting('main.waitsystem', 'no');
+        $GLOBALS['showextinfo'] = ['imdb' => get_setting('main.showimdbinfo', 'no')];
+        $GLOBALS['torrentmanage_class'] = get_setting('authority.torrentmanage', '');
+        $GLOBALS['smalldescription_main'] = get_setting('main.smalldescription', 'yes');
+        $GLOBALS['enabletooltip_tweak'] = get_setting('tweak.enabletooltip', 'no');
+        $GLOBALS['staffmem_class'] = get_setting('authority.staffmem', '');
+        $GLOBALS['expirehalfleech_torrent'] = get_setting('torrent.expirehalfleech');
+        $GLOBALS['expirefree_torrent'] = get_setting('torrent.expirefree');
+        $GLOBALS['expiretwoup_torrent'] = get_setting('torrent.expiretwoup');
+        $GLOBALS['expiretwoupfree_torrent'] = get_setting('torrent.expiretwoupfree');
+        $GLOBALS['expiretwouphalfleech_torrent'] = get_setting('torrent.expiretwouphalfleech');
+        $GLOBALS['expirethirtypercentleech_torrent'] = get_setting('torrent.expirethirtypercentleech');
+        $GLOBALS['commanage_class'] = (int) get_setting('authority.commanage', 0);
+        $GLOBALS['specialcatmode'] = (int) get_setting('main.specialcat', 0);
+        $GLOBALS['browsecatmode'] = (int) get_setting('main.browsecat', 0);
+        $GLOBALS['enablespecial'] = get_setting('main.spsct', 'no');
+        $GLOBALS['torrentsperpage_main'] = (int) get_setting('main.torrentsperpage', 50);
+        $GLOBALS['showmovies'] = [
+            'hot' => get_setting('main.hotmovie', 'yes'),
+            'classic' => get_setting('main.classicmovie', 'yes'),
+        ];
+        if (empty($GLOBALS['Advertisement'])) {
+            require_once ROOT_PATH . 'classes/class_advertisement.php';
+            $GLOBALS['Advertisement'] = new \ADVERTISEMENT($currentUser->id);
+        }
+        /** @var \class_cache_redis $Cache */
+        $Cache = $GLOBALS['Cache'];
+        $Advertisement = $GLOBALS['Advertisement'];
+
+        $lang_torrents = get_legacy_lang_file('torrents');
+        $lang_special = get_legacy_lang_file('special');
+
+        // check searchbox
+        switch ($section) {
+            case 'special':
+                if ($GLOBALS['enablespecial'] != 'yes') {
+                    abort(404);
+                }
+                if (! user_can('view_special_torrent')) {
+                    abort(403, $lang_special['std_sorry'] . $lang_special['std_permission_denied_only'] . get_user_class_name(get_setting('authority.view_special_torrent'), false, true, true) . sprintf($lang_special['std_or_above_can_view'], \App\Models\Setting::getSiteName()));
+                }
+                $sectiontype = $GLOBALS['specialcatmode'];
+                break;
+            case 'torrents':
+            default:
+                $sectiontype = $GLOBALS['browsecatmode'];
+        }
+
+        // tags
+        $tagRep = new \App\Repositories\TagRepository();
+        $allTags = $tagRep->listAll($sectiontype);
+        $filterInputWidth = 62;
+        $searchParams = $_GET;
+        $searchParams['mode'] = $sectiontype;
+
+        $showsubcat = get_searchbox_value($sectiontype, 'showsubcat');
+        $showsource = get_searchbox_value($sectiontype, 'showsource');
+        $showmedium = get_searchbox_value($sectiontype, 'showmedium');
+        $showcodec = get_searchbox_value($sectiontype, 'showcodec');
+        $showstandard = get_searchbox_value($sectiontype, 'showstandard');
+        $showprocessing = get_searchbox_value($sectiontype, 'showprocessing');
+        $showteam = get_searchbox_value($sectiontype, 'showteam');
+        $showaudiocodec = get_searchbox_value($sectiontype, 'showaudiocodec');
+        $catsperrow = get_searchbox_value($sectiontype, 'catsperrow');
+        $catpadding = get_searchbox_value($sectiontype, 'catpadding');
+
+        $cats = genrelist($sectiontype);
+        if ($showsubcat) {
+            if ($showsource) {
+                $sources = searchbox_item_list('sources', $sectiontype);
+            }
+            if ($showmedium) {
+                $media = searchbox_item_list('media', $sectiontype);
+            }
+            if ($showcodec) {
+                $codecs = searchbox_item_list('codecs', $sectiontype);
+            }
+            if ($showstandard) {
+                $standards = searchbox_item_list('standards', $sectiontype);
+            }
+            if ($showprocessing) {
+                $processings = searchbox_item_list('processings', $sectiontype);
+            }
+            if ($showteam) {
+                $teams = searchbox_item_list('teams', $sectiontype);
+            }
+            if ($showaudiocodec) {
+                $audiocodecs = searchbox_item_list('audiocodecs', $sectiontype);
+            }
+        }
+
+        $searchstr_ori = htmlspecialchars(trim($_GET['search'] ?? ''));
+        $searchstr = mysql_real_escape_string(trim($_GET['search'] ?? ''));
+        if (empty($searchstr)) {
+            unset($searchstr);
+        }
+
+        $meilisearchEnabled = get_setting('meilisearch.enabled') == 'yes';
+        $shouldUseMeili = $meilisearchEnabled && ! empty($searchstr);
+        do_log("[SHOULD_USE_MEILI]: $shouldUseMeili");
+
+        // sorting
+        $column = '';
+        $ascdesc = '';
+        $linkascdesc = '';
+        $orderby = 'ORDER BY pos_state DESC, torrents.id DESC';
+        $pagerlink = '';
+        if (isset($_GET['sort']) && $_GET['sort'] && isset($_GET['type']) && $_GET['type']) {
+            switch ($_GET['sort']) {
+                case '1': $column = 'name'; break;
+                case '2': $column = 'numfiles'; break;
+                case '3': $column = 'comments'; break;
+                case '4': $column = 'added'; break;
+                case '5': $column = 'size'; break;
+                case '6': $column = 'times_completed'; break;
+                case '7': $column = 'seeders'; break;
+                case '8': $column = 'leechers'; break;
+                case '9': $column = 'owner'; break;
+                default: $column = 'id';
+            }
+
+            switch ($_GET['type']) {
+                case 'asc': $ascdesc = 'ASC'; $linkascdesc = 'asc'; break;
+                case 'desc': $ascdesc = 'DESC'; $linkascdesc = 'desc'; break;
+                default: $ascdesc = 'DESC'; $linkascdesc = 'desc';
+            }
+
+            if ($column == 'owner') {
+                $orderby = "ORDER BY pos_state DESC, torrents.anonymous, users.username " . $ascdesc;
+            } else {
+                $orderby = "ORDER BY pos_state DESC, torrents." . $column . " " . $ascdesc;
+            }
+
+            $pagerlink = "sort=" . intval($_GET['sort']) . "&type=" . $linkascdesc . "&";
+        }
+
+        $allCategoryId = \App\Models\SearchBox::listCategoryId($sectiontype);
+        $addparam = '';
+        $wherea = [];
+        $wherecatina = [];
+        $wheresourceina = [];
+        $wheremediumina = [];
+        $wherecodecina = [];
+        $wherestandardina = [];
+        $whereprocessingina = [];
+        $whereteamina = [];
+        $whereaudiocodecina = [];
+        $whereothera = [];
+
+        // whether to show torrents from all sections
+        $allsec = intval($_GET['allsec'] ?? 0);
+        if ($allsec == 1) {
+            $addparam .= 'allsec=1&';
+        }
+
+        // bookmarked
+        $inclbookmarked = 0;
+        if ($_GET) {
+            $inclbookmarked = intval($_GET['inclbookmarked'] ?? 0);
+        } elseif ($curUser['notifs']) {
+            if (strpos($curUser['notifs'], '[inclbookmarked=0]') !== false) {
+                $inclbookmarked = 0;
+            } elseif (strpos($curUser['notifs'], '[inclbookmarked=1]') !== false) {
+                $inclbookmarked = 1;
+            } elseif (strpos($curUser['notifs'], '[inclbookmarked=2]') !== false) {
+                $inclbookmarked = 2;
+            }
+        }
+
+        if (! in_array($inclbookmarked, [0, 1, 2])) {
+            $inclbookmarked = 0;
+            write_log('User ' . $curUser['username'] . ',' . $curUser['ip'] . ' is hacking inclbookmarked field in' . ($_SERVER['SCRIPT_NAME'] ?? ''), 'mod');
+        }
+        if ($inclbookmarked == 0) {
+            $addparam .= 'inclbookmarked=0&';
+        } elseif ($inclbookmarked == 1) {
+            $addparam .= 'inclbookmarked=1&';
+            if (isset($curUser)) {
+                $wherea[] = 'torrents.id IN (SELECT torrentid FROM bookmarks WHERE userid=' . $curUser['id'] . ')';
+            }
+        } elseif ($inclbookmarked == 2) {
+            $addparam .= 'inclbookmarked=2&';
+            if (isset($curUser)) {
+                $wherea[] = 'torrents.id NOT IN (SELECT torrentid FROM bookmarks WHERE userid=' . $curUser['id'] . ')';
+            }
+        }
+
+        // include dead
+        if (isset($_GET['incldead'])) {
+            $include_dead = intval($_GET['incldead'] ?? 0);
+        } elseif ($curUser['notifs']) {
+            if (strpos($curUser['notifs'], '[incldead=0]') !== false) {
+                $include_dead = 0;
+            } elseif (strpos($curUser['notifs'], '[incldead=1]') !== false) {
+                $include_dead = 1;
+            } elseif (strpos($curUser['notifs'], '[incldead=2]') !== false) {
+                $include_dead = 2;
+            } else {
+                $include_dead = 1;
+            }
+        } else {
+            $include_dead = 1;
+        }
+
+        if (! in_array($include_dead, [0, 1, 2])) {
+            $include_dead = 0;
+            write_log('User ' . $curUser['username'] . ',' . $curUser['ip'] . ' is hacking incldead field in' . ($_SERVER['SCRIPT_NAME'] ?? ''), 'mod');
+        }
+        if ($include_dead == 0) {
+            $addparam .= 'incldead=0&';
+        } elseif ($include_dead == 1) {
+            $addparam .= 'incldead=1&';
+            $whereothera[] = "visible = 'yes'";
+        } elseif ($include_dead == 2) {
+            $addparam .= 'incldead=2&';
+            $whereothera[] = "visible = 'no'";
+        }
+
+        if (! isset($curUser) || ! user_can('seebanned')) {
+            $whereothera[] = "banned = 'no'";
+            $searchParams['banned'] = 'no';
+        }
+
+        // special torrent state
+        $special_state = 0;
+        if ($_GET) {
+            $special_state = intval($_GET['spstate'] ?? 0);
+        } elseif ($curUser['notifs']) {
+            foreach ([0, 1, 2, 3, 4, 5, 6, 7] as $spState) {
+                if (strpos($curUser['notifs'], "[spstate={$spState}]") !== false) {
+                    $special_state = $spState;
+                    break;
+                }
+            }
+        }
+
+        if (! in_array($special_state, [0, 1, 2, 3, 4, 5, 6, 7])) {
+            $special_state = 0;
+            write_log('User ' . $curUser['username'] . ',' . $curUser['ip'] . ' is hacking spstate field in ' . ($_SERVER['SCRIPT_NAME'] ?? ''), 'mod');
+        }
+        if ($special_state == 0) {
+            $addparam .= 'spstate=0&';
+        } elseif ($special_state == 1) {
+            $addparam .= 'spstate=1&';
+            $wherea[] = 'sp_state = 1';
+            if (get_global_sp_state() == 1) {
+                $wherea[] = 'sp_state = 1';
+            }
+        } elseif ($special_state == 2) {
+            $addparam .= 'spstate=2&';
+            if (get_global_sp_state() == 1) {
+                $wherea[] = 'sp_state = 2';
+            } elseif (get_global_sp_state() == 2) {
+                ;
+            }
+        } elseif ($special_state == 3) {
+            $addparam .= 'spstate=3&';
+            if (get_global_sp_state() == 1) {
+                $wherea[] = 'sp_state = 3';
+            } elseif (get_global_sp_state() == 3) {
+                ;
+            }
+        } elseif ($special_state == 4) {
+            $addparam .= 'spstate=4&';
+            if (get_global_sp_state() == 1) {
+                $wherea[] = 'sp_state = 4';
+            } elseif (get_global_sp_state() == 4) {
+                ;
+            }
+        } elseif ($special_state == 5) {
+            $addparam .= 'spstate=5&';
+            if (get_global_sp_state() == 1) {
+                $wherea[] = 'sp_state = 5';
+            } elseif (get_global_sp_state() == 5) {
+                ;
+            }
+        } elseif ($special_state == 6) {
+            $addparam .= 'spstate=6&';
+            if (get_global_sp_state() == 1) {
+                $wherea[] = 'sp_state = 6';
+            } elseif (get_global_sp_state() == 6) {
+                ;
+            }
+        } elseif ($special_state == 7) {
+            $addparam .= 'spstate=7&';
+            if (get_global_sp_state() == 1) {
+                $wherea[] = 'sp_state = 7';
+            } elseif (get_global_sp_state() == 7) {
+                ;
+            }
+        }
+
+        $category_get = intval($_GET['cat'] ?? 0);
+        $source_get = $medium_get = $codec_get = $standard_get = $processing_get = $team_get = $audiocodec_get = 0;
+        if ($showsubcat) {
+            if ($showsource) {
+                $source_get = intval($_GET['source'] ?? 0);
+            }
+            if ($showmedium) {
+                $medium_get = intval($_GET['medium'] ?? 0);
+            }
+            if ($showcodec) {
+                $codec_get = intval($_GET['codec'] ?? 0);
+            }
+            if ($showstandard) {
+                $standard_get = intval($_GET['standard'] ?? 0);
+            }
+            if ($showprocessing) {
+                $processing_get = intval($_GET['processing'] ?? 0);
+            }
+            if ($showteam) {
+                $team_get = intval($_GET['team'] ?? 0);
+            }
+            if ($showaudiocodec) {
+                $audiocodec_get = intval($_GET['audiocodec'] ?? 0);
+            }
+        }
+
+        $all = intval($_GET['all'] ?? 0);
+
+        if (! $all) {
+            if (! $_GET && $curUser['notifs']) {
+                $all = true;
+                foreach ($cats as $cat) {
+                    $all &= $cat['id'];
+                    $mystring = $curUser['notifs'];
+                    $findme = '[cat' . $cat['id'] . ']';
+                    if (strpos($mystring, $findme) !== false) {
+                        $wherecatina[] = $cat['id'];
+                        $addparam .= "cat{$cat['id']}=1&";
+                    }
+                }
+                if ($showsubcat) {
+                    if ($showsource) {
+                        foreach ($sources as $source) {
+                            $all &= $source['id'];
+                            if (strpos($curUser['notifs'], '[sou' . $source['id'] . ']') !== false) {
+                                $wheresourceina[] = $source['id'];
+                                $addparam .= "source{$source['id']}=1&";
+                            }
+                        }
+                    }
+                    if ($showmedium) {
+                        foreach ($media as $medium) {
+                            $all &= $medium['id'];
+                            if (strpos($curUser['notifs'], '[med' . $medium['id'] . ']') !== false) {
+                                $wheremediumina[] = $medium['id'];
+                                $addparam .= "medium{$medium['id']}=1&";
+                            }
+                        }
+                    }
+                    if ($showcodec) {
+                        foreach ($codecs as $codec) {
+                            $all &= $codec['id'];
+                            if (strpos($curUser['notifs'], '[cod' . $codec['id'] . ']') !== false) {
+                                $wherecodecina[] = $codec['id'];
+                                $addparam .= "codec{$codec['id']}=1&";
+                            }
+                        }
+                    }
+                    if ($showstandard) {
+                        foreach ($standards as $standard) {
+                            $all &= $standard['id'];
+                            if (strpos($curUser['notifs'], '[sta' . $standard['id'] . ']') !== false) {
+                                $wherestandardina[] = $standard['id'];
+                                $addparam .= "standard{$standard['id']}=1&";
+                            }
+                        }
+                    }
+                    if ($showprocessing) {
+                        foreach ($processings as $processing) {
+                            $all &= $processing['id'];
+                            if (strpos($curUser['notifs'], '[pro' . $processing['id'] . ']') !== false) {
+                                $whereprocessingina[] = $processing['id'];
+                                $addparam .= "processing{$processing['id']}=1&";
+                            }
+                        }
+                    }
+                    if ($showteam) {
+                        foreach ($teams as $team) {
+                            $all &= $team['id'];
+                            if (strpos($curUser['notifs'], '[tea' . $team['id'] . ']') !== false) {
+                                $whereteamina[] = $team['id'];
+                                $addparam .= "team{$team['id']}=1&";
+                            }
+                        }
+                    }
+                    if ($showaudiocodec) {
+                        foreach ($audiocodecs as $audiocodec) {
+                            $all &= $audiocodec['id'];
+                            if (strpos($curUser['notifs'], '[aud' . $audiocodec['id'] . ']') !== false) {
+                                $whereaudiocodecina[] = $audiocodec['id'];
+                                $addparam .= "audiocodec{$audiocodec['id']}=1&";
+                            }
+                        }
+                    }
+                }
+            } elseif ($category_get) {
+                int_check($category_get, true, true, true);
+                $wherecatina[] = $category_get;
+                $addparam .= "cat={$category_get}&";
+            } elseif ($medium_get) {
+                int_check($medium_get, true, true, true);
+                $wheremediumina[] = $medium_get;
+                $addparam .= "medium={$medium_get}&";
+            } elseif ($source_get) {
+                int_check($source_get, true, true, true);
+                $wheresourceina[] = $source_get;
+                $addparam .= "source={$source_get}&";
+            } elseif ($codec_get) {
+                int_check($codec_get, true, true, true);
+                $wherecodecina[] = $codec_get;
+                $addparam .= "codec={$codec_get}&";
+            } elseif ($standard_get) {
+                int_check($standard_get, true, true, true);
+                $wherestandardina[] = $standard_get;
+                $addparam .= "standard={$standard_get}&";
+            } elseif ($processing_get) {
+                int_check($processing_get, true, true, true);
+                $whereprocessingina[] = $processing_get;
+                $addparam .= "processing={$processing_get}&";
+            } elseif ($team_get) {
+                int_check($team_get, true, true, true);
+                $whereteamina[] = $team_get;
+                $addparam .= "team={$team_get}&";
+            } elseif ($audiocodec_get) {
+                int_check($audiocodec_get, true, true, true);
+                $whereaudiocodecina[] = $audiocodec_get;
+                $addparam .= "audiocodec={$audiocodec_get}&";
+            } else {
+                // select and go
+                $all = true;
+                foreach ($cats as $cat) {
+                    $__is = (isset($_GET["cat{$cat['id']}"]) && $_GET["cat{$cat['id']}"]);
+                    $all &= $__is;
+                    if ($__is) {
+                        $wherecatina[] = $cat['id'];
+                        $addparam .= "cat{$cat['id']}=1&";
+                    }
+                }
+                if ($showsubcat) {
+                    $taxFrame = [
+                        'source' => [$sources ?? [], 'source', &$wheresourceina],
+                        'medium' => [$media ?? [], 'medium', &$wheremediumina],
+                        'codec' => [$codecs ?? [], 'codec', &$wherecodecina],
+                        'standard' => [$standards ?? [], 'standard', &$wherestandardina],
+                        'processing' => [$processings ?? [], 'processing', &$whereprocessingina],
+                        'team' => [$teams ?? [], 'team', &$whereteamina],
+                        'audiocodec' => [$audiocodecs ?? [], 'audiocodec', &$whereaudiocodecina],
+                    ];
+                    $showTax = [
+                        'source' => $showsource,
+                        'medium' => $showmedium,
+                        'codec' => $showcodec,
+                        'standard' => $showstandard,
+                        'processing' => $showprocessing,
+                        'team' => $showteam,
+                        'audiocodec' => $showaudiocodec,
+                    ];
+                    foreach ($showTax as $taxonomy => $show) {
+                        if (! $show) {
+                            continue;
+                        }
+                        foreach ($taxFrame[$taxonomy][0] as $item) {
+                            $__key = $taxFrame[$taxonomy][1] . $item['id'];
+                            $__is = (isset($_GET[$__key]) && $_GET[$__key]);
+                            $all &= $__is;
+                            if ($__is) {
+                                $taxFrame[$taxonomy][2][] = $item['id'];
+                                $addparam .= "{$__key}=1&";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($all) {
+            $wherecatina = [];
+            if ($showsubcat) {
+                $wheresourceina = [];
+                $wheremediumina = [];
+                $wherecodecina = [];
+                $wherestandardina = [];
+                $whereprocessingina = [];
+                $whereteamina = [];
+                $whereaudiocodecina = [];
+            }
+            $addparam .= '';
+        }
+
+        $wherecatin = $wheresourcein = $wheremediumin = $wherecodecin = $wherestandardin = $whereprocessingin = $whereteamin = $whereaudiocodecin = '';
+        if (empty($wherecatina) && ! (in_array($inclbookmarked, [1, 2]) && $allsec == 1)) {
+            // require limit in some category
+            $wherecatina = $allCategoryId;
+        }
+        if (count($wherecatina) > 1) {
+            $wherecatin = implode(',', $wherecatina);
+        } elseif (count($wherecatina) == 1) {
+            $wherea[] = "category = $wherecatina[0]";
+        }
+
+        if ($showsubcat) {
+            if ($showsource) {
+                if (count($wheresourceina) > 1) {
+                    $wheresourcein = implode(',', $wheresourceina);
+                } elseif (count($wheresourceina) == 1) {
+                    $wherea[] = "source = $wheresourceina[0]";
+                }
+            }
+            if ($showmedium) {
+                if (count($wheremediumina) > 1) {
+                    $wheremediumin = implode(',', $wheremediumina);
+                } elseif (count($wheremediumina) == 1) {
+                    $wherea[] = "medium = $wheremediumina[0]";
+                }
+            }
+            if ($showcodec) {
+                if (count($wherecodecina) > 1) {
+                    $wherecodecin = implode(',', $wherecodecina);
+                } elseif (count($wherecodecina) == 1) {
+                    $wherea[] = "codec = $wherecodecina[0]";
+                }
+            }
+            if ($showstandard) {
+                if (count($wherestandardina) > 1) {
+                    $wherestandardin = implode(',', $wherestandardina);
+                } elseif (count($wherestandardina) == 1) {
+                    $wherea[] = "standard = $wherestandardina[0]";
+                }
+            }
+            if ($showprocessing) {
+                if (count($whereprocessingina) > 1) {
+                    $whereprocessingin = implode(',', $whereprocessingina);
+                } elseif (count($whereprocessingina) == 1) {
+                    $wherea[] = "processing = $whereprocessingina[0]";
+                }
+            }
+        }
+        if ($showteam) {
+            if (count($whereteamina) > 1) {
+                $whereteamin = implode(',', $whereteamina);
+            } elseif (count($whereteamina) == 1) {
+                $wherea[] = "team = $whereteamina[0]";
+            }
+        }
+        if ($showaudiocodec) {
+            if (count($whereaudiocodecina) > 1) {
+                $whereaudiocodecin = implode(',', $whereaudiocodecina);
+            } elseif (count($whereaudiocodecina) == 1) {
+                $wherea[] = "audiocodec = $whereaudiocodecina[0]";
+            }
+        }
+
+        $wherebase = $wherea;
+        $search_area = 0;
+        if (isset($searchstr)) {
+            $notnewword = (! isset($_GET['notnewword']) || ! $_GET['notnewword']) ? '' : 'notnewword=1&';
+            $search_mode = intval($_GET['search_mode'] ?? 0);
+            if (! in_array($search_mode, [0, 2])) {
+                $search_mode = 0;
+                write_log('User ' . $curUser['username'] . ',' . $curUser['ip'] . ' is hacking search_mode field in' . ($_SERVER['SCRIPT_NAME'] ?? ''), 'mod');
+            }
+
+            $search_area = intval($_GET['search_area'] ?? 0);
+
+            if ($search_area == 4) {
+                $searchstr = (int) parse_imdb_id($searchstr);
+            }
+            $like_expression_array = [];
+
+            switch ($search_mode) {
+                case 0: // AND, OR
+                case 1:
+                    $searchstr = str_replace('.', ' ', $searchstr);
+                    $searchstr_exploded = explode(' ', $searchstr);
+                    $searchstr_exploded_count = 0;
+                    foreach ($searchstr_exploded as $searchstr_element) {
+                        $searchstr_element = trim($searchstr_element);
+                        $searchstr_exploded_count++;
+                        if ($searchstr_exploded_count > 3) {
+                            // maximum 3 keywords
+                            break;
+                        }
+                        $like_expression_array[] = " LIKE '%" . $searchstr_element . "%'";
+                    }
+                    break;
+                case 2: // exact
+                    $like_expression_array[] = " LIKE '%" . $searchstr . "%'";
+                    break;
+            }
+            $ANDOR = ($search_mode == 0 ? ' AND ' : ' OR ');
+
+            switch ($search_area) {
+                case 0: // torrent name
+                    foreach ($like_expression_array as &$like_expression_array_element) {
+                        $like_expression_array_element = '(torrents.name' . $like_expression_array_element . ' OR torrents.small_descr' . $like_expression_array_element . ')';
+                    }
+                    unset($like_expression_array_element);
+                    $wherea[] = implode($ANDOR, $like_expression_array);
+                    break;
+                case 1: // torrent description
+                    foreach ($like_expression_array as &$like_expression_array_element) {
+                        $like_expression_array_element = 'torrent_extras.descr' . $like_expression_array_element;
+                    }
+                    unset($like_expression_array_element);
+                    $wherea[] = implode($ANDOR, $like_expression_array);
+                    break;
+                case 3: // torrent uploader
+                    foreach ($like_expression_array as &$like_expression_array_element) {
+                        $like_expression_array_element = 'users.username' . $like_expression_array_element;
+                    }
+                    unset($like_expression_array_element);
+                    if (! isset($curUser)) {
+                        $wherea[] = implode($ANDOR, $like_expression_array) . " AND torrents.anonymous = 'no'";
+                    } else {
+                        if (user_can('torrentmanage')) {
+                            $wherea[] = implode($ANDOR, $like_expression_array);
+                        } else {
+                            $wherea[] = '(' . implode($ANDOR, $like_expression_array) . " AND torrents.anonymous = 'no') OR (" . implode($ANDOR, $like_expression_array) . " AND torrents.anonymous = 'yes' AND users.id=" . $curUser['id'] . ')';
+                        }
+                    }
+                    break;
+                case 4: // imdb url
+                    foreach ($like_expression_array as &$like_expression_array_element) {
+                        $like_expression_array_element = 'torrents.url' . $like_expression_array_element;
+                    }
+                    unset($like_expression_array_element);
+                    $wherea[] = implode($ANDOR, $like_expression_array);
+                    break;
+                default: // unknown
+                    $search_area = 0;
+                    $wherea[] = "torrents.name LIKE '%" . $searchstr . "%'";
+                    write_log('User ' . $curUser['username'] . ',' . $curUser['ip'] . ' is hacking search_area field in' . ($_SERVER['SCRIPT_NAME'] ?? ''), 'mod');
+            }
+            $addparam .= 'search_area=' . $search_area . '&';
+            $addparam .= 'search=' . rawurlencode($searchstr) . '&' . $notnewword;
+            $addparam .= 'search_mode=' . $search_mode . '&';
+        }
+
+        // approval status
+        $approvalStatusNoneVisible = get_setting('torrent.approval_status_none_visible');
+        $approvalStatusIconEnabled = get_setting('torrent.approval_status_icon_enabled');
+        $approvalStatus = null;
+        $showApprovalStatusFilter = false;
+        if ($approvalStatusIconEnabled == 'yes' || (user_can('torrent-approval') && $approvalStatusNoneVisible == 'no')) {
+            $showApprovalStatusFilter = true;
+        }
+        if ($showApprovalStatusFilter && isset($_REQUEST['approval_status']) && is_numeric($_REQUEST['approval_status'])) {
+            $approvalStatus = intval($_REQUEST['approval_status']);
+            $wherea[] = "torrents.approval_status = $approvalStatus";
+            $searchParams['approval_status'] = $approvalStatus;
+            $addparam .= "approval_status={$approvalStatus}&";
+        } elseif ($approvalStatusNoneVisible == 'no' && ! user_can('torrent-approval')) {
+            $wherea[] = 'torrents.approval_status = ' . \App\Models\Torrent::APPROVAL_STATUS_ALLOW;
+            $searchParams['approval_status'] = \App\Models\Torrent::APPROVAL_STATUS_ALLOW;
+        }
+
+        // size / seeders / leechers / times_completed / added ranges
+        if (isset($_GET['size_begin']) && ctype_digit($_GET['size_begin'])) {
+            $wherea[] = 'torrents.size >= ' . intval($_GET['size_begin']) * 1024 * 1024 * 1024;
+            $addparam .= 'size_begin=' . intval($_GET['size_begin']) . '&';
+        }
+        if (isset($_GET['size_end']) && ctype_digit($_GET['size_end'])) {
+            $wherea[] = 'torrents.size <= ' . intval($_GET['size_end']) * 1024 * 1024 * 1024;
+            $addparam .= 'size_end=' . intval($_GET['size_end']) . '&';
+        }
+        if (isset($_GET['seeders_begin']) && ctype_digit($_GET['seeders_begin'])) {
+            $wherea[] = 'torrents.seeders >= ' . (int) $_GET['seeders_begin'];
+            $addparam .= 'seeders_begin=' . intval($_GET['seeders_begin']) . '&';
+        }
+        if (isset($_GET['seeders_end']) && ctype_digit($_GET['seeders_end'])) {
+            $wherea[] = 'torrents.seeders <= ' . (int) $_GET['seeders_end'];
+            $addparam .= 'seeders_end=' . intval($_GET['seeders_end']) . '&';
+        }
+        if (isset($_GET['leechers_begin']) && ctype_digit($_GET['leechers_begin'])) {
+            $wherea[] = 'torrents.leechers >= ' . (int) $_GET['leechers_begin'];
+            $addparam .= 'leechers_begin=' . intval($_GET['leechers_begin']) . '&';
+        }
+        if (isset($_GET['leechers_end']) && ctype_digit($_GET['leechers_end'])) {
+            $wherea[] = 'torrents.leechers <= ' . (int) $_GET['leechers_end'];
+            $addparam .= 'leechers_end=' . intval($_GET['leechers_end']) . '&';
+        }
+        if (isset($_GET['times_completed_begin']) && ctype_digit($_GET['times_completed_begin'])) {
+            $wherea[] = 'torrents.times_completed >= ' . (int) $_GET['times_completed_begin'];
+            $addparam .= 'times_completed_begin=' . intval($_GET['times_completed_begin']) . '&';
+        }
+        if (isset($_GET['times_completed_end']) && ctype_digit($_GET['times_completed_end'])) {
+            $wherea[] = 'torrents.times_completed <= ' . (int) $_GET['times_completed_end'];
+            $addparam .= 'times_completed_end=' . intval($_GET['times_completed_end']) . '&';
+        }
+        if (isset($_GET['added_begin']) && ! empty($_GET['added_begin'])) {
+            $wherea[] = 'torrents.added >= ' . sqlesc($_GET['added_begin']);
+            $addparam .= 'added_begin=' . $_GET['added_begin'] . '&';
+        }
+        if (isset($_GET['added_end']) && ! empty($_GET['added_end'])) {
+            $wherea[] = 'torrents.added <= ' . sqlesc(\Carbon\Carbon::parse($_GET['added_end'])->endOfDay()->toDateTimeString());
+            $addparam .= 'added_end=' . $_GET['added_end'] . '&';
+        }
+
+        $where = implode(' AND ', $wherea);
+
+        if ($wherecatin) {
+            $where .= ($where ? ' AND ' : '') . 'category IN(' . $wherecatin . ')';
+        }
+        if ($showsubcat) {
+            if ($wheresourcein) {
+                $where .= ($where ? ' AND ' : '') . 'source IN(' . $wheresourcein . ')';
+            }
+            if ($wheremediumin) {
+                $where .= ($where ? ' AND ' : '') . 'medium IN(' . $wheremediumin . ')';
+            }
+            if ($wherecodecin) {
+                $where .= ($where ? ' AND ' : '') . 'codec IN(' . $wherecodecin . ')';
+            }
+            if ($wherestandardin) {
+                $where .= ($where ? ' AND ' : '') . 'standard IN(' . $wherestandardin . ')';
+            }
+            if ($whereprocessingin) {
+                $where .= ($where ? ' AND ' : '') . 'processing IN(' . $whereprocessingin . ')';
+            }
+            if ($whereteamin) {
+                $where .= ($where ? ' AND ' : '') . 'team IN(' . $whereteamin . ')';
+            }
+            if ($whereaudiocodecin) {
+                $where .= ($where ? ' AND ' : '') . 'audiocodec IN(' . $whereaudiocodecin . ')';
+            }
+        }
+        if (! empty($whereothera)) {
+            $where .= ($where ? ' AND ' : '') . implode(' AND ', $whereothera);
+        }
+
+        $tagFilter = '';
+        $tagId = intval($_REQUEST['tag_id'] ?? 0);
+        if ($tagId > 0) {
+            $tagFilter = " inner join torrent_tags on torrents.id = torrent_tags.torrent_id and torrent_tags.tag_id = ${tagId} ";
+            $addparam .= "tag_id={$tagId}&";
+        }
+        $torrentExtraFilter = '';
+        if ($search_area == 1) {
+            $torrentExtraFilter = ' inner join torrent_extras on torrents.id = torrent_extras.torrent_id ';
+        }
+
+        if ($allsec == 1 || $GLOBALS['enablespecial'] != 'yes') {
+            $where = $where != '' ? "WHERE $where " : '';
+            $sql = 'SELECT COUNT(*) FROM torrents ' . ($search_area == 3 || $column == 'owner' ? 'LEFT JOIN users ON torrents.owner = users.id ' : '') . $tagFilter . $torrentExtraFilter . $where;
+        } else {
+            $where = $where != '' ? "WHERE $where" : '';
+            $sql = 'SELECT COUNT(*) FROM torrents ' . ($search_area == 3 || $column == 'owner' ? 'LEFT JOIN users ON torrents.owner = users.id ' : '') . $tagFilter . $torrentExtraFilter . $where;
+        }
+
+        $count = 0;
+        $resultFromSearchRep = [];
+        if ($shouldUseMeili) {
+            $searchRep = new \App\Repositories\MeiliSearchRepository();
+            $resultFromSearchRep = $searchRep->search($searchParams, $curUser['id']);
+            $count = $resultFromSearchRep['total'];
+        } else {
+            do_log('[BEFORE_TORRENT_COUNT_SQL]', 'debug');
+            $res = sql_query($sql);
+            do_log("[AFTER_TORRENT_COUNT_SQL] $sql", 'debug');
+            while ($row = mysql_fetch_array($res)) {
+                $count += $row[0];
+            }
+        }
+
+        $maxPageSize = 100;
+        if (! empty($_GET['pageSize'])) {
+            $torrentsperpage = $_GET['pageSize'];
+        } elseif ($curUser['torrentsperpage']) {
+            $torrentsperpage = (int) $curUser['torrentsperpage'];
+        } elseif ($GLOBALS['torrentsperpage_main']) {
+            $torrentsperpage = $GLOBALS['torrentsperpage_main'];
+        } else {
+            $torrentsperpage = $maxPageSize;
+        }
+        $torrentsperpage = min($maxPageSize, $torrentsperpage);
+
+        $pagertop = '';
+        $pagerbottom = '';
+        $torrentTableHtml = '';
+        $noResultsHtml = '';
+        $res = null;
+        if ($count) {
+            if (isset($searchstr) && (! isset($_GET['notnewword']) || ! $_GET['notnewword'])) {
+                insert_suggest($searchstr, $curUser['id']);
+            }
+            if ($addparam != '') {
+                if ($pagerlink != '') {
+                    if ($addparam[strlen($addparam) - 1] != ';') {
+                        $addparam = $addparam . '&' . $pagerlink;
+                    } else {
+                        $addparam = $addparam . $pagerlink;
+                    }
+                }
+            } else {
+                $addparam = $pagerlink;
+            }
+
+            list($pagertop, $pagerbottom, $limit, $offset, $size, $page) = pager($torrentsperpage, $count, '?' . $addparam);
+            $fieldsStr = implode(', ', \App\Models\Torrent::getFieldsForList(true));
+            $query = "SELECT $fieldsStr, $sectiontype as search_box_id FROM torrents " . ($search_area == 3 || $column == 'owner' ? 'LEFT JOIN users ON torrents.owner = users.id ' : '') . "$tagFilter $torrentExtraFilter $where $orderby $limit";
+            if (! $shouldUseMeili) {
+                do_log('[BEFORE_TORRENT_LIST_SQL]', 'debug');
+                $res = sql_query($query);
+                do_log("[AFTER_TORRENT_LIST_SQL] $query", 'debug');
+            }
+        }
+
+        $rows = [];
+        if ($count) {
+            if ($shouldUseMeili) {
+                $rows = $resultFromSearchRep['list'];
+            } else {
+                while ($row = mysql_fetch_assoc($res)) {
+                    $rows[] = $row;
+                }
+            }
+            $rows = apply_filter('torrent_list', $rows, $page, $sectiontype, $_GET['search'] ?? '');
+            $variant = 'bookmarks';
+            if ($sectiontype == $GLOBALS['browsecatmode']) {
+                $variant = 'torrents';
+            } elseif ($sectiontype == $GLOBALS['specialcatmode']) {
+                $variant = 'music';
+            }
+            $torrentTableHtml = $this->capture(function () use ($rows, $variant, $sectiontype) {
+                torrenttable($rows, $variant, $sectiontype);
+            });
+        } else {
+            if (isset($searchstr)) {
+                $noResultsHtml = $this->capture(function () use ($lang_torrents, $searchstr_ori) {
+                    print('<br />');
+                    stdmsg($lang_torrents['std_search_results_for'] . $searchstr_ori . '"', $lang_torrents['std_try_again']);
+                });
+            } else {
+                $noResultsHtml = $this->capture(function () use ($lang_torrents) {
+                    stdmsg($lang_torrents['std_nothing_found'], $lang_torrents['std_no_active_torrents']);
+                });
+            }
+        }
+
+        // hot search
+        $Cache->new_page('hot_search', 3670, true);
+        if (! $Cache->get_page()) {
+            $secs = 3 * 24 * 60 * 60;
+            $dt = sqlesc(date('Y-m-d H:i:s', (TIMENOW - $secs)));
+            $dt2 = sqlesc(date('Y-m-d H:i:s', (TIMENOW - $secs * 2)));
+            sql_query('DELETE FROM suggest WHERE adddate <' . $dt2);
+            $searchres = sql_query('SELECT keywords, COUNT(DISTINCT userid) as count FROM suggest WHERE adddate >' . $dt . ' GROUP BY keywords ORDER BY count DESC LIMIT 15');
+            $hotcount = 0;
+            $hotsearch = '';
+            while ($searchrow = mysql_fetch_assoc($searchres)) {
+                $hotsearch .= "<a href=\"" . htmlspecialchars('?search=' . rawurlencode($searchrow['keywords']) . '&notnewword=1') . "\"><u>" . htmlspecialchars($searchrow['keywords']) . "</u></a>&nbsp;&nbsp;";
+                $hotcount += mb_strlen($searchrow['keywords'], 'UTF-8');
+                if ($hotcount > 60) {
+                    break;
+                }
+            }
+            $Cache->add_whole_row();
+            if ($hotsearch) {
+                print('<tr><td class="embedded" colspan="3">&nbsp;&nbsp;' . $hotsearch . '</td></tr>');
+            }
+            $Cache->end_whole_row();
+            $Cache->cache_page();
+        }
+        $hotSearchRow = (string) $Cache->next_row();
+
+        $pageTitle = $lang_torrents['head_torrents'];
+        if (isset($searchstr)) {
+            $pageTitle = $lang_torrents['head_search_results_for'] . $searchstr_ori;
+        } elseif ($sectiontype != $GLOBALS['browsecatmode']) {
+            $pageTitle = $lang_torrents['head_special'];
+        }
+
+        $hotAndClassicHtml = $this->capture(function () {
+            displayHotAndClassic();
+        });
+
+        $searchBoxRightTdStyle = 'padding: 1px;padding-left: 10px;white-space: nowrap';
+        $queryString = $request->server('QUERY_STRING', '');
+
+        return view('torrent.browse', compact(
+            'lang_torrents',
+            'curUser',
+            'Advertisement',
+            'pageTitle',
+            'sectiontype',
+            'allsec',
+            'allTags',
+            'tagRep',
+            'include_dead',
+            'special_state',
+            'inclbookmarked',
+            'showApprovalStatusFilter',
+            'approvalStatus',
+            'searchstr_ori',
+            'filterInputWidth',
+            'searchBoxRightTdStyle',
+            'hotSearchRow',
+            'hotAndClassicHtml',
+            'count',
+            'pagertop',
+            'pagerbottom',
+            'torrentTableHtml',
+            'noResultsHtml',
+            'queryString'
+        ));
+    }
+
+    /**
      * Build the torrent row (with joins) the details page expects, mirroring
      * the legacy SELECT in public/details.php.
      */
