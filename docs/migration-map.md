@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 36 |
+| 已完成迁移 | 39 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 108 |
+| 待迁移页面 | 约 105 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 44 个（多数仅 API，路由未启用） |
@@ -76,11 +76,11 @@
 | getrss.php | 388 | ✅ | P2 | RSS 订阅表单，`RssController::index()` + Blade `getrss` |
 | torrentrss.php | 299 | ✅ | P2 | `RssController::feed()` passkey 门控 RSS 2.0 XML，`whereIn` 参数化 |
 | search.php | 163 | ✅ | P2 | `SearchController::index()` 搜索（Meili 或 Eloquent）|
-| searchsuggest.php | 19 | ⬜ | P3 | 搜索联想，API 化 |
+| searchsuggest.php | 19 | ✅ | P3 | `SearchSuggestController::index()` 搜索联想 JSON（`suggest` 表按关键词计数排序，最多 5 条、>25 字跳过），OpenSearch suggestions 数据源，无鉴权 |
 | ajax.php | 243 | ✅ | P2 | `AjaxController::web()` 通用 ajax 分发，action 级登录校验 |
 | getusertorrentlistajax.php | 363 | ✅ | P2 | `GetUserTorrentListAjaxController::web()` 用户种子列表（上传/做种/下载），权限分级 |
-| getextinfoajax.php | 27 | ⬜ | P3 | IMDb 信息 ajax |
-| opensearch.php | 57 | ⬜ | P3 | OpenSearch 描述 XML |
+| getextinfoajax.php | 27 | ✅ | P3 | `ExtInfoAjaxController::show()` IMDb 工具提示 XML 片段，`parse_imdb_id()` + 复用 `getimdb()`，按 imdb id + mode 缓存 1 天 |
+| opensearch.php | 57 | ✅ | P3 | `OpenSearchController::index()` OpenSearch 1.1 描述 XML，站点设置驱动，缓存 1 天 |
 | page.php | 29 | 🔒 | 保留 | 动态页面（可能被插件使用） |
 
 ## 4. 种子操作（写）

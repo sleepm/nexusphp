@@ -137,6 +137,18 @@ Route::get('/getusertorrentlistajax.php', [\App\Http\Controllers\GetUserTorrentL
 Route::get('/search.php', [\App\Http\Controllers\SearchController::class, 'index'])
     ->middleware('auth.nexus:nexus');
 
+// =============================================================
+// 搜索联想 / IMDb 信息 / OpenSearch（Phase 2 P3）—— 公开 API，无会话
+// =============================================================
+// search suggestions JSON endpoint
+Route::get('/searchsuggest.php', [\App\Http\Controllers\SearchSuggestController::class, 'index']);
+
+// IMDb info tooltip fragment (text/xml)
+Route::get('/getextinfoajax.php', [\App\Http\Controllers\ExtInfoAjaxController::class, 'show']);
+
+// OpenSearch description XML
+Route::get('/opensearch.php', [\App\Http\Controllers\OpenSearchController::class, 'index']);
+
 Route::get('/details.php', [\App\Http\Controllers\TorrentController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
