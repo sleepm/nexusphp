@@ -164,6 +164,10 @@ Route::get('/special.php', [\App\Http\Controllers\TorrentController::class, 'bro
     ->middleware('auth.nexus:nexus')
     ->defaults('section', 'special');
 
+// upload form
+Route::get('/upload.php', [\App\Http\Controllers\UploadController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);
