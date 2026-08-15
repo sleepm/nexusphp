@@ -140,6 +140,10 @@ Route::get('/search.php', [\App\Http\Controllers\SearchController::class, 'index
 Route::get('/details.php', [\App\Http\Controllers\TorrentController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// user details page
+Route::get('/userdetails.php', [\App\Http\Controllers\UserController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // torrent list (browse) and special section
 Route::get('/torrents.php', [\App\Http\Controllers\TorrentController::class, 'browse'])
     ->middleware('auth.nexus:nexus')
