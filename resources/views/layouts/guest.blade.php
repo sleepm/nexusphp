@@ -8,7 +8,7 @@
     $cssUri = get_css_uri('theme.css');
     $fontCssUri = get_font_css_uri();
     $forumPicFolder = get_forum_pic_folder();
-    $pageTitle = isset($title) ? $title : $siteName;
+    $pageTitle = trim((string) $__env->yieldContent('title', '')) ?: ($title ?? $siteName);
     $yearFounded = substr(get_setting('tweak.datefounded', '2007'), 0, 4);
     $langFunctions = get_legacy_lang_file('functions');
     $isLoggedIn = Auth::guard('nexus')->check() || Auth::guard('nexus-web')->check();

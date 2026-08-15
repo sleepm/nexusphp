@@ -120,6 +120,7 @@ class UserDetailsPageTest extends TestCase
 
         $this->requestAs($viewer, '/userdetails.php?id=' . $target->id)
             ->assertOk()
+            ->assertSee('Details for udetails_target', false)
             ->assertSee('udetails_target')
             ->assertSee('User ID')
             ->assertSee('Join')
