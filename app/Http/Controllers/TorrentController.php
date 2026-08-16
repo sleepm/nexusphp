@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\RewardResource;
 use App\Http\Resources\TorrentOperationLogResource;
 use App\Http\Resources\TorrentResource;
+use App\Models\Category;
 use App\Models\Claim;
 use App\Models\Setting;
 use App\Models\Torrent;
@@ -13,7 +14,10 @@ use App\Models\TorrentDenyReason;
 use App\Models\TorrentOperationLog;
 use App\Models\TorrentTag;
 use App\Models\User;
+use App\Repositories\HitAndRunRepository;
+use App\Repositories\MeiliSearchRepository;
 use App\Repositories\SearchBoxRepository;
+use App\Repositories\SearchRepository;
 use App\Repositories\TagRepository;
 use App\Repositories\TorrentRepository;
 use App\Repositories\UploadRepository;
@@ -1766,6 +1770,657 @@ $_REQUEST = $request->all();
     }
 
     /**
+     * Torrent edit form. Mirrors legacy public/edit.php so the page can be
+     * served by the Laravel router instead of the procedural script.
+     */
+    public function webEdit(Request $request)
+    {
+        /** @var \App\Models\User $currentUser */
+        $currentUser = Auth::guard('nexus')->user();
+        if (! $currentUser) {
+            abort(401);
+        }
+        $curUser = $currentUser->toArray();
+
+        $id = (int) $request->query('id', 0);
+        if (! $id) {
+            return response('', 200);
+        }
+
+        $lang = get_legacy_lang_file('edit');
+        $langFunctions = get_legacy_lang_file('functions');
+
+        // globals the shared legacy helpers expect (mirrors public/edit.php bootstrap)
+        $GLOBALS['CURUSER'] = $curUser;
+        $GLOBALS['lang_functions'] = $langFunctions;
+        $GLOBALS['CURLANGDIR'] = get_langfolder_cookie();
+        $GLOBALS['BASEURL'] = Setting::getBaseUrl();
+        $GLOBALS['SITENAME'] = Setting::getSiteName();
+        $GLOBALS['enablespecial'] = get_setting('main.spsct', 'no');
+        $GLOBALS['smalldescription_main'] = get_setting('main.smalldescription', 'yes');
+        $GLOBALS['enablenfo_main'] = get_setting('main.enablenfo', 'no');
+        $GLOBALS['browsecatmode'] = (int) get_setting('main.browsecat', 0);
+        $GLOBALS['specialcatmode'] = (int) get_setting('main.specialcat', 0);
+        $GLOBALS['showextinfo'] = ['imdb' => get_setting('main.showimdbinfo', 'no')];
+
+        $torrent = Torrent::query()->with(['basic_category', 'extra'])->find($id);
+        if (! $torrent) {
+            abort(404);
+        }
+        /** @var array $row torrents.* + category mode + torrent_extras convenience fields */
+        $row = $torrent->toArray();
+        $row['cat_mode'] = (int) ($torrent->basic_category->mode ?? 0);
+        $row['technical_info'] = (string) ($torrent->extra->media_info ?? '');
+        $row['descr'] = (string) ($torrent->extra->descr ?? '');
+        $row['pt_gen'] = (string) ($torrent->extra->getRawOriginal('pt_gen') ?? '');
+        // normalize date casts back to the legacy "Y-m-d H:i:s" display format
+        foreach (['added', 'promotion_until', 'pos_state_until'] as $dateField) {
+            $row[$dateField] = $row[$dateField] ? date('Y-m-d H:i:s', strtotime($row[$dateField])) : $row[$dateField];
+        }
+
+        $settingMain = get_setting('main');
+        $customField = new \Nexus\Field\Field();
+        $hitAndRunRep = new HitAndRunRepository();
+        $tagRep = new TagRepository();
+        $tagIdArr = TorrentTag::query()->where('torrent_id', $id)->pluck('tag_id')->toArray();
+        $searchBoxRep = new SearchBoxRepository();
+
+        if ($GLOBALS['enablespecial'] == 'yes' && user_can('movetorrent')) {
+            $allowmove = true; // enable moving torrent to other section
+        } else {
+            $allowmove = false;
+        }
+
+        $sectionmode = $row['cat_mode'];
+        if ($sectionmode == $GLOBALS['browsecatmode']) {
+            $othermode = $GLOBALS['specialcatmode'];
+            $movenote = $lang['text_move_to_special'];
+        } else {
+            $othermode = $GLOBALS['browsecatmode'];
+            $movenote = $lang['text_move_to_browse'];
+        }
+
+        $pageTitle = $lang['head_edit_torrent'] . '"' . $row['name'] . '"';
+        $content = '';
+        $scripts = [];
+
+        if ($curUser['id'] != $row['owner'] && ! user_can('torrentmanage')) {
+            $content .= "<h1 align=\"center\">{$lang['text_cannot_edit_torrent']}</h1>";
+            $content .= sprintf('<p>%s</p>', $lang['text_cannot_edit_torrent_note'], $request->getRequestUri());
+        } else {
+            $content .= '<form method="post" id="compose" name="edittorrent" action="takeedit.php" enctype="multipart/form-data">';
+            $content .= '<input type="hidden" name="id" value="' . $id . '" />';
+            if ($request->query('returnto')) {
+                $content .= '<input type="hidden" name="returnto" value="' . htmlspecialchars((string) $request->query('returnto')) . '" />';
+            }
+            $content .= "<table border=\"1\" cellspacing=\"0\" cellpadding=\"5\" width=\"97%\">\n";
+            $content .= "<tr><td class='colhead' colspan='2' align='center'>" . htmlspecialchars($row['name']) . "</td></tr>";
+            $content .= $this->row($lang['row_torrent_name'] . '<font color="red">*</font>', '<input type="text" style="width: 99%;" name="name" value="' . htmlspecialchars($row['name']) . '" />', 1);
+            if ($GLOBALS['smalldescription_main'] == 'yes') {
+                $content .= $this->row($lang['row_small_description'], '<input type="text" style="width: 99%;" name="small_descr" value="' . htmlspecialchars($row['small_descr']) . '" />', 1);
+            }
+
+            $content .= $this->capture(function () use ($row) {
+                get_external_tr($row['url']);
+            });
+            if ($settingMain['enable_pt_gen_system'] == 'yes') {
+                $ptGen = new \Nexus\PTGen\PTGen();
+                $content .= $ptGen->renderUploadPageFormInput($row['pt_gen']);
+            }
+
+            if ($GLOBALS['enablenfo_main'] == 'yes') {
+                $content .= $this->row(
+                    $lang['row_nfo_file'],
+                    '<font class="medium"><input type="radio" name="nfoaction" value="keep" checked="checked" />' . $lang['radio_keep_current'] .
+                    '<input type="radio" name="nfoaction" value="remove" />' . $lang['radio_remove'] .
+                    '<input id="nfoupdate" type="radio" name="nfoaction" value="update" />' . $lang['radio_update'] . '</font><br /><input type="file" name="nfo" onchange="document.getElementById(\'nfoupdate\').checked=true" />',
+                    1
+                );
+            }
+
+            // price
+            if (user_can('torrent-set-price') && get_setting('torrent.paid_torrent_enabled') == 'yes') {
+                $maxPrice = get_setting('torrent.max_price');
+                $pricePlaceholder = '';
+                if ($maxPrice > 0) {
+                    $pricePlaceholder = nexus_trans('label.torrent.max_price_help', ['max_price' => $maxPrice]);
+                }
+                $content .= $this->row(
+                    nexus_trans('label.torrent.price'),
+                    '<input type="number" min="0" name="price" value="' . $row['price'] . '" placeholder="' . $pricePlaceholder . '" />&nbsp;&nbsp;' . nexus_trans('label.torrent.price_help', ['tax_factor' => (floatval(get_setting('torrent.tax_factor', 0)) * 100) . '%']),
+                    1
+                );
+            }
+
+            $content .= '<tr><td class="rowhead">' . $lang['row_description'] . '<font color="red">*</font></td><td class="rowfollow">';
+            $content .= $this->capture(function () use ($row) {
+                textbbcode('edittorrent', 'descr', $row['descr'], false, 130, true);
+            });
+            $content .= '</td></tr>';
+
+            if ($settingMain['enable_technical_info'] == 'yes') {
+                $content .= $this->row($langFunctions['text_technical_info'], '<textarea name="technical_info" rows="8" style="width: 99%;">' . $row['technical_info'] . '</textarea><br/>' . $langFunctions['text_technical_info_help_text'], 1);
+            }
+
+            $s = '<select name="type" id="oricat" data-mode="' . $sectionmode . '">';
+            foreach (genrelist($sectionmode) as $subrow) {
+                $s .= '<option value="' . $subrow['id'] . '"';
+                if ($subrow['id'] == $row['category']) {
+                    $s .= ' selected="selected"';
+                }
+                $s .= '>' . htmlspecialchars($subrow['name']) . "</option>\n";
+            }
+            $s .= "</select>\n";
+
+            if ($allowmove) {
+                $s2 = '<select name="type" id="newcat" disabled data-mode="' . $othermode . "'>\n";
+                foreach (genrelist($othermode) as $subrow) {
+                    $s2 .= '<option value="' . $subrow['id'] . '"';
+                    if ($subrow['id'] == $row['category']) {
+                        $s2 .= ' selected="selected"';
+                    }
+                    $s2 .= '>' . htmlspecialchars($subrow['name']) . "</option>\n";
+                }
+                $s2 .= "</select>\n";
+                $movecheckbox = '<input type="checkbox" id="movecheck" name="movecheck" value="1" onclick="disableother2(\'oricat\',\'newcat\')" />';
+            }
+            $content .= $this->row($lang['row_type'] . '<font color="red">*</font>', $s . ($allowmove ? '&nbsp;&nbsp;' . $movecheckbox . $movenote . $s2 : ''), 1);
+
+            $sectionCurrent = $searchBoxRep->renderTaxonomySelect($sectionmode, $row);
+            $content .= $this->row($lang['row_quality'], $sectionCurrent, 1, 'mode_' . $sectionmode);
+            $content .= $customField->renderOnUploadPage($id, $sectionmode);
+            $content .= $hitAndRunRep->renderOnUploadPage($row['hr'], $sectionmode);
+            $content .= $this->row($langFunctions['text_tags'], $tagRep->renderCheckbox($sectionmode, $tagIdArr), 1, 'mode_' . $sectionmode);
+
+            if ($allowmove && $othermode) {
+                $selectOther = $searchBoxRep->renderTaxonomySelect($othermode, $row);
+                $content .= $this->row($lang['row_quality'], $selectOther, 1, 'mode_' . $othermode);
+                $content .= $customField->renderOnUploadPage($id, $othermode);
+                $content .= $hitAndRunRep->renderOnUploadPage($row['hr'], $othermode);
+                $content .= $this->row($langFunctions['text_tags'], $tagRep->renderCheckbox($othermode, $tagIdArr), 1, 'mode_' . $othermode);
+            }
+
+            $rowChecks = [];
+            if (user_can('beanonymous') || user_can('torrentmanage')) {
+                $rowChecks[] = '<label><input type="checkbox" name="anonymous"' . ($row['anonymous'] == 'yes' ? ' checked="checked"' : '') . ' value="1" />' . $lang['checkbox_anonymous_note'] . '</label>';
+            }
+            if (user_can('torrentmanage')) {
+                array_unshift($rowChecks, '<label><input id="visible" type="checkbox" name="visible"' . ($row['visible'] == 'yes' ? ' checked="checked"' : '') . ' value="1" />' . $lang['checkbox_visible'] . '</label>');
+            }
+            if (! empty($rowChecks)) {
+                $content .= $this->row($lang['row_check'], implode('&nbsp;&nbsp;', $rowChecks), 1);
+            }
+
+            if (user_can('torrentsticky') || (user_can('torrentmanage') && $curUser['picker'] == 'yes')) {
+                $pickcontent = $pickcontentPrefix = '';
+
+                if (user_can('torrentonpromotion')) {
+                    $pickcontent .= '<b>' . $lang['row_special_torrent'] . ":&nbsp;</b>" . '<select name="sel_spstate" style="width: 100px;">' . promotion_selection($row['sp_state'], 0) . '</select>&nbsp;&nbsp;&nbsp;' . '<select name="promotion_time_type" onchange="if (this.value == \'2\') {document.getElementById(\'promotion_until_note\').style.display = \'\';} else {document.getElementById(\'promotion_until_note\').style.display = \'none\';}"><option value="0"' . ($row['promotion_time_type'] == 0 ? ' selected="selected"' : '') . '>' . $lang['select_use_global_setting'] . '</option><option value="1"' . ($row['promotion_time_type'] == 1 ? ' selected="selected"' : '') . '>' . $lang['select_forever'] . '</option><option value="2"' . ($row['promotion_time_type'] == 2 ? ' selected="selected"' : '') . '>' . $lang['select_until'] . '</option></select><span id="promotion_until_note"' . ($row['promotion_time_type'] == 2 ? '' : ' style="display: none;"') . '>';
+                    $pickcontent .= '<input type="text" id="promotionuntiltime" name="promotionuntil" style="width: 120px;" value="' . ($row['promotion_until'] > $row['added'] ? $row['promotion_until'] : '') . '" />';
+                    $pickcontent .= '&nbsp;(' . $lang['text_ie_for'] . '<select name="promotionaddedtime" onchange="document.getElementById(\'promotionuntiltime\').value=this.value;"><option value="' . ($row['promotion_until'] > $row['added'] ? $row['promotion_until'] : '') . '">' . $lang['text_keep_current'] . '</option>';
+                    foreach (array(900, 1800, 3600, 5400, 7200, 14400, 21600, 28800, 43200, 64800, 86400, 129600, 259200, 604800, 1296000, 2592000, 7776000, 15552000, 31104000) as $seconds) {
+                        $pickcontent .= self::getAddedTimeOption(strtotime($row['added']), $seconds);
+                    }
+                    $pickcontent .= '</select>)&nbsp;' . $lang['text_promotion_until_note'] . '</span>&nbsp;&nbsp;';
+                }
+                if (user_can('torrentsticky')) {
+                    if ($pickcontent) {
+                        $pickcontent .= '<br />';
+                    }
+                    $options = [];
+                    foreach (Torrent::listPosStates() as $key => $value) {
+                        $options[] = '<option' . (($row['pos_state'] == $key) ? ' selected="selected"' : '') . ' value="' . $key . '">' . $value['text'] . '</option>';
+                    }
+                    $pickcontent .= '<b>' . $lang['row_torrent_position'] . ":&nbsp;</b>" . '<select name="pos_state" style="width: 100px;">' . implode('', $options) . '</select>&nbsp;&nbsp;&nbsp;';
+                    $pickcontent .= datetimepicker_input('pos_state_until', $row['pos_state_until'], nexus_trans('label.deadline') . ':&nbsp;', ['require_files' => true]);
+                }
+                if (user_can('torrentmanage') && ($curUser['picker'] == 'yes' || get_user_class() >= User::CLASS_SYSOP)) {
+                    if ($pickcontent) {
+                        $pickcontent .= '<br />';
+                    }
+                    $pickcontent .= '<b>' . $lang['row_recommended_movie'] . ":&nbsp;</b>" . '<select name="sel_recmovie" style="width: 100px;">' .
+                        '<option' . (($row['picktype'] == 'normal') ? ' selected="selected"' : '') . ' value="0">' . $lang['select_normal'] . '</option>' .
+                        '<option' . (($row['picktype'] == 'hot') ? ' selected="selected"' : '') . ' value="1">' . $lang['select_hot'] . '</option>' .
+                        '<option' . (($row['picktype'] == 'classic') ? ' selected="selected"' : '') . ' value="2">' . $lang['select_classic'] . '</option>' .
+                        '<option' . (($row['picktype'] == 'recommended') ? ' selected="selected"' : '') . ' value="3">' . $lang['select_recommended'] . '</option>' .
+                        '</select>';
+                }
+                $content .= $this->row($lang['row_pick'], $pickcontent, 1);
+            }
+
+            $content .= '<tr><td class="toolbox" colspan="2" align="center"><input id="qr" type="submit" value="' . $lang['submit_edit_it'] . '" /> <input type="reset" value="' . $lang['submit_revert_changes'] . '" /></td></tr>' . "\n";
+            $content .= "</table>\n";
+            $content .= "</form>\n";
+
+            if (user_can('torrent-delete') && user_can('torrentmanage')) {
+                $content .= '<br /><br />';
+                $content .= '<form method="post" action="delete.php">' . "\n";
+                $content .= '<input type="hidden" name="id" value="' . $id . '" />' . "\n";
+                if ($request->query('returnto')) {
+                    $content .= '<input type="hidden" name="returnto" value="' . htmlspecialchars((string) $request->query('returnto')) . '" />' . "\n";
+                }
+                $content .= "<table border=\"1\" cellspacing=\"0\" cellpadding=\"5\">\n";
+                $content .= '<tr><td class="colhead" align="left" style="padding-bottom: 3px" colspan="2">' . $lang['text_delete_torrent'] . '</td></tr>';
+                $content .= $this->row('<input name="reasontype" type="radio" value="1" />&nbsp;' . $lang['radio_dead'], $lang['text_dead_note'], 1);
+                $content .= $this->row('<input name="reasontype" type="radio" value="2" />&nbsp;' . $lang['radio_dupe'], '<input type="text" style="width: 200px" name="reason[]" />', 1);
+                $content .= $this->row('<input name="reasontype" type="radio" value="3" />&nbsp;' . $lang['radio_nuked'], '<input type="text" style="width: 200px" name="reason[]" />', 1);
+                $content .= $this->row('<input name="reasontype" type="radio" value="4" />&nbsp;' . $lang['radio_rules'], '<input type="text" style="width: 200px" name="reason[]" />' . $lang['text_req'], 1);
+                $content .= $this->row('<input name="reasontype" type="radio" value="5" checked="checked" />&nbsp;' . $lang['radio_other'], '<input type="text" style="width: 200px" name="reason[]" />' . $lang['text_req'], 1);
+                $content .= '<tr><td class="toolbox" colspan="2" align="center"><input type="submit" style="height: 25px" value="' . $lang['submit_delete_it'] . '" /></td></tr>' . "\n";
+                $content .= '</table>';
+                $content .= "</form>\n";
+            }
+        }
+
+        $jsonStickySeries = json_encode([4, 6, 12, 24, 36, 48, 72, 168, 360]);
+        $scripts[] = <<<EOT
+jQuery(function($){
+	var date_format = function (date) {
+		var seperator1 = "-";
+		var seperator2 = ":";
+		var month = date.getMonth() + 1;
+		var strDate = date.getDate();
+		var strHour = date.getHours();
+		var strMinute = date.getMinutes();
+		var strSecond = date.getSeconds();
+		if (month >= 1 && month <= 9) {
+			month = "0" + month;
+		}
+		if (strDate >= 0 && strDate <= 9) {
+			strDate = "0" + strDate;
+		}
+		if (strHour >= 0 && strHour <= 9) strHour = "0" + strHour;
+		if (strMinute >= 0 && strMinute <= 9) strMinute = "0" + strMinute;
+		if (strSecond >= 0 && strSecond <= 9) strSecond = "0" + strSecond;
+		return date.getFullYear() + seperator1 + month + seperator1 + strDate
+				+ " " + strHour + seperator2 + strMinute
+				+ seperator2 + strSecond;
+	}
+	var pos_until_select = $("#pos_until_select");
+	var pos_until = $("#pos_until");
+	$("#pos_group").change(function(){
+		if($(this).val() == 0){
+			pos_until.hide();
+			pos_until_select.hide();
+		}else{
+			pos_until.show();
+			pos_until_select.show();
+		}
+	}).change();
+	var series = $jsonStickySeries;
+	series.forEach(function(elem){
+		var label = elem >= 72 ? parseInt(parseInt(elem) / 24) + "{$langFunctions['text_day']}" : elem + "{$langFunctions['text_hour']}";
+		pos_until_select.append('<option value="' + elem + '">' + label + '</option>');
+	});
+	pos_until_select.change(function(){
+		var value = $(this).val();
+		if(value == -1){
+			pos_until.val("0000-00-00 00:00:00").attr("readonly", true);
+		}else if(value == 0){
+			pos_until.attr("readonly", false);
+		}else if(value > 0){
+			var curr = pos_until.val();
+			var d = new Date(Date.now() + 3600000 * value);
+			pos_until.attr("readonly", true).val(date_format(d));
+		}
+	}).change();
+});
+EOT;
+
+        $scripts[] = <<<JS
+jQuery("#movecheck").on("change", function () {
+    let _this = jQuery(this);
+    let checked = _this.prop("checked");
+    let activeSelect
+    if (checked) {
+        activeSelect = jQuery("#newcat");
+    } else {
+        activeSelect = jQuery("#oricat");
+    }
+    let mode = activeSelect.attr("data-mode");
+    console.log(mode)
+    jQuery("tr[relation]").hide();
+    jQuery("tr[relation=mode_" + mode +"]").show();
+})
+jQuery("tr[relation]").hide();
+jQuery("tr[relation=mode_{$sectionmode}]").show();
+JS;
+
+        $externalScripts = [
+            'vendor/jquery-loading/jquery.loading.min.js',
+            'js/ptgen.js',
+        ];
+
+        // JS/CSS assets registered through \Nexus\Nexus::js()/css() (e.g. the
+        // datetimepicker) are normally flushed by stdfoot()/stdhead(); under the
+        // Blade layout we push them here.
+        $headerAssets = implode("\n", \Nexus\Nexus::getAppendHeaders());
+        $footerAssets = implode("\n", \Nexus\Nexus::getAppendFooters());
+
+        return view('torrent.edit', compact('lang', 'pageTitle', 'content', 'scripts', 'externalScripts', 'headerAssets', 'footerAssets'));
+    }
+
+    /**
+     * Edit submission. Mirrors legacy public/takeedit.php so the form rendered
+     * by webEdit() (which posts to takeedit.php) keeps working under the
+     * Laravel router instead of the procedural script.
+     */
+    public function webTakeEdit(Request $request)
+    {
+        /** @var \App\Models\User $currentUser */
+        $currentUser = Auth::guard('nexus')->user();
+        if (! $currentUser) {
+            abort(401);
+        }
+        $curUser = $currentUser->toArray();
+
+        // globals the shared legacy helpers expect (mirrors public/takeedit.php bootstrap)
+        $GLOBALS['CURUSER'] = $curUser;
+        $GLOBALS['lang_takeedit'] = get_legacy_lang_file('takeedit');
+        $GLOBALS['lang_functions'] = get_legacy_lang_file('functions');
+        $GLOBALS['CURLANGDIR'] = get_langfolder_cookie();
+        $GLOBALS['BASEURL'] = Setting::getBaseUrl();
+        $GLOBALS['SITENAME'] = Setting::getSiteName();
+        $GLOBALS['enablenfo_main'] = get_setting('main.enablenfo', 'no');
+        $GLOBALS['enablespecial'] = get_setting('main.spsct', 'no');
+        $GLOBALS['browsecatmode'] = (int) get_setting('main.browsecat', 0);
+        $GLOBALS['specialcatmode'] = (int) get_setting('main.specialcat', 0);
+
+        $langTakeedit = $GLOBALS['lang_takeedit'];
+
+        foreach (['id', 'name', 'descr', 'type'] as $field) {
+            if (! $request->has($field)) {
+                return $this->editFailed($langTakeedit['std_missing_form_data']);
+            }
+        }
+        // check max price
+        $maxPrice = get_setting('torrent.max_price');
+        $paidTorrentEnabled = get_setting('torrent.paid_torrent_enabled') == 'yes';
+        if ($maxPrice > 0 && $request->input('price') > $maxPrice && $paidTorrentEnabled) {
+            return $this->editFailed('price too much');
+        }
+
+        $id = (int) $request->input('id');
+        if (! $id) {
+            return $this->editFailed($langTakeedit['std_missing_form_data']);
+        }
+
+        $torrentInfo = Torrent::query()->with(['basic_category', 'extra'])->find($id);
+        if (! $torrentInfo) {
+            return $this->editFailed($langTakeedit['std_torrent_not_found'] ?? 'Torrent not found');
+        }
+        $torrentAddedTimeString = $torrentInfo->added ? $torrentInfo->added->format('Y-m-d H:i:s') : '';
+        $torrentOld = Torrent::query()->find($id);
+        if ($curUser['id'] != $torrentInfo->owner && ! user_can('torrentmanage')) {
+            return $this->editFailed($langTakeedit['std_not_owner']);
+        }
+        $oldcatmode = (int) ($torrentInfo->basic_category->mode ?? 0);
+        $updateset = [];
+        $extraUpdate = [];
+
+        $url = parse_imdb_id($request->input('url', ''));
+
+        // PT-Gen
+        if (! empty($request->input('pt_gen'))) {
+            $postPtGen = $request->input('pt_gen');
+            $existsPtGenInfo = json_decode((string) ($torrentInfo->extra->getRawOriginal('pt_gen') ?? ''), true) ?? [];
+            $ptGen = new \Nexus\PTGen\PTGen();
+            if ($postPtGen != $ptGen->getLink($existsPtGenInfo)) {
+                $extraUpdate['pt_gen'] = $postPtGen;
+            }
+        } else {
+            $extraUpdate['pt_gen'] = '';
+        }
+
+        $extraUpdate['media_info'] = $request->input('technical_info', '');
+
+        /** @var \class_cache_redis $Cache */
+        $Cache = $GLOBALS['Cache'];
+        if ($GLOBALS['enablenfo_main'] == 'yes') {
+            $nfoaction = $request->input('nfoaction');
+            if ($nfoaction == 'update') {
+                $nfofile = $request->file('nfo');
+                if (! $nfofile || ! $nfofile->isValid()) {
+                    return $this->editFailed('No data');
+                }
+                if ($nfofile->getSize() > 65535) {
+                    return $this->editFailed($langTakeedit['std_nfo_too_big']);
+                }
+                $nfofilename = $nfofile->getRealPath();
+                if (filesize($nfofilename) > 0) {
+                    $extraUpdate['nfo'] = str_replace("\x0d\x0d\x0a", "\x0d\x0a", file_get_contents($nfofilename));
+                }
+                $Cache->delete_value('nfo_block_torrent_id_' . $id);
+            } elseif ($nfoaction == 'remove') {
+                $extraUpdate['nfo'] = '';
+                $Cache->delete_value('nfo_block_torrent_id_' . $id);
+            }
+        }
+
+        $catid = (int) $request->input('type');
+        if (! is_valid_id($catid)) {
+            return $this->editFailed($langTakeedit['std_missing_form_data']);
+        }
+        $name = $request->input('name');
+        $descr = $request->input('descr');
+        if (! $name || ! $descr) {
+            return $this->editFailed($langTakeedit['std_missing_form_data']);
+        }
+        $category = Category::query()->find($catid);
+        if (! $category) {
+            return $this->editFailed($langTakeedit['std_missing_form_data']);
+        }
+        $newcatmode = (int) $category->mode;
+        if ($GLOBALS['enablespecial'] == 'yes' && user_can('movetorrent')) {
+            $allowmove = true; // enable moving torrent to other section
+        } else {
+            $allowmove = false;
+        }
+        if ($oldcatmode != $newcatmode && ! $allowmove) {
+            return $this->editFailed($langTakeedit['std_cannot_move_torrent']);
+        }
+        $updateset['anonymous'] = ! empty($request->input('anonymous')) ? 'yes' : 'no';
+        $updateset['name'] = $name;
+        $extraUpdate['descr'] = $descr;
+        $updateset['url'] = $url;
+        $updateset['small_descr'] = (string) $request->input('small_descr', '');
+        $updateset['category'] = $catid;
+        $updateset['source'] = (int) $request->input("source_sel.{$newcatmode}", 0);
+        $updateset['medium'] = (int) $request->input("medium_sel.{$newcatmode}", 0);
+        $updateset['codec'] = (int) $request->input("codec_sel.{$newcatmode}", 0);
+        $updateset['standard'] = (int) $request->input("standard_sel.{$newcatmode}", 0);
+        $updateset['processing'] = (int) $request->input("processing_sel.{$newcatmode}", 0);
+        $updateset['team'] = (int) $request->input("team_sel.{$newcatmode}", 0);
+        $updateset['audiocodec'] = (int) $request->input("audiocodec_sel.{$newcatmode}", 0);
+        if (user_can('torrentmanage')) {
+            $updateset['visible'] = $request->input('visible') ? 'yes' : 'no';
+        }
+        if (user_can('torrentonpromotion')) {
+            if (! $request->has('sel_spstate') || $request->input('sel_spstate') == 1) {
+                $updateset['sp_state'] = 1;
+            } elseif (in_array((int) $request->input('sel_spstate'), [2, 3, 4, 5, 6, 7])) {
+                $updateset['sp_state'] = (int) $request->input('sel_spstate');
+            }
+
+            // promotion expiration type
+            if (! $request->has('promotion_time_type') || $request->input('promotion_time_type') == 0) {
+                $updateset['promotion_time_type'] = 0;
+                $updateset['promotion_until'] = null;
+            } elseif ($request->input('promotion_time_type') == 1) {
+                $updateset['promotion_time_type'] = 1;
+                $updateset['promotion_until'] = null;
+            } elseif ($request->input('promotion_time_type') == 2) {
+                $promotionUntil = $request->input('promotionuntil');
+                if ($promotionUntil && strtotime($torrentAddedTimeString) <= strtotime($promotionUntil)) {
+                    $updateset['promotion_time_type'] = 2;
+                    $updateset['promotion_until'] = $promotionUntil;
+                } else {
+                    $updateset['promotion_time_type'] = 0;
+                    $updateset['promotion_until'] = null;
+                }
+            }
+        }
+        if (user_can('torrentsticky')) {
+            if ($request->has('pos_state') && isset(Torrent::$posStates[$request->input('pos_state')])) {
+                $posStateUntil = $request->input('pos_state_until') ?: null;
+                $posState = $request->input('pos_state');
+                if ($posState == Torrent::POS_STATE_STICKY_NONE) {
+                    $posStateUntil = null;
+                }
+                if ($posStateUntil && Carbon::parse($posStateUntil)->lte(now())) {
+                    $posState = Torrent::POS_STATE_STICKY_NONE;
+                    $posStateUntil = null;
+                }
+                $updateset['pos_state'] = $posState;
+                $updateset['pos_state_until'] = $posStateUntil;
+            }
+        }
+
+        $pickinfo = '';
+        $placeinfo = '';
+        if (user_can('torrentmanage') && ($curUser['picker'] == 'yes' || get_user_class() >= User::CLASS_SYSOP)) {
+            $doRecommend = false;
+            $selRecmovie = (int) $request->input('sel_recmovie', 0);
+            if ($selRecmovie == 0) {
+                if ($torrentInfo->picktype != 'normal') {
+                    $pickinfo = ', recomendation canceled!';
+                }
+                $updateset['picktype'] = 'normal';
+                $updateset['picktime'] = null;
+                $doRecommend = true;
+            } elseif ($selRecmovie == 1) {
+                if ($torrentInfo->picktype != 'hot') {
+                    $pickinfo = ', recommend as hot movie';
+                }
+                $updateset['picktype'] = 'hot';
+                $updateset['picktime'] = date('Y-m-d H:i:s');
+                $doRecommend = true;
+            } elseif ($selRecmovie == 2) {
+                if ($torrentInfo->picktype != 'classic') {
+                    $pickinfo = ', recommend as classic movie';
+                }
+                $updateset['picktype'] = 'classic';
+                $updateset['picktime'] = date('Y-m-d H:i:s');
+                $doRecommend = true;
+            } elseif ($selRecmovie == 3) {
+                if ($torrentInfo->picktype != 'recommended') {
+                    $pickinfo = ', recommend as recommended movie';
+                }
+                $updateset['picktype'] = 'recommended';
+                $updateset['picktime'] = date('Y-m-d H:i:s');
+                $doRecommend = true;
+            }
+            if ($doRecommend) {
+                do_log('[DEL_HOT_CLASSIC_RESOURCES]');
+                foreach ([$GLOBALS['browsecatmode'], $GLOBALS['specialcatmode']] as $mode) {
+                    \Nexus\Database\NexusDB::cache_del("hot_{$mode}_resources");
+                    \Nexus\Database\NexusDB::cache_del("classic_{$mode}_resources");
+                }
+            }
+        }
+
+        /**
+         * cover
+         */
+        $descriptionArr = format_description($descr);
+        $cover = get_image_from_description($descriptionArr, true, false);
+        $updateset['cover'] = $cover;
+
+        /**
+         * hr
+         */
+        if (isset($request['hr'][$newcatmode]) && isset(Torrent::$hrStatus[$request['hr'][$newcatmode]]) && user_can('torrent_hr')) {
+            $updateset['hr'] = $request->input("hr.{$newcatmode}");
+        }
+        /**
+         * price
+         */
+        if (user_can('torrent-set-price') && $paidTorrentEnabled) {
+            $updateset['price'] = (int) $request->input('price', 0);
+        }
+
+        $torrentInfo->fill($updateset)->save();
+        $torrentInfo->extra()->updateOrCreate(['torrent_id' => $id], $extraUpdate);
+        fire_event('torrent_updated', $torrentInfo, $torrentOld);
+
+        /**
+         * custom fields
+         */
+        if (! empty($request->input("custom_fields.{$newcatmode}"))) {
+            $customField = new \Nexus\Field\Field();
+            $customField->saveFieldValues($newcatmode, $id, $request->input("custom_fields.{$newcatmode}"));
+        }
+
+        /**
+         * tags
+         */
+        $tagIdArr = array_filter($request->input("tags.{$newcatmode}", []));
+        insert_torrent_tags($id, $tagIdArr, true);
+
+        if ($curUser['id'] == $torrentInfo->owner) {
+            if ($torrentInfo->anonymous == 'yes') {
+                write_log("Torrent $id ($name) was edited by Anonymous" . $pickinfo . $placeinfo);
+            } else {
+                write_log("Torrent $id ($name) was edited by {$curUser['username']}" . $pickinfo . $placeinfo);
+            }
+        } else {
+            write_log("Torrent $id ($name) was edited by {$curUser['username']}, Mod Edit" . $pickinfo . $placeinfo);
+        }
+
+        $searchRep = new SearchRepository();
+        $searchRep->updateTorrent($id);
+
+        $torrentUrl = sprintf('details.php?id=%s', $id);
+        if ($torrentInfo->banned == 'yes' && $torrentInfo->owner == $curUser['id']) {
+            \App\Models\StaffMessage::query()->insert([
+                'sender' => $curUser['id'],
+                'subject' => nexus_trans('torrent.owner_update_torrent_subject', ['detail_url' => $torrentUrl, 'torrent_name' => $name]),
+                'msg' => nexus_trans('torrent.owner_update_torrent_msg', ['detail_url' => $torrentUrl, 'torrent_name' => $name]),
+                'added' => now(),
+                'permission' => 'torrent-approval',
+            ]);
+            clear_staff_message_cache();
+        }
+        if ($torrentInfo->owner != $curUser['id']) {
+            TorrentOperationLog::add([
+                'torrent_id' => $id,
+                'uid' => $curUser['id'],
+                'action_type' => TorrentOperationLog::ACTION_TYPE_EDIT,
+                'comment' => '',
+            ], true);
+        }
+        $meiliSearch = new MeiliSearchRepository();
+        $meiliSearch->doImportFromDatabase($id);
+
+        $returl = 'details.php?id=' . $id . '&edited=1';
+        if ($request->input('returnto')) {
+            $returl = $request->input('returnto');
+        }
+
+        return redirect($returl);
+    }
+
+    /**
+     * Render a takeedit failure the way the legacy bark() did.
+     */
+    private function editFailed(string $message)
+    {
+        return redirect(url('/error?error=' . urlencode($message)));
+    }
+
+    /**
+     * Build an <option> for the promotion-until quick-pick list (mirrors the
+     * helper previously defined at the bottom of public/edit.php).
+     */
+    private static function getAddedTimeOption(int $timeStamp, int $addSeconds): string
+    {
+        $timeStamp += $addSeconds;
+        $timeString = date('Y-m-d H:i:s', $timeStamp);
+
+        return '<option value="' . $timeString . '">' . mkprettytime($addSeconds) . '</option>';
+    }
+
+    /**
      * Build the torrent row (with joins) the details page expects, mirroring
      * the legacy SELECT in public/details.php.
      */
@@ -1807,9 +2462,9 @@ $_REQUEST = $request->all();
      * Render a single table row via the legacy tr() helper but return it as a
      * string instead of printing it.
      */
-    private function row(string $x, string $y, int $noesc = 0): string
+    private function row(string $x, string $y, int $noesc = 0, string $relation = ''): string
     {
-        return (string) tr($x, $y, $noesc, '', true);
+        return (string) tr($x, $y, $noesc, $relation, true);
     }
 
     /**

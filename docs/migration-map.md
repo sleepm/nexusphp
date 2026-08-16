@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 39 |
+| 已完成迁移 | 41 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 105 |
+| 待迁移页面 | 约 102 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 44 个（多数仅 API，路由未启用） |
@@ -90,8 +90,8 @@
 | upload.php | 258 | ✅ | P1 | 上传表单。`UploadController::web()` 迁移遗留 `public/upload.php`，渲染 Blade `upload/upload`（上传表单/分类/质量/描述/Offer/Pick 等整页），路由 `/upload.php` |
 | takeupload.php | 532 | ✅ | P1 | 上传提交，`UploadController::webTakeUpload()` 迁移遗留 `public/takeupload.php`，POST 路由 `/takeupload.php`（`auth.nexus`），保留 legacy 表单字段（`*_sel[mode]`）、existing→`existed=1` 重定向与 offer 完成流程；`TakeUploadPageTest` 覆盖 |
 | takeamountupload.php | 41 | ⬜ | P3 | 批量加量上传 |
-| edit.php | 331 | ⬜ | P1 | 编辑种子表单 |
-| takeedit.php | 312 | ⬜ | P1 | 编辑提交，`TorrentController::update()` |
+| edit.php | 331 | ✅ | P1 | 编辑种子表单。`TorrentController::webEdit()` 迁移遗留 `public/edit.php`，渲染 Blade `torrent/edit`（名称/描述/分类/质量/自定义字段/HR/标签/Pick/删除区等整页），路由 `/edit.php` |
+| takeedit.php | 312 | ✅ | P1 | 编辑提交，`TorrentController::webTakeEdit()` 迁移遗留 `public/takeedit.php`，POST 路由 `/takeedit.php`（`auth.nexus`），保留 legacy 表单字段（`*_sel[mode]`/`tags[mode]`/`hr[mode]`/`custom_fields[mode]`），`torrent_updated` 事件 + 操作日志；`TakeEditPageTest` 覆盖 |
 | takeflush.php | 29 | ⬜ | P3 | 清空 peer |
 | fastdelete.php | 67 | ⬜ | P2 | 快速删除（admin） |
 | delete.php | 97 | ⬜ | P2 | 删除种子 |

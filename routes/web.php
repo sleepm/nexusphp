@@ -172,6 +172,14 @@ Route::get('/upload.php', [\App\Http\Controllers\UploadController::class, 'web']
 Route::post('/takeupload.php', [\App\Http\Controllers\UploadController::class, 'webTakeUpload'])
     ->middleware('auth.nexus:nexus');
 
+// edit torrent form
+Route::get('/edit.php', [\App\Http\Controllers\TorrentController::class, 'webEdit'])
+    ->middleware('auth.nexus:nexus');
+
+// edit torrent submission (mirrors public/takeedit.php)
+Route::post('/takeedit.php', [\App\Http\Controllers\TorrentController::class, 'webTakeEdit'])
+    ->middleware('auth.nexus:nexus');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);
