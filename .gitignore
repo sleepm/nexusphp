@@ -39,6 +39,7 @@ attachments
 bitbucket
 /public/attachments
 /public/bitbucket
+opencode.json
 
 # Redis
 /dump.rdb

@@ -94,6 +94,16 @@ Route::get('/myhr.php', [\App\Http\Controllers\HitAndRunController::class, 'show
     ->middleware('auth.nexus:nexus');
 
 // =============================================================
+// 积分中心（Phase 2 P1）—— mybonus
+// =============================================================
+Route::get('/mybonus.php', [\App\Http\Controllers\BonusController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// bonus exchange submission (mirrors public/mybonus.php action=exchange)
+Route::post('/mybonus.php', [\App\Http\Controllers\BonusController::class, 'webExchange'])
+    ->middleware('auth.nexus:nexus');
+
+// =============================================================
 // 首页与主列表（Phase 2 P2）—— topten / usersearch / userhistory
 // =============================================================
 Route::get('/topten.php', [\App\Http\Controllers\ToptenController::class, 'index'])

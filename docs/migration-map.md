@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 41 |
+| 已完成迁移 | 42 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 102 |
+| 待迁移页面 | 约 101 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 44 个（多数仅 API，路由未启用） |
@@ -123,7 +123,7 @@
 
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
-| mybonus.php | 823 | ⬜ | P1 | 积分中心。`BonusRepository` 已有 |
+| mybonus.php | 823 | ✅ | P1 | 积分中心。`BonusController::web()` 迁移遗留 `public/mybonus.php`，渲染 Blade `mybonus`（兑换表 + 积分说明），`webExchange()` 处理 POST 兑换（上传/下载/VIP/邀请/临时邀请/自定义头衔/免广告/慈善/赠礼/消H&R/补签卡/彩虹ID/改名卡），复用 `BonusRepository` + `NexusLock` 防重；路由 `/mybonus.php`（CSRF 豁免），遗留文件已删 |
 | bonus-log.php | 110 | ⬜ | P2 | 积分日志，`BonusLogResource`(Filament) 已有 |
 | donate.php | 106 | ⬜ | P2 | 捐赠 |
 | donated.php | 31 | ⬜ | P3 | 捐赠提交 |
