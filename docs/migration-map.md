@@ -88,7 +88,7 @@
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
 | upload.php | 258 | ✅ | P1 | 上传表单。`UploadController::web()` 迁移遗留 `public/upload.php`，渲染 Blade `upload/upload`（上传表单/分类/质量/描述/Offer/Pick 等整页），路由 `/upload.php` |
-| takeupload.php | 532 | ⬜ | P1 | 上传提交，`TorrentController::store()` 已有 API 实现 |
+| takeupload.php | 532 | ✅ | P1 | 上传提交，`UploadController::webTakeUpload()` 迁移遗留 `public/takeupload.php`，POST 路由 `/takeupload.php`（`auth.nexus`），保留 legacy 表单字段（`*_sel[mode]`）、existing→`existed=1` 重定向与 offer 完成流程；`TakeUploadPageTest` 覆盖 |
 | takeamountupload.php | 41 | ⬜ | P3 | 批量加量上传 |
 | edit.php | 331 | ⬜ | P1 | 编辑种子表单 |
 | takeedit.php | 312 | ⬜ | P1 | 编辑提交，`TorrentController::update()` |

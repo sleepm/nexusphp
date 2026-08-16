@@ -17,6 +17,8 @@ class VerifyCsrfToken extends Middleware
         "web/token/*",
         // legacy invite.php posts to takeconfirm.php without a CSRF token
         "takeconfirm.php",
+        // legacy upload.php form posts to takeupload.php without a CSRF token
+        "takeupload.php",
         // legacy AJAX (public/js/common.js ajax.post) sends no CSRF token
         "thanks.php",
         "ajax.php",

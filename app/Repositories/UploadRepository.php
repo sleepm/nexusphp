@@ -4,6 +4,7 @@ namespace App\Repositories;
 use App\Auth\Permission;
 use App\Enums\ModelEventEnum;
 use App\Exceptions\NexusException;
+use App\Exceptions\TorrentExistedException;
 use App\Http\Resources\SearchBoxResource;
 use App\Models\BonusLogs;
 use App\Models\Category;
@@ -69,10 +70,11 @@ class UploadRepository extends BaseRepository
         $infoHash = pack("H*", sha1(Bencode::encode($dict['info'])));
         $exists = Torrent::query()->where('info_hash', $infoHash)->first(['id']);
         if ($exists) {
-            throw new NexusException(nexus_trans('upload.torrent_existed', ['id' => $exists->id]));
+            throw new TorrentExistedException($exists->id);
         }
         $subCategoriesAngTags = $this->getSubCategoriesAndTags($request, $category);
         $fileListInfo = $this->getFileListInfo($info, $dname);
+        $this->checkPieceCount($info, $fileListInfo['totalLength']);
         $posStateInfo = $this->getPosStateInfo($request);
         $pickInfo = $this->getPickInfo($request);
         $anonymous = "no";
@@ -313,6 +315,25 @@ class UploadRepository extends BaseRepository
             }
         }
         return $value;
+    }
+
+    /**
+     * Mirrors the legacy takeupload.php pieces-ratio guard: reject torrents with
+     * an excessive number of pieces unless the total size truly needs that many.
+     *
+     * @throws NexusException
+     */
+    private function checkPieceCount(array $info, int $totalLength): void
+    {
+        if (!isset($info['pieces']) || !is_string($info['pieces'])) {
+            throw new NexusException(nexus_trans('upload.invalid_pieces'));
+        }
+        $piecesCount = strlen($info['pieces']) / 20;
+        $maxPieceCount = 24576;
+        $idealPiecesCount = $totalLength / (8 * 1024 ** 2);
+        if ($piecesCount > $maxPieceCount && $idealPiecesCount < $maxPieceCount) {
+            throw new NexusException('Too many pieces');
+        }
     }
 
     /**

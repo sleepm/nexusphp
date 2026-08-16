@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Auth\Permission;
+use App\Exceptions\NexusException;
+use App\Exceptions\TorrentExistedException;
 use App\Http\Resources\SearchBoxResource;
 use App\Http\Resources\TorrentResource;
+use App\Models\Category;
+use App\Models\Message;
+use App\Models\Offer;
 use App\Models\SearchBox;
 use App\Models\Setting;
 use App\Models\Torrent;
@@ -307,6 +312,178 @@ JS;
         $footerAssets = implode("\n", \Nexus\Nexus::getAppendFooters());
 
         return view('upload.upload', compact('lang', 'pageTitle', 'content', 'scripts', 'externalScripts', 'headerAssets', 'footerAssets'));
+    }
+
+    /**
+     * Upload submission. Mirrors legacy public/takeupload.php so the form
+     * rendered by UploadController::web (which posts to takeupload.php) keeps
+     * working under the Laravel router instead of the procedural script.
+     */
+    public function webTakeUpload(Request $request)
+    {
+        /** @var \App\Models\User $currentUser */
+        $currentUser = Auth::guard('nexus')->user();
+        if (! $currentUser) {
+            abort(401);
+        }
+        $curUser = $currentUser->toArray();
+        if ($curUser['uploadpos'] == 'no') {
+            abort(403, nexus_trans('upload.unauthorized_upload_freely'));
+        }
+
+        // globals the shared legacy helpers expect (mirrors public/upload.php bootstrap)
+        $GLOBALS['CURUSER'] = $curUser;
+        $GLOBALS['lang_takeupload'] = get_legacy_lang_file('takeupload');
+        $GLOBALS['lang_functions'] = get_legacy_lang_file('functions');
+        $GLOBALS['CURLANGDIR'] = get_langfolder_cookie();
+        $GLOBALS['BASEURL'] = Setting::getBaseUrl();
+        $GLOBALS['SITENAME'] = Setting::getSiteName();
+
+        foreach (['descr', 'type', 'name'] as $v) {
+            if (! $request->has($v)) {
+                return $this->uploadFailed(nexus_trans('upload.missing_form_data'));
+            }
+        }
+        if (! $request->hasFile('file')) {
+            return $this->uploadFailed(nexus_trans('upload.missing_form_data'));
+        }
+
+        $catid = (int) $request->input('type', 0);
+        if (! is_valid_id($catid)) {
+            return $this->uploadFailed(nexus_trans('upload.category_unselected'));
+        }
+        $category = Category::query()->find($catid);
+        if (! $category) {
+            return $this->uploadFailed(nexus_trans('upload.invalid_category'));
+        }
+        $catmod = (int) $category->mode;
+
+        // legacy form posts the quality/tag/HR fields keyed by section mode
+        $this->mergeLegacySectionFields($request, $catmod);
+
+        // legacy derives the torrent name from the .torrent filename when blank
+        if (trim((string) $request->input('name', '')) === '') {
+            $fileName = (string) $request->file('file')->getClientOriginalName();
+            if (preg_match('/^(.+)\.torrent$/si', $fileName, $matches)) {
+                $request->merge(['name' => $matches[1]]);
+            }
+        }
+
+        // uploading for an allowed offer (browse section only, mirrors takeupload.php)
+        $offerId = 0;
+        $voteUserIds = [];
+        if ($catmod == (int) get_setting('main.browsecat', 0)) {
+            $offerId = (int) $request->input('offer', 0);
+            if ($offerId) {
+                $offerValid = (get_setting('main.showoffer', 'no') == 'yes')
+                    && Offer::query()
+                        ->where('id', $offerId)
+                        ->where('userid', $currentUser->id)
+                        ->where('allowed', 'allowed')
+                        ->exists();
+                if (! $offerValid) {
+                    return $this->uploadFailed(nexus_trans('upload.uploaded_not_offered'));
+                }
+                $voteUserIds = DB::table('offervotes')
+                    ->where('offerid', $offerId)
+                    ->where('userid', '!=', $currentUser->id)
+                    ->where('vote', 'yeah')
+                    ->pluck('userid')
+                    ->all();
+            }
+        }
+
+        try {
+            $newTorrent = $this->repository->upload($request);
+        } catch (TorrentExistedException $exception) {
+            return redirect(sprintf('details.php?id=%d&existed=1', $exception->getTorrentId()));
+        } catch (NexusException $exception) {
+            do_log(sprintf("takeupload fail: %s", $exception->getMessage()), 'error');
+            return $this->uploadFailed($exception->getMessage());
+        }
+
+        $id = $newTorrent->id;
+
+        // custom fields
+        $customFieldValues = $request->input("custom_fields.{$catmod}", []);
+        if (! empty($customFieldValues)) {
+            (new \Nexus\Field\Field())->saveFieldValues($catmod, $id, $customFieldValues);
+        }
+
+        // finish the offer: notify voters and clean it up
+        if ($offerId) {
+            $this->finishOffer($voteUserIds, $offerId, $currentUser, $newTorrent);
+        }
+
+        return redirect(get_protocol_prefix() . Setting::getBaseUrl() . '/details.php?id=' . $id . '&uploaded=1');
+    }
+
+    /**
+     * Render a takeupload failure the way the legacy bark() did.
+     */
+    private function uploadFailed(string $message)
+    {
+        return redirect(url('/error?error=' . urlencode($message)));
+    }
+
+    /**
+     * Translate the legacy form's section-mode-keyed fields into the flat field
+     * names the UploadRepository expects.
+     */
+    private function mergeLegacySectionFields(Request $request, int $catmod): void
+    {
+        $merge = [];
+        foreach (['source', 'medium', 'codec', 'audiocodec', 'standard', 'processing', 'team'] as $field) {
+            $merge[$field] = (int) $request->input("{$field}_sel.{$catmod}", 0);
+        }
+        $tags = $request->input("tags.{$catmod}", []);
+        if (is_array($tags)) {
+            $merge['tags'] = array_values(array_filter($tags, fn ($v) => $v !== '' && $v !== null));
+        }
+        $hrArr = (array) $request->input('hr', []);
+        if (isset($hrArr[$catmod])) {
+            $merge['hr'] = (int) $hrArr[$catmod];
+        }
+        if ($request->has('picktype') && ! $request->has('pick_type')) {
+            $merge['pick_type'] = $request->input('picktype');
+        }
+        $merge['small_descr'] = (string) $request->input('small_descr', '');
+        $merge['url'] = (string) $request->input('url', '');
+        $request->merge($merge);
+    }
+
+    /**
+     * Notify users who voted "yeah" on an offer that its torrent is uploaded,
+     * then remove the offer (mirrors legacy takeupload.php).
+     */
+    private function finishOffer(array $voteUserIds, int $offerId, User $uploader, Torrent $torrent): void
+    {
+        $baseUrl = get_protocol_prefix() . Setting::getBaseUrl();
+        foreach ($voteUserIds as $userId) {
+            $locale = get_user_locale($userId);
+            $pnMsg = nexus_trans('torrent.msg_offer_you_voted', [], $locale)
+                . $torrent->name
+                . nexus_trans('torrent.msg_was_uploaded_by', [], $locale)
+                . $uploader->username
+                . nexus_trans('torrent.msg_you_can_download', [], $locale)
+                . sprintf('[url=%s/details.php?id=%d&hit=1]', $baseUrl, $torrent->id)
+                . nexus_trans('torrent.msg_here', [], $locale)
+                . '[/url]';
+            $subject = nexus_trans('torrent.msg_offer', [], $locale)
+                . $torrent->name
+                . nexus_trans('torrent.msg_was_just_uploaded', [], $locale);
+            Message::add([
+                'sender' => 0,
+                'subject' => $subject,
+                'receiver' => $userId,
+                'added' => now()->toDateTimeString(),
+                'msg' => $pnMsg,
+            ]);
+        }
+        DB::table('offers')->where('id', $offerId)->delete();
+        DB::table('offervotes')->where('offerid', $offerId)->delete();
+        DB::table('comments')->where('offer', $offerId)->delete();
+        User::query()->where('id', $uploader->id)->increment('offer_allowed_count');
     }
 
     /**
