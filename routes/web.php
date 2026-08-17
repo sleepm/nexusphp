@@ -117,6 +117,10 @@ Route::get('/takemessage.php', [\App\Http\Controllers\MessageController::class, 
 Route::post('/takemessage.php', [\App\Http\Controllers\MessageController::class, 'webTakeMessage'])
     ->middleware('auth.nexus:nexus');
 
+// 发送短讯页（sendmessage.php）—— GET: compose form (new / reply)
+Route::get('/sendmessage.php', [\App\Http\Controllers\MessageController::class, 'webSendMessage'])
+    ->middleware('auth.nexus:nexus');
+
 // =============================================================
 // 论坛（forums.php / moforums.php）—— Phase 7 P2 迁移
 // =============================================================

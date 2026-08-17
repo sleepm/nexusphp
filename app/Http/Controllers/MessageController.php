@@ -802,6 +802,82 @@ class MessageController extends Controller
     }
 
     /**
+     * Send-message compose form, mirrors legacy public/sendmessage.php.
+     */
+    public function webSendMessage(Request $request)
+    {
+        [$curUser] = $this->bootstrap($request);
+
+        $lang = get_legacy_lang_file('sendmessage');
+        $GLOBALS['lang_sendmessage'] = $lang;
+        $GLOBALS['enableattach_attachment'] = (string) get_setting('attachment.enableattach', 'no');
+
+        $receiver = (int) $request->query('receiver', 0);
+        if (! is_valid_id($receiver)) {
+            abort(403, $GLOBALS['lang_functions']['std_invalid_id'] ?? 'Invalid ID');
+        }
+
+        $replyto = (string) $request->query('replyto', '');
+        if ($replyto && ! is_valid_id($replyto)) {
+            abort(403, $lang['std_permission_denied'] ?? 'Permission denied.');
+        }
+
+        $user = User::query()->find($receiver);
+        if (! $user) {
+            abort(404, $lang['std_no_user_id'] ?? 'No user with that ID.');
+        }
+
+        $subject = '';
+        $body = '';
+        if ($replyto) {
+            $msga = Message::query()->find((int) $replyto);
+            if (! $msga || $msga['receiver'] != $curUser['id']) {
+                abort(403, $lang['std_permission_denied'] ?? 'Permission denied.');
+            }
+            $msga = $msga->toArray();
+            $body .= $msga['msg'] . "\n\n-------- [url=userdetails.php?id=" . $curUser['id'] . ']' . $curUser['username'] . '[/url][i] Wrote at ' . date('Y-m-d H:i:s') . ":[/i] --------\n";
+            $subject = $msga['subject'];
+            if (preg_match('/^Re:\s/', $subject)) {
+                $subject = preg_replace('/^Re:\s(.*)$/', 'Re(2): \\1', $subject);
+            } elseif (preg_match('/^Re\([0-9]*\):\s/', $msga['subject'])) {
+                $replycount = (int) preg_replace('/^Re\(([0-9]*)\):\s/', '\\1', $subject);
+                $replycount++;
+                $subject = preg_replace('/^Re\(([0-9]*)\):\s(.*)$/', 'Re(' . $replycount . '): \\2', $subject);
+            } else {
+                $subject = 'Re: ' . $msga['subject'];
+            }
+            $subject = htmlspecialchars($subject);
+        }
+
+        ob_start();
+        begin_main_frame();
+        print('<form id=compose name="compose" method=post action=takemessage.php>');
+        print('<input type=hidden name=receiver value="' . $receiver . '">');
+        $returnto = (string) $request->query('returnto', '');
+        if (! $returnto) {
+            $returnto = (string) $request->headers->get('referer');
+        }
+        if ($returnto) {
+            print('<input type=hidden name=returnto value="' . htmlspecialchars($returnto) . '">');
+        }
+        $title = ($lang['text_message_to'] ?? 'Message to ') . get_username($receiver);
+        begin_compose($title, ($replyto ? 'reply' : 'new'), $body, true, $subject);
+        print('<tr><td class=toolbox colspan=2 align=center>');
+        if ($replyto) {
+            print("<input type=checkbox name='delete' value='yes' " . ($curUser['deletepms'] == 'yes' ? ' checked' : '') . '>' . ($lang['checkbox_delete_message_replying_to'] ?? '') . '<input type=hidden name=origmsg value="' . $replyto . '">');
+        }
+        print("<input type=checkbox name='save' value='yes' " . ($curUser['savepms'] == 'yes' ? ' checked' : '') . '>' . ($lang['checkbox_save_message_to_sendbox'] ?? ''));
+        print('</td></tr>');
+        end_compose();
+        end_main_frame();
+        $content = ob_get_clean();
+
+        $pageTitle = $lang['head_send_message'] ?? 'Send message';
+        $content = $this->wrapContent($content);
+        return view('sendmessage', compact('pageTitle', 'content', 'lang'));
+    }
+
+    /**
      * Message-box navigation menu, mirrors the legacy messages.php
      * `messagemenu()` helper.
      */
