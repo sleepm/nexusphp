@@ -25,6 +25,8 @@ class VerifyCsrfToken extends Middleware
         "mybonus.php",
         // legacy messages.php moveordel/forward/delete forms post without a CSRF token
         "messages.php",
+        // legacy sendmessage.php / messages.php compose+forward forms post to takemessage.php without a CSRF token
+        "takemessage.php",
         // legacy AJAX (public/js/common.js ajax.post) sends no CSRF token
         "thanks.php",
         "ajax.php",

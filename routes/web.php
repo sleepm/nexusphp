@@ -111,6 +111,12 @@ Route::get('/messages.php', [\App\Http\Controllers\MessageController::class, 'we
 Route::post('/messages.php', [\App\Http\Controllers\MessageController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// 发送站内信（takemessage.php）—— legacy sendmessage.php/messages.php 表单 POST
+Route::get('/takemessage.php', [\App\Http\Controllers\MessageController::class, 'webTakeMessage'])
+    ->middleware('auth.nexus:nexus');
+Route::post('/takemessage.php', [\App\Http\Controllers\MessageController::class, 'webTakeMessage'])
+    ->middleware('auth.nexus:nexus');
+
 // =============================================================
 // 首页与主列表（Phase 2 P2）—— topten / usersearch / userhistory
 // =============================================================

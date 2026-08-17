@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Nexus\Database\NexusDB;
 
 class MessageController extends Controller
@@ -601,6 +602,203 @@ class MessageController extends Controller
             abort(400, $lang['std_could_not_delete_message'] ?? 'Could not delete message.');
         }
         return redirect('messages.php?action=viewmailbox&id=' . $message['location']);
+    }
+
+    /**
+     * Send a PM, mirrors legacy public/takemessage.php.
+     */
+    public function webTakeMessage(Request $request)
+    {
+        [$curUser] = $this->bootstrap($request);
+
+        $lang = get_legacy_lang_file('takemessage');
+        $GLOBALS['lang_takemessage'] = $lang;
+        $GLOBALS['SITEEMAIL'] = (string) get_setting('main.SITEEMAIL', '');
+        $GLOBALS['smtptype'] = Setting::getSmtpType();
+        $GLOBALS['emailnotify_smtp'] = (string) get_setting('smtp.emailnotify', 'no');
+
+        if (! $request->isMethod('POST')) {
+            abort(403, $lang['std_permission_denied'] ?? 'Permission Denied!');
+        }
+
+        $origmsg = (int) $request->input('origmsg', 0);
+        $msg = trim((string) $request->input('body', ''));
+
+        if ($request->input('forward') == 1) {
+            // Forwarding an existing message
+            if (! $origmsg) {
+                abort(400, $lang['std_invalid_id'] ?? 'Invalid ID');
+            }
+            $origMsg = Message::query()
+                ->where('id', $origmsg)
+                ->where(function ($query) use ($curUser) {
+                    $query->where('receiver', $curUser['id'])->orWhere('sender', $curUser['id']);
+                })
+                ->first();
+            if (! $origMsg) {
+                abort(403, $lang['std_no_permission_forwarding'] ?? 'You do not have permission to forward this message.');
+            }
+            $to = trim((string) $request->input('to', ''));
+            if (! $to) {
+                abort(400, $lang['std_must_enter_username'] ?? 'You must enter the username to whom you want to forward the message.');
+            }
+            $receiverUser = User::query()->whereRaw('LOWER(username) = LOWER(?)', [$to])->first();
+            if (! $receiverUser) {
+                $langFunctions = $GLOBALS['lang_functions'] ?? get_legacy_lang_file('functions');
+                abort(400, ($langFunctions['std_no_user_named'] ?? 'No user with that name.') . "'" . $to . "'");
+            }
+            $receiver = (int) $receiverUser->id;
+            $locale = get_user_locale($receiver);
+            $origMsgArr = $origMsg->toArray();
+            if ($origMsgArr['sender'] == 0) {
+                $origfrom = nexus_trans('message.msg_system', [], $locale);
+            } else {
+                $origfrom = '[url=userdetails.php?id=' . $origMsgArr['sender'] . ']' . get_plain_username($origMsgArr['sender']) . '[/url]';
+            }
+            $msg = '-------- ' . nexus_trans('message.msg_original_message_from', [], $locale) . $origfrom . " --------\n" . $origMsgArr['msg'] . "\n\n" . ($msg ? '-------- [url=userdetails.php?id=' . $curUser['id'] . ']' . $curUser['username'] . "[/url][i] Wrote at " . date('Y-m-d H:i:s') . ":[/i] --------\n" . $msg : '');
+        } else {
+            $receiver = (int) $request->input('receiver', 0);
+            if (! is_valid_id($receiver) || ($origmsg && ! is_valid_id($origmsg))) {
+                abort(400, $lang['std_invalid_id'] ?? 'Invalid ID');
+            }
+            if (! $msg) {
+                abort(400, $lang['std_please_enter_something'] ?? 'Please enter something!');
+            }
+        }
+
+        $save = $request->input('save');
+        $returnto = (string) $request->input('returnto', '');
+
+        // Anti Flood Code: a member can only send one PM every 10 seconds.
+        if (! user_can('staffmem')) {
+            if (strtotime((string) $curUser['last_pm']) > (TIMENOW - 10)) {
+                $secs = 60 - (TIMENOW - strtotime((string) $curUser['last_pm']));
+                abort(429, ($lang['std_message_flooding_denied'] ?? 'Message Flooding Not Allowed. Please wait ') . $secs . ($lang['std_before_sending_pm'] ?? ' second(s) before sending PM.'));
+            }
+        }
+
+        $save = ($save == 'yes') ? 'yes' : 'no';
+
+        $user = User::query()->where('id', $receiver)
+            ->select(['id', 'username', 'parked', 'email', 'acceptpms', 'notifs'])
+            ->first();
+        if (! $user) {
+            abort(400, $lang['std_user_not_exist'] ?? 'No user with this ID');
+        }
+        $recipient = $user->toArray();
+
+        // Make sure the recipient wants this message
+        if (! user_can('staffmem')) {
+            if ($recipient['parked'] == 'yes') {
+                abort(403, ($lang['std_refused'] ?? 'Refused') . ' - ' . ($lang['std_account_parked'] ?? 'This account is parked.'));
+            }
+            if ($recipient['acceptpms'] == 'yes') {
+                $blocked = DB::table('blocks')->where('userid', $receiver)->where('blockid', $curUser['id'])->exists();
+                if ($blocked) {
+                    abort(403, ($lang['std_refused'] ?? 'Refused') . ' - ' . ($lang['std_user_blocks_your_pms'] ?? 'This user has blocked PMs from you.'));
+                }
+            } elseif ($recipient['acceptpms'] == 'friends') {
+                $isFriend = DB::table('friends')->where('userid', $receiver)->where('friendid', $curUser['id'])->exists();
+                if (! $isFriend) {
+                    abort(403, ($lang['std_refused'] ?? 'Refused') . ' - ' . ($lang['std_user_accepts_friends_pms'] ?? 'This user only accepts PMs from users in his friends list.'));
+                }
+            } elseif ($recipient['acceptpms'] == 'no') {
+                abort(403, ($lang['std_refused'] ?? 'Refused') . ' - ' . ($lang['std_user_blocks_all_pms'] ?? 'This user does not accept PMs.'));
+            }
+        }
+
+        $subject = trim((string) $request->input('subject', ''));
+
+        $messageRecord = Message::add([
+            'sender' => $curUser['id'],
+            'receiver' => $receiver,
+            'msg' => $msg,
+            'subject' => $subject,
+            'added' => now(),
+            'saved' => $save,
+            'location' => 1,
+        ]);
+
+        NexusDB::cache_del('user_' . $curUser['id'] . '_outbox_count');
+
+        $msgid = $messageRecord->id;
+        $date = date('Y-m-d H:i:s');
+        // Update last PM sent...
+        User::query()->where('id', $curUser['id'])->update(['last_pm' => now()]);
+
+        // Send notification email when the recipient opted in.
+        if ($GLOBALS['emailnotify_smtp'] == 'yes' && $GLOBALS['smtptype'] != 'none') {
+            $sm = strpos((string) $recipient['notifs'], '[pm]') !== false;
+            if ($sm) {
+                $username = trim($curUser['username']);
+                $msgReceiver = trim($recipient['username']);
+                $prefix = get_protocol_prefix();
+                $locale = get_user_locale($recipient['id']);
+                $title = $GLOBALS['SITENAME'] . ' ' . nexus_trans('message.mail_received_pm_from', [], $locale) . $username . '!';
+                $mailDear = nexus_trans('message.mail_dear', [], $locale);
+                $mailYouReceivedAPm = nexus_trans('message.mail_you_received_a_pm', [], $locale);
+                $mailSender = nexus_trans('message.mail_sender', [], $locale);
+                $mailSubject = nexus_trans('message.mail_subject', [], $locale);
+                $mailDate = nexus_trans('message.mail_date', [], $locale);
+                $mailYouFollowingUrl = nexus_trans('message.mail_use_following_url', [], $locale);
+                $mailHere = nexus_trans('message.mail_here', [], $locale);
+                $mailYouFollowingUrl1 = nexus_trans('message.mail_use_following_url_1', [], $locale);
+                $mailYours = nexus_trans('message.mail_yours', [], $locale);
+                $siteName = Setting::getSiteName();
+                $mailTheSiteTeam = sprintf(nexus_trans('message.mail_the_site_team', [], $locale), $siteName);
+                $body = <<<EOD
+                {$mailDear}$msgReceiver,
+
+                {$mailYouReceivedAPm}
+
+                {$mailSender}: $username
+                {$mailSubject}: $subject
+                {$mailDate}: $date
+
+                {$mailYouFollowingUrl}<b><a href="javascript:void(null)" onclick="window.open('$prefix{$GLOBALS['BASEURL']}/messages.php?action=viewmessage&id=$msgid')">{$mailHere}</a></b>{$mailYouFollowingUrl1}<br />
+                $prefix{$GLOBALS['BASEURL']}/messages.php?action=viewmessage&id=$msgid
+
+                ------{$mailYours}
+                {$mailTheSiteTeam}
+                EOD;
+
+                sent_mail($recipient['email'], $GLOBALS['SITENAME'], $GLOBALS['SITEEMAIL'], $title, str_replace('<br />', '<br />', nl2br($body)), 'sendmessage', false, false, '');
+            }
+        }
+
+        $delete = $request->input('delete');
+
+        if ($origmsg) {
+            if ($delete == 'yes') {
+                // Make sure receiver of $origmsg is current user
+                $origTarget = Message::query()->where('id', $origmsg)->first();
+                if ($origTarget) {
+                    $arr = $origTarget->toArray();
+                    if ($arr['receiver'] != $curUser['id']) {
+                        abort(400, "w00t - This shouldn't happen.");
+                    }
+                    if ($arr['saved'] == 'no') {
+                        Message::query()->where('id', $origmsg)->delete();
+                    } elseif ($arr['saved'] == 'yes') {
+                        Message::query()->where('id', $origmsg)->update(['location' => '0']);
+                    }
+                }
+            }
+            if (! $returnto) {
+                $returnto = get_protocol_prefix() . $GLOBALS['BASEURL'] . '/messages.php';
+            }
+        }
+
+        if ($returnto) {
+            return redirect($returnto);
+        }
+
+        $pageTitle = $lang['std_succeeded'] ?? 'Succeeded';
+        $content = $this->wrapContent(
+            '<h1 align="center">' . ($lang['std_succeeded'] ?? 'Succeeded') . '</h1>'
+            . '<p align="center">' . ($lang['std_message_was'] ?? 'Message was') . ($lang['std_successfully_sent'] ?? ' successfully sent!') . '</p>'
+        );
+        return view('messages', compact('pageTitle', 'content'));
     }
 
     /**
