@@ -118,11 +118,15 @@ Route::post('/takemessage.php', [\App\Http\Controllers\MessageController::class,
     ->middleware('auth.nexus:nexus');
 
 // =============================================================
-// 论坛（forums.php）—— Phase 7 P2 迁移
+// 论坛（forums.php / moforums.php）—— Phase 7 P2 迁移
 // =============================================================
 // GET: portal / viewforum / viewtopic / viewunread / search / compose / confirm pages
 // POST: post / movetopic / deletetopic / deletepost / setsticky / setlocked / hltopic
 Route::match(['get', 'post'], '/forums.php', [\App\Http\Controllers\ForumController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// 论坛分区管理（overforums）—— GET: list / edit forum; POST: del / addforum / editforum
+Route::match(['get', 'post'], '/moforums.php', [\App\Http\Controllers\OverForumController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
 // =============================================================

@@ -29,6 +29,8 @@ class VerifyCsrfToken extends Middleware
         "takemessage.php",
         // legacy forums.php post/movetopic/deletetopic/deletepost/setsticky/setlocked/hltopic forms have no CSRF token
         "forums.php",
+        // legacy moforums.php addforum/editforum forms have no CSRF token
+        "moforums.php",
         // legacy AJAX (public/js/common.js ajax.post) sends no CSRF token
         "thanks.php",
         "ajax.php",
