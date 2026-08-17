@@ -104,6 +104,14 @@ Route::post('/mybonus.php', [\App\Http\Controllers\BonusController::class, 'webE
     ->middleware('auth.nexus:nexus');
 
 // =============================================================
+// 站内信（messages.php）—— Phase 7 P1 迁移
+// =============================================================
+Route::get('/messages.php', [\App\Http\Controllers\MessageController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+Route::post('/messages.php', [\App\Http\Controllers\MessageController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// =============================================================
 // 首页与主列表（Phase 2 P2）—— topten / usersearch / userhistory
 // =============================================================
 Route::get('/topten.php', [\App\Http\Controllers\ToptenController::class, 'index'])

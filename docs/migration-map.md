@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 42 |
+| 已完成迁移 | 43 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 101 |
+| 待迁移页面 | 约 100 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 44 个（多数仅 API，路由未启用） |
@@ -136,7 +136,7 @@
 
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
-| messages.php | 725 | ⬜ | P1 | 站内信。`MessageController` + Repository 已有 |
+| messages.php | 725 | ✅ | P1 | 站内信。`MessageController::web()` 迁移遗留 `public/messages.php`，渲染 Blade `messages`（收件箱/发件箱/自定义邮箱列表、搜索、分页、转发、邮箱管理），`Pmbox` + `Message` Eloquent 模型，路由 `/messages.php`（GET/POST，CSRF 豁免），遗留文件已删 |
 | takemessage.php | 192 | ⬜ | P1 | 发送消息 |
 | sendmessage.php | 60 | ⬜ | P2 | 发消息页 |
 | deletemessage.php | 43 | ⬜ | P3 | 删除消息 |
