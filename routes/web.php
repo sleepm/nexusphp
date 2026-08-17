@@ -118,6 +118,14 @@ Route::post('/takemessage.php', [\App\Http\Controllers\MessageController::class,
     ->middleware('auth.nexus:nexus');
 
 // =============================================================
+// 论坛（forums.php）—— Phase 7 P2 迁移
+// =============================================================
+// GET: portal / viewforum / viewtopic / viewunread / search / compose / confirm pages
+// POST: post / movetopic / deletetopic / deletepost / setsticky / setlocked / hltopic
+Route::match(['get', 'post'], '/forums.php', [\App\Http\Controllers\ForumController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// =============================================================
 // 首页与主列表（Phase 2 P2）—— topten / usersearch / userhistory
 // =============================================================
 Route::get('/topten.php', [\App\Http\Controllers\ToptenController::class, 'index'])

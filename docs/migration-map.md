@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 44 |
+| 已完成迁移 | 45 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 99 |
+| 待迁移页面 | 约 98 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 44 个（多数仅 API，路由未启用） |
@@ -153,7 +153,7 @@
 
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
-| forums.php | 1645 | ⬜ | P1 | 论坛首页/版块。`ForumController` + `OverForumController` 已有 |
+| forums.php | 1645 | ✅ | P1 | 论坛首页/版块。`ForumController::web()` 迁移遗留 `public/forums.php`（portal/viewforum/viewtopic/viewunread/search/newtopic/reply/quote/edit/post、setsticky/setlocked/hltopic、movetopic/deletetopic/deletepost、catchup），渲染 Blade `forums`，路由 `/forums.php`（GET+POST，CSRF 豁免），遗留文件已删 |
 | moforums.php | 215 | ⬜ | P1 | 版块帖子列表。`TopicController` 已有 |
 | forummanage.php | 302 | ⬜ | P2 | 版块管理（admin → Filament `ForumResource`） |
 | modtask.php | 496 | ⬜ | P2 | 版主操作 |
