@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 47 |
+| 已完成迁移 | 48 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 96 |
+| 待迁移页面 | 约 95 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 44 个（多数仅 API，路由未启用） |
@@ -93,7 +93,7 @@
 | edit.php | 331 | ✅ | P1 | 编辑种子表单。`TorrentController::webEdit()` 迁移遗留 `public/edit.php`，渲染 Blade `torrent/edit`（名称/描述/分类/质量/自定义字段/HR/标签/Pick/删除区等整页），路由 `/edit.php` |
 | takeedit.php | 312 | ✅ | P1 | 编辑提交，`TorrentController::webTakeEdit()` 迁移遗留 `public/takeedit.php`，POST 路由 `/takeedit.php`（`auth.nexus`），保留 legacy 表单字段（`*_sel[mode]`/`tags[mode]`/`hr[mode]`/`custom_fields[mode]`），`torrent_updated` 事件 + 操作日志；`TakeEditPageTest` 覆盖 |
 | takeflush.php | 29 | ⬜ | P3 | 清空 peer |
-| fastdelete.php | 67 | ⬜ | P2 | 快速删除（admin） |
+| fastdelete.php | 67 | ✅ | P2 | 快速删除（admin）。`TorrentController::webFastDelete()` 迁移遗留 `public/fastdelete.php`（`id`+`sure=1` 确认页、ES 删除、`deletetorrent()`、上传者魔力值扣除、操作日志、PM 通知上传者，成功重定向 `torrents.php`），路由 `/fastdelete.php`（GET，auth.nexus），遗留文件已删；`FastDeletePageTest` 覆盖 |
 | delete.php | 97 | ⬜ | P2 | 删除种子 |
 | download.php | 212 | 🔒 | 保留 | 种子下载，保留 legacy 或转专有 Route（涉及 Passkey 校验） |
 | downloadnotice.php | 161 | ⬜ | P3 | 下载须知 |

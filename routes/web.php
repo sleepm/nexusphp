@@ -220,6 +220,10 @@ Route::get('/edit.php', [\App\Http\Controllers\TorrentController::class, 'webEdi
 Route::post('/takeedit.php', [\App\Http\Controllers\TorrentController::class, 'webTakeEdit'])
     ->middleware('auth.nexus:nexus');
 
+// fast torrent deletion (staff) — mirrors public/fastdelete.php
+Route::get('/fastdelete.php', [\App\Http\Controllers\TorrentController::class, 'webFastDelete'])
+    ->middleware('auth.nexus:nexus');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);

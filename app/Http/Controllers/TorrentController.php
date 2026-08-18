@@ -7,6 +7,7 @@ use App\Http\Resources\TorrentOperationLogResource;
 use App\Http\Resources\TorrentResource;
 use App\Models\Category;
 use App\Models\Claim;
+use App\Models\Message;
 use App\Models\Setting;
 use App\Models\Torrent;
 use App\Models\TorrentBuyLog;
@@ -2404,6 +2405,110 @@ JS;
      * Render a takeedit failure the way the legacy bark() did.
      */
     private function editFailed(string $message)
+    {
+        return redirect(url('/error?error=' . urlencode($message)));
+    }
+
+    /**
+     * Fast torrent deletion (staff). Mirrors legacy public/fastdelete.php so
+     * the staff "delete" links rendered by torrenttable() / search results
+     * keep working under the Laravel router instead of the procedural script.
+     *
+     * GET id (and sure=1 to confirm) deletes the torrent: removes the ES
+     * document, calls deletetorrent(), refunds the upload bonus from the
+     * uploader, logs the action and notifies the uploader, then redirects
+     * to torrents.php.
+     */
+    public function webFastDelete(Request $request)
+    {
+        /** @var \App\Models\User $currentUser */
+        $currentUser = Auth::guard('nexus')->user();
+        if (! $currentUser) {
+            abort(401);
+        }
+        $curUser = $currentUser->toArray();
+
+        // globals the shared legacy helpers expect (mirrors public/fastdelete.php bootstrap)
+        $GLOBALS['CURUSER'] = $curUser;
+        $GLOBALS['lang_fastdelete'] = get_legacy_lang_file('fastdelete');
+        $GLOBALS['lang_functions'] = get_legacy_lang_file('functions');
+        $GLOBALS['CURLANGDIR'] = get_langfolder_cookie();
+        $GLOBALS['BASEURL'] = Setting::getBaseUrl();
+        $GLOBALS['SITENAME'] = Setting::getSiteName();
+        $GLOBALS['bonus_tweak'] = get_setting('tweak.bonus', 'enable');
+
+        $langFastdelete = $GLOBALS['lang_fastdelete'];
+
+        $id = (int) $request->query('id', 0);
+        if (! is_valid_id($id)) {
+            return $this->deleteFailed($langFastdelete['std_missing_form_data'] ?? 'missing form data');
+        }
+
+        $torrent = Torrent::query()->select('id', 'name', 'owner', 'seeders', 'anonymous')->find($id);
+        if (! $torrent) {
+            abort(404);
+        }
+
+        if (! user_can('torrentmanage') || ! user_can('torrent-delete')) {
+            return $this->deleteFailed($langFastdelete['text_no_permission'] ?? 'You are not authorised to delete this torrent.');
+        }
+
+        // sanity check: require an explicit sure=1 confirmation link
+        if (! $request->query('sure')) {
+            $content = $this->capture(function () use ($langFastdelete, $id) {
+                stdmsg(
+                    $langFastdelete['std_delete_torrent'] ?? 'Delete torrent',
+                    ($langFastdelete['std_delete_torrent_note'] ?? '')
+                    . '<a class=altlink href=fastdelete.php?id=' . $id . '&sure=1>'
+                    . ($langFastdelete['std_here_if_sure'] ?? ' here</a> if you are sure.')
+                );
+            });
+
+            return view('fastdelete', compact('content') + [
+                'pageTitle' => $langFastdelete['std_delete_torrent'] ?? 'Delete torrent',
+                'lang' => $langFastdelete,
+            ]);
+        }
+
+        $searchRep = new SearchRepository();
+        $deleteEsResult = $searchRep->deleteTorrent($id);
+        if ($deleteEsResult === false) {
+            return $this->deleteFailed('Delete es fail.');
+        }
+
+        deletetorrent($id);
+
+        KPS('-', (float) get_setting('bonus.uploadtorrent', 0), $torrent->owner);
+
+        if ($torrent->anonymous == 'yes' && $curUser['id'] == $torrent->owner) {
+            write_log("Torrent $id ({$torrent->name}) was deleted by its anonymous uploader", 'normal');
+        } else {
+            write_log("Torrent $id ({$torrent->name}) was deleted by {$curUser['username']}", 'normal');
+        }
+
+        // notify the torrent uploader
+        if ($curUser['id'] != $torrent->owner && User::query()->where('id', $torrent->owner)->exists()) {
+            $locale = get_user_locale($torrent->owner);
+            $subject = nexus_trans('torrent.msg_torrent_deleted', [], $locale);
+            $msg = nexus_trans('torrent.msg_the_torrent_you_uploaded', [], $locale)
+                . $torrent->name
+                . nexus_trans('torrent.msg_was_deleted_by', ['admin' => $curUser['username']], $locale);
+            Message::add([
+                'sender' => 0,
+                'receiver' => $torrent->owner,
+                'subject' => $subject,
+                'msg' => $msg,
+                'added' => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return redirect('torrents.php');
+    }
+
+    /**
+     * Render a fastdelete failure the way the legacy bark() did.
+     */
+    private function deleteFailed(string $message)
     {
         return redirect(url('/error?error=' . urlencode($message)));
     }
