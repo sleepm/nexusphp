@@ -224,6 +224,18 @@ Route::post('/takeedit.php', [\App\Http\Controllers\TorrentController::class, 'w
 Route::get('/fastdelete.php', [\App\Http\Controllers\TorrentController::class, 'webFastDelete'])
     ->middleware('auth.nexus:nexus');
 
+// torrent deletion (owner or staff) — mirrors public/delete.php
+Route::post('/delete.php', [\App\Http\Controllers\TorrentController::class, 'webDelete'])
+    ->middleware('auth.nexus:nexus');
+
+// BitBucket attachment image log (admin) — mirrors public/bitbucketlog.php
+Route::get('/bitbucketlog.php', [\App\Http\Controllers\BitbucketController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// site-wide freeleech switcher (admin) — mirrors public/freeleech.php
+Route::match(['get', 'post'], '/freeleech.php', [\App\Http\Controllers\FreeleechController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);

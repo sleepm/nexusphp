@@ -2506,6 +2506,129 @@ JS;
     }
 
     /**
+     * Torrent deletion (owner or staff). Mirrors legacy public/delete.php so
+     * the delete form rendered on the edit page keeps working under the
+     * Laravel router instead of the procedural script.
+     *
+     * POST id + reasontype + reason[] deletes the torrent: removes the ES
+     * document, calls deletetorrent(), writes the site log with the delete
+     * reason, deducts the upload bonus from the uploader, notifies the
+     * uploader, then renders the "torrent deleted" confirmation page.
+     */
+    public function webDelete(Request $request)
+    {
+        /** @var \App\Models\User $currentUser */
+        $currentUser = Auth::guard('nexus')->user();
+        if (! $currentUser) {
+            abort(401);
+        }
+        $curUser = $currentUser->toArray();
+
+        // globals the shared legacy helpers expect (mirrors public/delete.php bootstrap)
+        $GLOBALS['CURUSER'] = $curUser;
+        $GLOBALS['lang_delete'] = get_legacy_lang_file('delete');
+        $GLOBALS['lang_functions'] = get_legacy_lang_file('functions');
+        $GLOBALS['CURLANGDIR'] = get_langfolder_cookie();
+        $GLOBALS['BASEURL'] = Setting::getBaseUrl();
+        $GLOBALS['SITENAME'] = Setting::getSiteName();
+        $GLOBALS['bonus_tweak'] = get_setting('tweak.bonus', 'enable');
+
+        $langDelete = $GLOBALS['lang_delete'];
+
+        if (! user_can('torrent-delete')) {
+            return $this->deleteFailed($langDelete['std_delete_failed'] ?? 'Delete failed!');
+        }
+
+        $id = (int) $request->input('id', 0);
+        if (! $id) {
+            return $this->deleteFailed($langDelete['std_missing_form_date'] ?? 'missing form data');
+        }
+
+        $torrent = Torrent::query()->select('id', 'name', 'owner', 'seeders', 'anonymous')->find($id);
+        if (! $torrent) {
+            abort(404);
+        }
+
+        if ($curUser['id'] != $torrent->owner && ! user_can('torrentmanage')) {
+            return $this->deleteFailed($langDelete['std_not_owner'] ?? "You're not the owner! How did that happen?");
+        }
+
+        $rt = (int) $request->input('reasontype', 0);
+        if ($rt < 1 || $rt > 5) {
+            return $this->deleteFailed(($langDelete['std_invalid_reason'] ?? 'Invalid reason ') . $rt . '.');
+        }
+
+        $reason = (array) $request->input('reason', []);
+
+        if ($rt == 1) {
+            $reasonstr = 'Dead: 0 seeders, 0 leechers = 0 peers total';
+        } elseif ($rt == 2) {
+            $reasonstr = 'Dupe' . (! empty($reason[0]) ? (': ' . trim((string) $reason[0])) : '!');
+        } elseif ($rt == 3) {
+            $reasonstr = 'Nuked' . (! empty($reason[1]) ? (': ' . trim((string) $reason[1])) : '!');
+        } elseif ($rt == 4) {
+            if (empty($reason[2])) {
+                return $this->deleteFailed($langDelete['std_describe_violated_rule'] ?? 'Please describe the violated rule.');
+            }
+            $reasonstr = Setting::getSiteName() . ' rules broken: ' . trim((string) $reason[2]);
+        } else {
+            if (empty($reason[3])) {
+                return $this->deleteFailed($langDelete['std_enter_reason'] ?? 'Please enter the reason for deleting this torrent.');
+            }
+            $reasonstr = trim((string) $reason[3]);
+        }
+
+        $searchRep = new SearchRepository();
+        if ($searchRep->deleteTorrent($id) === false) {
+            return $this->deleteFailed('Delete es fail.');
+        }
+
+        deletetorrent($id);
+
+        if ($torrent->anonymous == 'yes' && $curUser['id'] == $torrent->owner) {
+            write_log("Torrent $id ({$torrent->name}) was deleted by its anonymous uploader ($reasonstr)", 'normal');
+        } else {
+            write_log("Torrent $id ({$torrent->name}) was deleted by {$curUser['username']} ($reasonstr)", 'normal');
+        }
+
+        //===remove karma
+        KPS('-', (float) get_setting('bonus.uploadtorrent', 0), $torrent->owner);
+
+        // Send pm to torrent uploader
+        if ($curUser['id'] != $torrent->owner && User::query()->where('id', $torrent->owner)->exists()) {
+            $locale = get_user_locale($torrent->owner);
+            $subject = nexus_trans('torrent.msg_torrent_deleted', [], $locale);
+            $msg = nexus_trans('torrent.msg_the_torrent_you_uploaded', [], $locale)
+                . $torrent->name
+                . nexus_trans('torrent.msg_was_deleted_by', [], $locale)
+                . '[url=userdetails.php?id=' . $curUser['id'] . ']' . $curUser['username'] . '[/url]'
+                . nexus_trans('torrent.msg_reason_is', [], $locale)
+                . $reasonstr;
+            Message::add([
+                'sender' => 0,
+                'receiver' => $torrent->owner,
+                'subject' => $subject,
+                'msg' => $msg,
+                'added' => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        if ($request->input('returnto')) {
+            $ret = '<a href="' . htmlspecialchars((string) $request->input('returnto')) . '">' . ($langDelete['text_go_back'] ?? 'Go back to whence you came') . '</a>';
+        } else {
+            $ret = '<a href="index.php">' . ($langDelete['text_back_to_index'] ?? 'Back to index') . '</a>';
+        }
+
+        $content = '<h1>' . ($langDelete['text_torrent_deleted'] ?? 'Torrent deleted!') . '</h1>' . "\n"
+            . '<p>' . $ret . '</p>' . "\n";
+
+        return view('delete', compact('content') + [
+            'pageTitle' => $langDelete['head_torrent_deleted'] ?? 'Torrent deleted!',
+            'lang' => $langDelete,
+        ]);
+    }
+
+    /**
      * Render a fastdelete failure the way the legacy bark() did.
      */
     private function deleteFailed(string $message)

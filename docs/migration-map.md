@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 48 |
+| 已完成迁移 | 51 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 95 |
+| 待迁移页面 | 约 92 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 44 个（多数仅 API，路由未启用） |
@@ -94,16 +94,16 @@
 | takeedit.php | 312 | ✅ | P1 | 编辑提交，`TorrentController::webTakeEdit()` 迁移遗留 `public/takeedit.php`，POST 路由 `/takeedit.php`（`auth.nexus`），保留 legacy 表单字段（`*_sel[mode]`/`tags[mode]`/`hr[mode]`/`custom_fields[mode]`），`torrent_updated` 事件 + 操作日志；`TakeEditPageTest` 覆盖 |
 | takeflush.php | 29 | ⬜ | P3 | 清空 peer |
 | fastdelete.php | 67 | ✅ | P2 | 快速删除（admin）。`TorrentController::webFastDelete()` 迁移遗留 `public/fastdelete.php`（`id`+`sure=1` 确认页、ES 删除、`deletetorrent()`、上传者魔力值扣除、操作日志、PM 通知上传者，成功重定向 `torrents.php`），路由 `/fastdelete.php`（GET，auth.nexus），遗留文件已删；`FastDeletePageTest` 覆盖 |
-| delete.php | 97 | ⬜ | P2 | 删除种子 |
+| delete.php | 97 | ✅ | P2 | 删除种子。`TorrentController::webDelete()` 迁移遗留 `public/delete.php`（POST `id`+`reasontype`+`reason[]`、`torrent-delete` 权限门、ES 删除、`deletetorrent()`、带删除理由的站点日志、上传者魔力值扣除、PM 通知上传者、删除成功页），路由 `/delete.php`（POST，auth.nexus，CSRF 豁免），遗留文件已删；`DeletePageTest` 覆盖 |
 | download.php | 212 | 🔒 | 保留 | 种子下载，保留 legacy 或转专有 Route（涉及 Passkey 校验） |
 | downloadnotice.php | 161 | ⬜ | P3 | 下载须知 |
 | downloadsubs.php | 63 | 🔒 | 保留 | 字幕下载 |
 | getattachment.php | 57 | 🔒 | 保留 | 附件下载，`AttachmentController` 可承接 |
 | attachment.php | 291 | 🔒 | 保留 | 附件展示 |
 | bitbucket-upload.php | 93 | 🔒 | 保留 | 附件上传 |
-| bitbucketlog.php | 53 | ⬜ | P3 | 附件记录 |
+| bitbucketlog.php | 53 | ✅ | P3 | 附件记录。`BitbucketController::web()` 迁移遗留 `public/bitbucketlog.php`（管理员查看附件图片列表、分页、`?delete=ID` 删除行+文件），路由 `/bitbucketlog.php`（GET，auth.nexus），遗留文件已删；`BitbucketLogPageTest` 覆盖 |
 | torrentrss/getrss | — | — | — | （见 RSS 节） |
-| freeleech.php | 49 | ⬜ | P3 | 免种列表 |
+| freeleech.php | 49 | ✅ | P3 | 全站免种开关。`FreeleechController::web()` 迁移遗留 `public/freeleech.php`（action 分发 `setallfree`/`setall2up`/`setall2up_free`/`setallhalf_down`/`setall2up_half_down`/`setallnormal`，`TorrentState::query()->update()` + `flushCache()`），路由 `/freeleech.php`（GET+POST，auth.nexus，CSRF 豁免），遗留文件已删；`FreeleechPageTest` 覆盖 |
 
 ## 5. 评论 / 收藏 / 感谢 / 签到（轻量互动）
 
