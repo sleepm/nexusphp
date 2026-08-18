@@ -2629,6 +2629,76 @@ JS;
     }
 
     /**
+     * Bulk upload credit grant (staff). Mirrors legacy public/takeamountupload.php
+     * so the admin "Add Upload" form keeps working under the Laravel router:
+     * adds a given amount (in GB) of upload credit to every user of the selected
+     * classes and sends each of them a PM.
+     *
+     * POST classes[] + amount + msg + subject + sender updates the uploaded
+     * bytes and inserts one message per matching user, then redirects to
+     * amountupload.php?sent=1.
+     */
+    public function webTakeAmountUpload(Request $request)
+    {
+        /** @var \App\Models\User $currentUser */
+        $currentUser = Auth::guard('nexus')->user();
+        if (! $currentUser) {
+            abort(401);
+        }
+        $curUser = $currentUser->toArray();
+
+        // globals the shared legacy helpers expect (mirrors public/takeamountupload.php bootstrap)
+        $GLOBALS['CURUSER'] = $curUser;
+        $GLOBALS['lang_functions'] = get_legacy_lang_file('functions');
+        $GLOBALS['CURLANGDIR'] = get_langfolder_cookie();
+        $GLOBALS['BASEURL'] = Setting::getBaseUrl();
+        $GLOBALS['SITENAME'] = Setting::getSiteName();
+
+        if (get_user_class() < User::CLASS_SYSOP) {
+            abort(403, 'Permission denied.');
+        }
+
+        $senderId = $request->input('sender') === 'system' ? 0 : (int) $curUser['id'];
+        $dt = now()->toDateTimeString();
+        $msg = trim((string) $request->input('msg', ''));
+        $amount = (string) $request->input('amount', '');
+        if ($msg === '' || $amount === '') {
+            return $this->deleteFailed("Don't leave any fields blank.");
+        }
+        if (! is_numeric($amount)) {
+            return $this->deleteFailed('amount must be numeric');
+        }
+
+        $classes = (array) $request->input('clases', []);
+        if ($classes === []) {
+            return $this->deleteFailed('Invalid Class');
+        }
+        foreach ($classes as $class) {
+            if (! is_valid_id($class) && $class != 0) {
+                return $this->deleteFailed('Invalid Class');
+            }
+        }
+        $subject = trim((string) $request->input('subject', ''));
+
+        $uploadedBytes = (int) getsize_int($amount, 'G');
+
+        $receiverIds = User::query()->whereIn('class', $classes)->pluck('id')->all();
+        User::query()->whereIn('class', $classes)->increment('uploaded', $uploadedBytes);
+
+        foreach ($receiverIds as $receiverId) {
+            Message::add([
+                'sender' => $senderId,
+                'receiver' => $receiverId,
+                'added' => $dt,
+                'subject' => $subject,
+                'msg' => $msg,
+            ]);
+        }
+
+        return redirect('amountupload.php?sent=1');
+    }
+
+    /**
      * Render a fastdelete failure the way the legacy bark() did.
      */
     private function deleteFailed(string $message)

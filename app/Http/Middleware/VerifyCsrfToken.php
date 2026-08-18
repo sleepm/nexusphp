@@ -21,6 +21,8 @@ class VerifyCsrfToken extends Middleware
         "takeupload.php",
         // legacy edit.php form posts to takeedit.php without a CSRF token
         "takeedit.php",
+        // legacy amountupload.php form posts to takeamountupload.php without a CSRF token
+        "takeamountupload.php",
         // legacy mybonus.php exchange forms post to mybonus.php without a CSRF token
         "mybonus.php",
         // legacy messages.php moveordel/forward/delete forms post without a CSRF token

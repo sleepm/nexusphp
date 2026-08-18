@@ -220,6 +220,10 @@ Route::get('/edit.php', [\App\Http\Controllers\TorrentController::class, 'webEdi
 Route::post('/takeedit.php', [\App\Http\Controllers\TorrentController::class, 'webTakeEdit'])
     ->middleware('auth.nexus:nexus');
 
+// bulk upload credit grant (staff) — mirrors public/takeamountupload.php
+Route::post('/takeamountupload.php', [\App\Http\Controllers\TorrentController::class, 'webTakeAmountUpload'])
+    ->middleware('auth.nexus:nexus');
+
 // fast torrent deletion (staff) — mirrors public/fastdelete.php
 Route::get('/fastdelete.php', [\App\Http\Controllers\TorrentController::class, 'webFastDelete'])
     ->middleware('auth.nexus:nexus');
