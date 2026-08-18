@@ -236,6 +236,10 @@ Route::get('/bitbucketlog.php', [\App\Http\Controllers\BitbucketController::clas
 Route::match(['get', 'post'], '/freeleech.php', [\App\Http\Controllers\FreeleechController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// pre-download notice gate — mirrors public/downloadnotice.php
+Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);
