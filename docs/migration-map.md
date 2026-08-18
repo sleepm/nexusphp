@@ -11,12 +11,12 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 52 |
+| 已完成迁移 | 56 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 91 |
+| 待迁移页面 | 约 87 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
-| 已有 Controller | 44 个（多数仅 API，路由未启用） |
+| 已有 Controller | 47 个（多数仅 API，路由未启用） |
 
 **完成判定标准（DoD）：**
 1. 页面逻辑已由 Controller 方法承载，路由注册于 `routes/web.php` 或 `routes/admin.php`
@@ -124,10 +124,10 @@
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
 | mybonus.php | 823 | ✅ | P1 | 积分中心。`BonusController::web()` 迁移遗留 `public/mybonus.php`，渲染 Blade `mybonus`（兑换表 + 积分说明），`webExchange()` 处理 POST 兑换（上传/下载/VIP/邀请/临时邀请/自定义头衔/免广告/慈善/赠礼/消H&R/补签卡/彩虹ID/改名卡），复用 `BonusRepository` + `NexusLock` 防重；路由 `/mybonus.php`（CSRF 豁免），遗留文件已删 |
-| bonus-log.php | 110 | ⬜ | P2 | 积分日志，`BonusLogResource`(Filament) 已有 |
-| donate.php | 106 | ⬜ | P2 | 捐赠 |
-| donated.php | 31 | ⬜ | P3 | 捐赠提交 |
-| donorlist.php | 43 | ⬜ | P3 | 捐赠榜 |
+| bonus-log.php | 110 | ✅ | P2 | 积分日志。`BonusLogController::web()` 网格化展示（uid/category/business_type 过滤 + 分页，查看他人需 viewhistory），`BonusLogs` Eloquent，路由 `/bonus-log.php`（auth.nexus），遗留文件已删；回归 `BonusLogPageTest` |
+| donate.php | 106 | ✅ | P2 | 捐赠（PayPal/Alipay/自定义文案，公开页）。`DonationController::web()` + Blade `donate`，路由 `/donate.php`，遗留文件已删 |
+| donated.php | 31 | ✅ | P3 | 捐赠提交（SYSOP）。`DonationController::webDonated()` 更新 `users.donated` + Blade `donated`，路由 `/donated.php`（CSRF 豁免，auth.nexus），遗留文件已删；回归 `DonationPageTest` |
+| donorlist.php | 43 | ✅ | P3 | 捐赠榜（管理员+）。`DonorListController::web()` 分页列出 `donor='yes'` 用户 + Blade `donorlist`，路由 `/donorlist.php`（auth.nexus），遗留文件已删；回归 `DonorListPageTest` |
 | promotionlink.php | 71 | ⬜ | P3 | 推广链接 |
 | mybar.php | 109 | ⬜ | P3 | 签名档 |
 | cc98bar.php | 129 | ⬜ | P3 | 外站签名档 |

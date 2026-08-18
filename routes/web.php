@@ -104,6 +104,24 @@ Route::post('/mybonus.php', [\App\Http\Controllers\BonusController::class, 'webE
     ->middleware('auth.nexus:nexus');
 
 // =============================================================
+// 积分日志 / 捐赠（Phase 2 P2/P3）—— bonus-log / donate / donated
+// =============================================================
+// user bonus log (mirrors public/bonus-log.php)
+Route::get('/bonus-log.php', [\App\Http\Controllers\BonusLogController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// donation page (public, mirrors public/donate.php)
+Route::get('/donate.php', [\App\Http\Controllers\DonationController::class, 'web']);
+
+// donated amount update form + submit (SYSOP, mirrors public/donated.php)
+Route::match(['get', 'post'], '/donated.php', [\App\Http\Controllers\DonationController::class, 'webDonated'])
+    ->middleware('auth.nexus:nexus');
+
+// donor list (admin, mirrors public/donorlist.php)
+Route::get('/donorlist.php', [\App\Http\Controllers\DonorListController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// =============================================================
 // 站内信（messages.php）—— Phase 7 P1 迁移
 // =============================================================
 Route::get('/messages.php', [\App\Http\Controllers\MessageController::class, 'web'])
