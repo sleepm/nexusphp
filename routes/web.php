@@ -140,6 +140,39 @@ Route::get('/sendmessage.php', [\App\Http\Controllers\MessageController::class, 
     ->middleware('auth.nexus:nexus');
 
 // =============================================================
+// 消息系统（Phase 7 消息收尾）—— deletemessage / staffmess / takestaffmess /
+// staffbox / staffpanel / contactstaff / massmail
+// =============================================================
+// single-message inbox/sentbox deletion (GET, mirrors public/deletemessage.php)
+Route::get('/deletemessage.php', [\App\Http\Controllers\DeleteMessageController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// mass-PM form + submission (GET/POST, mirrors public/staffmess.php / takestaffmess.php)
+Route::get('/staffmess.php', [\App\Http\Controllers\StaffMessController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+Route::post('/takestaffmess.php', [\App\Http\Controllers\StaffMessController::class, 'webTake'])
+    ->middleware('auth.nexus:nexus');
+// GET /takestaffmess.php mirrors the legacy stderr() 403 (POST-only page)
+Route::get('/takestaffmess.php', [\App\Http\Controllers\StaffMessController::class, 'webTake'])
+    ->middleware('auth.nexus:nexus');
+
+// staff inbox: list / view / answer / delete / mark answered (GET+POST, mirrors public/staffbox.php)
+Route::match(['get', 'post'], '/staffbox.php', [\App\Http\Controllers\StaffBoxController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// staff control panel (GET, mirrors public/staffpanel.php)
+Route::get('/staffpanel.php', [\App\Http\Controllers\StaffPanelController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// contact-staff compose form (GET, mirrors public/contactstaff.php; posts to legacy takecontact.php)
+Route::get('/contactstaff.php', [\App\Http\Controllers\ContactStaffController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// mass e-mail gateway (GET/POST, mirrors public/massmail.php)
+Route::match(['get', 'post'], '/massmail.php', [\App\Http\Controllers\MassMailController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// =============================================================
 // 论坛（forums.php / moforums.php）—— Phase 7 P2 迁移
 // =============================================================
 // GET: portal / viewforum / viewtopic / viewunread / search / compose / confirm pages

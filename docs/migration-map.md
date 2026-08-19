@@ -10,10 +10,10 @@
 
 | 统计项 | 数量 |
 | --- | --- |
-| 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 59 |
-| 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 84 |
+| 遗留页面总数 (`public/*.php`) | 150 |
+| 已完成迁移 | 78 |
+| 保留 legacy（tracker/特殊脚本） | 15 |
+| 待迁移页面 | 57 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -139,13 +139,13 @@
 | messages.php | 725 | ✅ | P1 | 站内信。`MessageController::web()` 迁移遗留 `public/messages.php`，渲染 Blade `messages`（收件箱/发件箱/自定义邮箱列表、搜索、分页、转发、邮箱管理），`Pmbox` + `Message` Eloquent 模型，路由 `/messages.php`（GET/POST，CSRF 豁免），遗留文件已删 |
 | takemessage.php | 192 | ✅ | P1 | 发送消息。`MessageController::webTakeMessage()` 迁移遗留 `public/takemessage.php`（普通发送/转发/回复时删除原消息、限流、接收方 acceptpms/parked 检查、通知邮件），接收方检查用 `blocks`/`friends` 数据表查询，路由 `/takemessage.php`（POST，CSRF 豁免），遗留文件已删 |
 | sendmessage.php | 60 | ✅ | P2 | 发送短讯页。`MessageController::webSendMessage()` 迁移遗留 `public/sendmessage.php`（新建/回复 compose 表单：receiver/replyto 校验、Re:/Re(n): 主题续接、删除原消息/保存发件箱复选，复用 `begin_compose`/`textbbcode` 编辑器），渲染 Blade `sendmessage`，路由 `/sendmessage.php`（GET，auth.nexus），遗留文件已删；`SendMessagePageTest` 覆盖 |
-| deletemessage.php | 43 | ⬜ | P3 | 删除消息 |
-| staffmess.php | 72 | ⬜ | P2 | 管理组消息 |
-| takestaffmess.php | 57 | ⬜ | P2 | 发管理组消息 |
-| staffbox.php | 275 | ⬜ | P2 | 管理信箱 |
-| staffpanel.php | 86 | ⬜ | P3 | 管理面板 |
-| contactstaff.php | 14 | ⬜ | P3 | 联系管理组 |
-| massmail.php | 81 | ⬜ | P2 | 群发邮件（admin） |
+| deletemessage.php | 43 | ✅ | P3 | 删除消息。`DeleteMessageController::web()` 迁移遗留 `public/deletemessage.php`（GET `?id=`+`type=in/sent` 删除单封站内信，归属校验、`ignorepm` 关系不受影响），路由 `/deletemessage.php`（GET，auth.nexus），遗留文件已删；`DeleteMessagePageTest` 覆盖 |
+| staffmess.php | 72 | ✅ | P2 | 管理组消息。`StaffMessController::web()` 迁移遗留 `public/staffmess.php`（管理员多选用户类群发 PM 表单，`?sent=1` 成功提示，`form_role_filter` 插件钩子），路由 `/staffmess.php`（GET，auth.nexus），遗留文件已删；`StaffMessPageTest` 覆盖 |
+| takestaffmess.php | 57 | ✅ | P2 | 发管理组消息。`StaffMessController::webTake()` 迁移遗留 `public/takestaffmess.php`（POST `classes[]`+`subject`+`msg`+`sender`，管理员门槛、类校验、`role_query_conditions` 过滤 + `chunkById` 分批插入 `messages` 并更新 `last_pm`，成功重定向 `staffmess.php?sent=1`），路由 `/takestaffmess.php`（POST，auth.nexus；GET 镜像 legacy 403），遗留文件已删；`StaffMessPageTest` 覆盖 |
+| staffbox.php | 275 | ✅ | P2 | 管理信箱。`StaffBoxController::web()` 迁移遗留 `public/staffbox.php`（action 分发 list/viewpm/answermessage/takeanswer/deletestaffmessage/setanswered/takecontactanswered，`user_can('staffmem')`+permission 门、回答后回 PM 并标记 answered、批量标记/删除），渲染 Blade `staffbox`，路由 `/staffbox.php`（GET+POST，auth.nexus），遗留文件已删；`StaffBoxPageTest` 覆盖 |
+| staffpanel.php | 86 | ✅ | P3 | 管理面板。`StaffPanelController::web()` 迁移遗留 `public/staffpanel.php`（MODERATOR 门槛）按类分级输出站点管理链接快捷入口），渲染 Blade `staffpanel`，路由 `/staffpanel.php`（GET，auth.nexus），遗留文件已删；`StaffPanelPageTest` 覆盖 |
+| contactstaff.php | 14 | ✅ | P3 | 联系管理组。`ContactStaffController::web()` 迁移遗留 `public/contactstaff.php`（联系表单页，提交走 legacy `takecontact.php`，渲染时校验收件人），渲染 Blade `contactstaff`，路由 `/contactstaff.php`（GET，auth.nexus），遗留文件已删；`ContactStaffPageTest` 覆盖 |
+| massmail.php | 81 | ✅ | P2 | 群发邮件（admin）。`MassMailController::web()` 迁移遗留 `public/massmail.php`（SYSOP 门槛、`or` 比较符（`<`/`>`/`=`/`<=`/`>=`）+`class` 筛选用户、subject 截断为 80 字符并前缀 `Fw: `、逐用户 `sent_mail()` 群发，成功/失败结果页），路由 `/massmail.php`（GET+POST，auth.nexus），遗留文件已删；`MassMailPageTest` 覆盖 |
 
 ## 8. 论坛
 

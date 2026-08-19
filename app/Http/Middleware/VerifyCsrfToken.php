@@ -42,5 +42,11 @@ class VerifyCsrfToken extends Middleware
         "ajax.php",
         // legacy donated.php update form posts to donated.php without a CSRF token
         "donated.php",
+        // legacy staffbox.php answer/bulk-action forms post to staffbox.php without a CSRF token
+        "staffbox.php",
+        // legacy staffmess.php form posts to takestaffmess.php without a CSRF token
+        "takestaffmess.php",
+        // legacy massmail.php form posts to massmail.php without a CSRF token
+        "massmail.php",
     ];
 }
