@@ -188,6 +188,10 @@ Route::match(['get', 'post'], '/moforums.php', [\App\Http\Controllers\OverForumC
 Route::match(['get', 'post'], '/forummanage.php', [\App\Http\Controllers\ForumManageController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// 版主操作（modtask）—— POST: confirmuser / edituser（userdetails.php / unco.php 表单提交）
+Route::match(['get', 'post'], '/modtask.php', [\App\Http\Controllers\ModTaskController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // =============================================================
 // 首页与主列表（Phase 2 P2）—— topten / usersearch / userhistory
 // =============================================================

@@ -156,7 +156,7 @@
 | forums.php | 1645 | ✅ | P1 | 论坛首页/版块。`ForumController::web()` 迁移遗留 `public/forums.php`（portal/viewforum/viewtopic/viewunread/search/newtopic/reply/quote/edit/post、setsticky/setlocked/hltopic、movetopic/deletetopic/deletepost、catchup），渲染 Blade `forums`，路由 `/forums.php`（GET+POST，CSRF 豁免），遗留文件已删 |
 | moforums.php | 215 | ✅ | P1 | 论坛分区管理。`OverForumController::web()` 迁移遗留 `public/moforums.php`（分区列表/新增/编辑/删除），渲染 Blade `moforums`，路由 `/moforums.php`（GET+POST，CSRF 豁免），遗留文件已删；`OverForumPageTest` 覆盖 |
 | forummanage.php | 302 | ✅ | P2 | 版块管理。`ForumManageController::web()` 迁移遗留 `public/forummanage.php`（版块列表/新增/编辑/删除，删除连带 topics/posts/forummods、moderator 逗号分隔最多 3 人），路由 `/forummanage.php`（GET+POST，CSRF 豁免），遗留文件已删；`ForumManagePageTest` 覆盖 |
-| modtask.php | 496 | ⬜ | P2 | 版主操作 |
+| modtask.php | 496 | ✅ | P2 | 版主操作。`ModTaskController::web()` 迁移遗留 `public/modtask.php`（confirmuser 确认/取消确认待激活账号、edituser 应用 userdetails 表单的标题/头像/签名/隐私/警告/上传下载发帖权限/捐赠等修改），路由 `/modtask.php`（POST，CSRF 豁免），遗留文件已删；`ModTaskPageTest` 覆盖 |
 | makepoll.php | 177 | ⬜ | P2 | 建投票。`PollController` 已有 |
 | polloverview.php | 80 | ⬜ | P3 | 投票结果 |
 | shoutbox.php | 147 | ⬜ | P3 | 聊天室 |

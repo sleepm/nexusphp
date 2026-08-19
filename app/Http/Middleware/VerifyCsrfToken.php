@@ -48,5 +48,7 @@ class VerifyCsrfToken extends Middleware
         "takestaffmess.php",
         // legacy massmail.php form posts to massmail.php without a CSRF token
         "massmail.php",
+        // legacy userdetails.php / unco.php forms post to modtask.php without a CSRF token
+        "modtask.php",
     ];
 }
