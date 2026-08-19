@@ -11,12 +11,12 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 158 |
-| 已完成迁移 | 56 |
+| 已完成迁移 | 59 |
 | 保留 legacy（tracker/特殊脚本） | 约 15 |
-| 待迁移页面 | 约 87 |
+| 待迁移页面 | 约 84 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
-| 已有 Controller | 47 个（多数仅 API，路由未启用） |
+| 已有 Controller | 50 个（多数仅 API，路由未启用） |
 
 **完成判定标准（DoD）：**
 1. 页面逻辑已由 Controller 方法承载，路由注册于 `routes/web.php` 或 `routes/admin.php`
@@ -128,9 +128,9 @@
 | donate.php | 106 | ✅ | P2 | 捐赠（PayPal/Alipay/自定义文案，公开页）。`DonationController::web()` + Blade `donate`，路由 `/donate.php`，遗留文件已删 |
 | donated.php | 31 | ✅ | P3 | 捐赠提交（SYSOP）。`DonationController::webDonated()` 更新 `users.donated` + Blade `donated`，路由 `/donated.php`（CSRF 豁免，auth.nexus），遗留文件已删；回归 `DonationPageTest` |
 | donorlist.php | 43 | ✅ | P3 | 捐赠榜（管理员+）。`DonorListController::web()` 分页列出 `donor='yes'` 用户 + Blade `donorlist`，路由 `/donorlist.php`（auth.nexus），遗留文件已删；回归 `DonorListPageTest` |
-| promotionlink.php | 71 | ⬜ | P3 | 推广链接 |
-| mybar.php | 109 | ⬜ | P3 | 签名档 |
-| cc98bar.php | 129 | ⬜ | P3 | 外站签名档 |
+| promotionlink.php | 71 | ✅ | P3 | 推广链接。`PromotionLinkController::web()` 迁移遗留 `public/promotionlink.php`（`?key=` 点击奖励防重复、`updatekey`/缺 key 重新生成、推广页 XHTML/HTML/BBCode 片段渲染，公开点击路径 + `?key=` 场景 `Auth::shouldUse('nexus')` 兼容 legacy 权限助手），路由 `/promotionlink.php`，遗留文件已删；`PromotionLinkPageTest` 覆盖 |
+| mybar.php | 109 | ✅ | P3 | 签名档。`MyBarController::web()` 迁移遗留 `public/mybar.php`（`?userid=ID.png` 路径校验、GD 绘制用户名/上传/下载 + `noname`/`noup`/`nodown` 与颜色/字号/坐标覆盖、类/`strong` 隐私门、300s 缓存），路由 `/mybar.php`，遗留文件已删；`MyBarPageTest` 覆盖 |
+| cc98bar.php | 129 | ✅ | P3 | 外站签名档。`Cc98BarController::web()` 迁移遗留 `public/cc98bar.php`（路径编码选项解析 `nn..ny`/`ur..uy`/`dr..dy`/`bg` + `id.ID.png`，共用 `RendersUserBar` trait 渲染与缓存），路由 `/cc98bar.php/{tail?}`，遗留文件已删；`Cc98BarPageTest` 覆盖 |
 
 ## 7. 消息系统
 

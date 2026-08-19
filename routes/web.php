@@ -262,6 +262,17 @@ Route::match(['get', 'post'], '/freeleech.php', [\App\Http\Controllers\Freeleech
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// promotion link page + click tracking — mirrors public/promotionlink.php
+// (the ?key= click path is public so guests can visit a shared promotion link)
+Route::get('/promotionlink.php', [\App\Http\Controllers\PromotionLinkController::class, 'web']);
+
+// personal userbar image — mirrors public/mybar.php (?userid=ID.png)
+Route::get('/mybar.php', [\App\Http\Controllers\MyBarController::class, 'web']);
+
+// external-forum userbar image — mirrors public/cc98bar.php (options in the path)
+Route::get('/cc98bar.php/{tail?}', [\App\Http\Controllers\Cc98BarController::class, 'web'])
+    ->where('tail', '.*');
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);
