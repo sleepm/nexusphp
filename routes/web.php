@@ -184,6 +184,10 @@ Route::match(['get', 'post'], '/forums.php', [\App\Http\Controllers\ForumControl
 Route::match(['get', 'post'], '/moforums.php', [\App\Http\Controllers\OverForumController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// 版块管理（forums）—— GET: list / del / edit / new forum; POST: addforum / editforum
+Route::match(['get', 'post'], '/forummanage.php', [\App\Http\Controllers\ForumManageController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // =============================================================
 // 首页与主列表（Phase 2 P2）—— topten / usersearch / userhistory
 // =============================================================

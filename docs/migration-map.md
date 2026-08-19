@@ -155,7 +155,7 @@
 | --- | --- | --- | --- | --- |
 | forums.php | 1645 | ✅ | P1 | 论坛首页/版块。`ForumController::web()` 迁移遗留 `public/forums.php`（portal/viewforum/viewtopic/viewunread/search/newtopic/reply/quote/edit/post、setsticky/setlocked/hltopic、movetopic/deletetopic/deletepost、catchup），渲染 Blade `forums`，路由 `/forums.php`（GET+POST，CSRF 豁免），遗留文件已删 |
 | moforums.php | 215 | ✅ | P1 | 论坛分区管理。`OverForumController::web()` 迁移遗留 `public/moforums.php`（分区列表/新增/编辑/删除），渲染 Blade `moforums`，路由 `/moforums.php`（GET+POST，CSRF 豁免），遗留文件已删；`OverForumPageTest` 覆盖 |
-| forummanage.php | 302 | ⬜ | P2 | 版块管理（admin → Filament `ForumResource`） |
+| forummanage.php | 302 | ✅ | P2 | 版块管理。`ForumManageController::web()` 迁移遗留 `public/forummanage.php`（版块列表/新增/编辑/删除，删除连带 topics/posts/forummods、moderator 逗号分隔最多 3 人），路由 `/forummanage.php`（GET+POST，CSRF 豁免），遗留文件已删；`ForumManagePageTest` 覆盖 |
 | modtask.php | 496 | ⬜ | P2 | 版主操作 |
 | makepoll.php | 177 | ⬜ | P2 | 建投票。`PollController` 已有 |
 | polloverview.php | 80 | ⬜ | P3 | 投票结果 |
@@ -190,7 +190,7 @@
 | catmanage.php | 836 | ⬜ | P1 | `Section\CategoryResource` ✅ |
 | admanage.php | 427 | ⬜ | P2 | `Advertisement`（需新建 Resource） |
 | faqmanage.php | 118 | ⬜ | P2 | `FaqResource`（需新建） |
-| forummanage.php | 302 | ⬜ | P2 | `ForumResource`（需新建） |
+| forummanage.php | 302 | ✅ | P2 | `ForumManageController`（已落地） |
 | linksmanage.php | 167 | ⬜ | P2 | `LinksResource`（需新建） |
 | medals.php → medal.php | 148 | ⬜ | P1 | `MedalResource` ✅ |
 | tags.php | 303 | ⬜ | P1 | `TagResource` ✅ |
