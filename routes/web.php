@@ -22,6 +22,17 @@ Route::post('/index.php', [\App\Http\Controllers\IndexController::class, 'vote']
     ->middleware('auth.nexus:nexus');
 
 // =============================================================
+// 投票管理（makepoll / polloverview）—— 替代 public/makepoll.php / public/polloverview.php
+// =============================================================
+// 创建/编辑投票表单 + 提交（GET/POST，镜像 public/makepoll.php）
+Route::match(['get', 'post'], '/makepoll.php', [\App\Http\Controllers\PollController::class, 'webMakePoll'])
+    ->middleware('auth.nexus:nexus');
+
+// 投票概况：?id=N 显示投票详情（选项 + 用户投票），否则列出所有投票（镜像 public/polloverview.php）
+Route::get('/polloverview.php', [\App\Http\Controllers\PollController::class, 'webOverview'])
+    ->middleware('auth.nexus:nexus');
+
+// =============================================================
 // 认证与会话（Auth）—— Phase 1 迁移，替代 public/login.php 等遗留页面
 // =============================================================
 Route::get('/login.php', [\App\Http\Controllers\AuthenticateController::class, 'showLoginForm']);

@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 78 |
+| 已完成迁移 | 80 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 57 |
+| 待迁移页面 | 55 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -157,8 +157,8 @@
 | moforums.php | 215 | ✅ | P1 | 论坛分区管理。`OverForumController::web()` 迁移遗留 `public/moforums.php`（分区列表/新增/编辑/删除），渲染 Blade `moforums`，路由 `/moforums.php`（GET+POST，CSRF 豁免），遗留文件已删；`OverForumPageTest` 覆盖 |
 | forummanage.php | 302 | ✅ | P2 | 版块管理。`ForumManageController::web()` 迁移遗留 `public/forummanage.php`（版块列表/新增/编辑/删除，删除连带 topics/posts/forummods、moderator 逗号分隔最多 3 人），路由 `/forummanage.php`（GET+POST，CSRF 豁免），遗留文件已删；`ForumManagePageTest` 覆盖 |
 | modtask.php | 496 | ✅ | P2 | 版主操作。`ModTaskController::web()` 迁移遗留 `public/modtask.php`（confirmuser 确认/取消确认待激活账号、edituser 应用 userdetails 表单的标题/头像/签名/隐私/警告/上传下载发帖权限/捐赠等修改），路由 `/modtask.php`（POST，CSRF 豁免），遗留文件已删；`ModTaskPageTest` 覆盖 |
-| makepoll.php | 177 | ⬜ | P2 | 建投票。`PollController` 已有 |
-| polloverview.php | 80 | ⬜ | P3 | 投票结果 |
+| makepoll.php | 177 | ✅ | P2 | 建投票。`PollController::webMakePoll()` 迁移遗留 `public/makepoll.php`（GET 渲染新建/编辑表单，新建且距上次发布 <3 天时给出提醒；POST 校验必填 question/option0/option1、创建或更新投票并清 `current_poll_content`/`current_poll_result` 缓存、按 `returnto` 重定向），渲染 Blade `makepoll`，路由 `/makepoll.php`（GET+POST，auth.nexus），遗留文件已删；`PollPageTest` 覆盖 |
+| polloverview.php | 80 | ✅ | P3 | 投票结果。`PollController::webOverview()` 迁移遗留 `public/polloverview.php`（无 `?id=` 列出全部投票；有 `?id=` 显示详情：概况行 + 选项表 + 按 username 排序的分页用户投票），渲染 Blade `polloverview`（复用 `partials.pagination`），路由 `/polloverview.php`（GET，auth.nexus），遗留文件已删；`PollPageTest` 覆盖 |
 | shoutbox.php | 147 | ⬜ | P3 | 聊天室 |
 | friends.php | 356 | ⬜ | P2 | 好友 |
 | tags.php | 303 | ⬜ | P2 | 标签。`TagController` + `TagResource`(Filament) 已有 |
