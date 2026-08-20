@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 80 |
+| 已完成迁移 | 82 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 55 |
+| 待迁移页面 | 53 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -159,10 +159,10 @@
 | modtask.php | 496 | ✅ | P2 | 版主操作。`ModTaskController::web()` 迁移遗留 `public/modtask.php`（confirmuser 确认/取消确认待激活账号、edituser 应用 userdetails 表单的标题/头像/签名/隐私/警告/上传下载发帖权限/捐赠等修改），路由 `/modtask.php`（POST，CSRF 豁免），遗留文件已删；`ModTaskPageTest` 覆盖 |
 | makepoll.php | 177 | ✅ | P2 | 建投票。`PollController::webMakePoll()` 迁移遗留 `public/makepoll.php`（GET 渲染新建/编辑表单，新建且距上次发布 <3 天时给出提醒；POST 校验必填 question/option0/option1、创建或更新投票并清 `current_poll_content`/`current_poll_result` 缓存、按 `returnto` 重定向），渲染 Blade `makepoll`，路由 `/makepoll.php`（GET+POST，auth.nexus），遗留文件已删；`PollPageTest` 覆盖 |
 | polloverview.php | 80 | ✅ | P3 | 投票结果。`PollController::webOverview()` 迁移遗留 `public/polloverview.php`（无 `?id=` 列出全部投票；有 `?id=` 显示详情：概况行 + 选项表 + 按 username 排序的分页用户投票），渲染 Blade `polloverview`（复用 `partials.pagination`），路由 `/polloverview.php`（GET，auth.nexus），遗留文件已删；`PollPageTest` 覆盖 |
-| shoutbox.php | 147 | ⬜ | P3 | 聊天室 |
+| shoutbox.php | 147 | ✅ | P3 | 聊天室。`ShoutboxController::web()` 迁移遗留 `public/shoutbox.php`（iframe 片段，`type=shoutbox|helpbox` 渲染消息列表，`?sent=yes&shbox_text=..` 发言：helpbox 游客可发、shoutbox 需登录，NexusLock 60s 限频；`?del=ID` 删除消息（sbmanage）；`sbnum`/`sbrefresh`/`hidehb` 用户偏好），渲染 Blade `shoutbox`，路由 `/shoutbox.php`（GET），遗留文件已删；`ShoutboxPageTest` 覆盖 |
 | friends.php | 356 | ⬜ | P2 | 好友 |
 | tags.php | 303 | ⬜ | P2 | 标签。`TagController` + `TagResource`(Filament) 已有 |
-| fun.php | 304 | ⬜ | P3 | 趣味页面（`funmanage` 权限） |
+| fun.php | 304 | ✅ | P3 | 趣味页面。`FunController::web()` 迁移遗留 `public/fun.php`（action 分发 `view`/`new`/`add`/`edit`/`delete`/`ban`/`vote`；new/add 距上篇 <24h 拦截，edit/delete/ban 需 `funmanage`（delete 额外管理员），ban 附理由并 PM 原作者，vote 去重 + 满 20 票按比率置 notfunny/dull/funny/veryfunny、25/50/100/200 票给作者积分奖励 + PM），渲染 Blade `fun`/`fun_form`/`fun_page`，路由 `/fun.php`（GET+POST，auth.nexus），遗留文件已删；`FunPageTest` 覆盖 |
 
 ## 9. 请求 / 求种 / Offer
 

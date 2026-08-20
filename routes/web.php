@@ -33,6 +33,17 @@ Route::get('/polloverview.php', [\App\Http\Controllers\PollController::class, 'w
     ->middleware('auth.nexus:nexus');
 
 // =============================================================
+// 聊天室 & 趣味盒子—— 替代 public/shoutbox.php / public/fun.php
+// =============================================================
+// shoutbox 为 iframe 片段：type=helpbox 允许游客访问（登录页帮助盒），type=shoutbox 需登录；
+// ?del=ID 删除消息（sbmanage），?sent=yes&shbox_text=.. 发言（镜像 public/shoutbox.php）
+Route::get('/shoutbox.php', [\App\Http\Controllers\ShoutboxController::class, 'web']);
+
+// 趣味盒子：action=view 为 iframe 片段；new/add/edit/delete/ban/vote 均需登录（镜像 public/fun.php）
+Route::match(['get', 'post'], '/fun.php', [\App\Http\Controllers\FunController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// =============================================================
 // 认证与会话（Auth）—— Phase 1 迁移，替代 public/login.php 等遗留页面
 // =============================================================
 Route::get('/login.php', [\App\Http\Controllers\AuthenticateController::class, 'showLoginForm']);
