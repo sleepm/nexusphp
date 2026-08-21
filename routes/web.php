@@ -43,6 +43,10 @@ Route::get('/shoutbox.php', [\App\Http\Controllers\ShoutboxController::class, 'w
 Route::match(['get', 'post'], '/fun.php', [\App\Http\Controllers\FunController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// 好友/黑名单（friends.php）—— GET 渲染好友+屏蔽用户列表；?action=add|delete 增删（镜像 public/friends.php）
+Route::match(['get', 'post'], '/friends.php', [\App\Http\Controllers\FriendsController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // =============================================================
 // 认证与会话（Auth）—— Phase 1 迁移，替代 public/login.php 等遗留页面
 // =============================================================
