@@ -50,5 +50,7 @@ class VerifyCsrfToken extends Middleware
         "massmail.php",
         // legacy userdetails.php / unco.php forms post to modtask.php without a CSRF token
         "modtask.php",
+        // legacy tags.php BB test form posts to itself without a CSRF token
+        "tags.php",
     ];
 }

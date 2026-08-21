@@ -218,6 +218,9 @@ Route::match(['get', 'post'], '/forummanage.php', [\App\Http\Controllers\ForumMa
 Route::match(['get', 'post'], '/modtask.php', [\App\Http\Controllers\ModTaskController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// BB 标签帮助页（tags.php）—— 公开页，POST test 表单回传自身（镜像 public/tags.php）
+Route::match(['get', 'post'], '/tags.php', [\App\Http\Controllers\TagController::class, 'web']);
+
 // =============================================================
 // 首页与主列表（Phase 2 P2）—— topten / usersearch / userhistory
 // =============================================================
