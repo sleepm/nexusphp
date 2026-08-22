@@ -441,6 +441,10 @@ Route::match(['get', 'post'], '/modrules.php', fn () => redirect()->route('filam
 Route::match(['get', 'post'], '/fields.php', fn () => redirect()->route('filament.admin.resources.torrent-custom-fields.index'))
     ->name('fields.index');
 
+// all clients (admin) — mirrors public/allagents.php, now handled by Filament AgentAllowResource/AgentDenyResource
+Route::match(['get', 'post'], '/allagents.php', fn () => redirect()->route('filament.admin.resources.system.agent-allows.index'))
+    ->name('allagents.index');
+
 // pre-download notice gate — mirrors public/downloadnotice.php
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');

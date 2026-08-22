@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 104 |
+| 已完成迁移 | 105 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 31 |
+| 待迁移页面 | 30 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -208,7 +208,7 @@
 | fields.php | 57 | ✅ | P3 | 自定义字段。`TorrentCustomFieldResource` ✅（列表/创建/编辑/删除，补齐 Create/Edit 页，`/fields.php` 重定向到 Filament，遗留文件已删；`FieldsPageTest` 覆盖） |
 | formats.php | 215 | ✅ | P3 | 下载文件格式帮助页（静态指南）。`FormatsController::web()` 迁移遗留 `public/formats.php`（Compression/Multimedia/CD Image/Other Files 分节说明），渲染 Blade `formats`（`layouts.guest`），路由 `/formats.php`（auth.nexus），遗留文件已删；`FormatsPageTest` 覆盖 |
 | videoformats.php | 204 | ✅ | P3 | 视频格式/发布类型帮助页（静态指南）。`FormatsController::video()` 迁移遗留 `public/videoformats.php`（CAM/TS/TC/SCR/DVDRip 等 + Scene Tags 说明），渲染 Blade `videoformats`（`layouts.guest`），路由 `/videoformats.php`（auth.nexus），遗留文件已删；`FormatsPageTest` 覆盖 |
-| allagents.php | 16 | ⬜ | P3 | `AgentAllowResource` / `AgentDenyResource` ✅ |
+| allagents.php | 16 | ✅ | P3 | `AgentAllowResource` / `AgentDenyResource` ✅，路由 `/allagents.php` 重定向到 Filament `agent-allows`，遗留文件已删；`AllAgentsPageTest` 覆盖 |
 | ipsearch.php | 170 | ⬜ | P2 | IP 搜索 |
 | ipcheck.php | 97 | ⬜ | P3 | IP 检查 |
 | iphistory.php | 90 | ⬜ | P3 | IP 历史 |

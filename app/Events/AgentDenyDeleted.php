@@ -7,7 +7,6 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -15,16 +14,16 @@ class AgentDenyDeleted
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public ?Model $model = null;
+    public ?array $data = null;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct(Model $model)
+    public function __construct(array $data)
     {
-        $this->model = $model;
+        $this->data = $data;
     }
 
     /**
