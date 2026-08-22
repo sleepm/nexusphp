@@ -82,13 +82,13 @@ class AdminpanelTableSeeder extends Seeder
 //                'url' => 'catmanage.php',
 //                'info' => 'Manage torrents categories at your site',
 //            ),
-            9 =>
-            array (
-                'id' => 12,
-                'name' => 'Custom Field Manage',
-                'url' => 'fields.php',
-                'info' => 'Manage custom fields',
-            ),
+            //            9 =>
+//            array (
+//                'id' => 12,
+//                'name' => 'Custom Field Manage',
+//                'url' => 'fields.php',
+//                'info' => 'Manage custom fields',
+//            ),
         ));
 
 

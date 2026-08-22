@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 101 |
+| 已完成迁移 | 102 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 34 |
+| 待迁移页面 | 33 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -205,7 +205,7 @@
 | users.php | 144 | ✅ | P1 | `UserResource` ✅，`/users.php` 重定向到 Filament `user.users.index`，遗留文件已删；`UsersPageTest` 覆盖 |
 | user-ban-log.php | 37 | ✅ | P2 | `UserBanLogResource`（新建，`System\UserBanLogResource` ✅ uid/username/operator/reason 列表 + UID 筛选，`/user-ban-log.php` 重定向到 Filament，遗留文件已删；`UserBanLogPageTest` 覆盖） |
 | modrules.php | 107 | ✅ | P3 | 版规管理。`RuleResource`（新建，`System\RuleResource` ✅ 列表/创建/编辑/删除 + 按语言筛选 + 增删改自动清 `rules` 缓存，`/modrules.php` 重定向到 Filament，遗留文件已删；`ModRulesPageTest` 覆盖） |
-| fields.php | 57 | ⬜ | P3 | 自定义字段，`TorrentCustomFieldResource` ✅ |
+| fields.php | 57 | ✅ | P3 | 自定义字段。`TorrentCustomFieldResource` ✅（列表/创建/编辑/删除，补齐 Create/Edit 页，`/fields.php` 重定向到 Filament，遗留文件已删；`FieldsPageTest` 覆盖） |
 | formats.php | 215 | ⬜ | P3 | 格式化设置，`Section` 相关 Resource ✅ |
 | videoformats.php | 204 | ⬜ | P3 | 同上 |
 | allagents.php | 16 | ⬜ | P3 | `AgentAllowResource` / `AgentDenyResource` ✅ |

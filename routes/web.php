@@ -429,6 +429,10 @@ Route::match(['get', 'post'], '/user-ban-log.php', fn () => redirect()->route('f
 Route::match(['get', 'post'], '/modrules.php', fn () => redirect()->route('filament.admin.resources.system.rules.index'))
     ->name('modrules.index');
 
+// custom fields management (admin) — mirrors public/fields.php, now handled by Filament TorrentCustomFieldResource
+Route::match(['get', 'post'], '/fields.php', fn () => redirect()->route('filament.admin.resources.torrent-custom-fields.index'))
+    ->name('fields.index');
+
 // pre-download notice gate — mirrors public/downloadnotice.php
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');

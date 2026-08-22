@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TorrentCustomFields;
 
+use App\Filament\Resources\TorrentCustomFields\Pages;
 use App\Filament\Resources\TorrentCustomFields\Pages\ListTorrentCustomFields;
 use App\Filament\Resources\TorrentCustomFields\Schemas\TorrentCustomFieldForm;
 use App\Filament\Resources\TorrentCustomFields\Tables\TorrentCustomFieldsTable;
@@ -54,6 +55,8 @@ class TorrentCustomFieldResource extends Resource
     {
         return [
             'index' => ListTorrentCustomFields::route('/'),
+            'create' => Pages\CreateTorrentCustomField::route('/create'),
+            'edit' => Pages\EditTorrentCustomField::route('/{record}/edit'),
         ];
     }
 }

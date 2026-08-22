@@ -374,6 +374,11 @@ class Update extends Install
             $this->initTrackerUrl('update');
             NexusDB::cache_del("nexus_plugin_store_all");
         }
+
+        /**
+         * @since 1.10.4 custom field management migrated to Filament TorrentCustomFieldResource
+         */
+        $this->removeMenu(['fields.php']);
     }
 
     public function runExtraMigrate()
