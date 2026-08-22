@@ -204,7 +204,7 @@
 | deletedisabled.php | 45 | ✅ | P3 | 同上，`/deletedisabled.php` 重定向到 Filament `user.users.index`，遗留文件已删；`DeleteDisabledPageTest` 覆盖 |
 | users.php | 144 | ✅ | P1 | `UserResource` ✅，`/users.php` 重定向到 Filament `user.users.index`，遗留文件已删；`UsersPageTest` 覆盖 |
 | user-ban-log.php | 37 | ✅ | P2 | `UserBanLogResource`（新建，`System\UserBanLogResource` ✅ uid/username/operator/reason 列表 + UID 筛选，`/user-ban-log.php` 重定向到 Filament，遗留文件已删；`UserBanLogPageTest` 覆盖） |
-| modrules.php | 107 | ⬜ | P3 | 版规管理（需新建） |
+| modrules.php | 107 | ✅ | P3 | 版规管理。`RuleResource`（新建，`System\RuleResource` ✅ 列表/创建/编辑/删除 + 按语言筛选 + 增删改自动清 `rules` 缓存，`/modrules.php` 重定向到 Filament，遗留文件已删；`ModRulesPageTest` 覆盖） |
 | fields.php | 57 | ⬜ | P3 | 自定义字段，`TorrentCustomFieldResource` ✅ |
 | formats.php | 215 | ⬜ | P3 | 格式化设置，`Section` 相关 Resource ✅ |
 | videoformats.php | 204 | ⬜ | P3 | 同上 |

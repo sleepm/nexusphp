@@ -425,6 +425,10 @@ Route::match(['get', 'post'], '/users.php', fn () => redirect()->route('filament
 Route::match(['get', 'post'], '/user-ban-log.php', fn () => redirect()->route('filament.admin.resources.system.user-ban-logs.index'))
     ->name('user-ban-log.index');
 
+// rules management (admin) — mirrors public/modrules.php, now handled by Filament RuleResource
+Route::match(['get', 'post'], '/modrules.php', fn () => redirect()->route('filament.admin.resources.system.rules.index'))
+    ->name('modrules.index');
+
 // pre-download notice gate — mirrors public/downloadnotice.php
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');

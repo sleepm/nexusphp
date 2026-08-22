@@ -53,6 +53,7 @@ return [
         'faq' => 'FAQ',
 
         'links' => 'Links',
+        'rules' => 'Rules',
         'cheaters' => 'Cheaters',
         'bans' => 'Bans',
         'banned_emails' => 'Banned Emails',

@@ -508,6 +508,10 @@ return [
         'select_section' => '选择',
         'select_section_help' => "如果某个选择未指定，其所有选项都符合此规则。必须至少指定一个选择。",
     ],
+    'rules' => [
+        'title' => '标题',
+        'text' => '内容',
+    ],
     'field' => [
         'label' => '自定义字段',
         'name' => '名称',

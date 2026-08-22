@@ -53,6 +53,7 @@ return [
         'faq' => 'FAQ',
 
         'links' => '链接',
+        'rules' => '规则管理',
         'cheaters' => '作弊检测',
         'bans' => 'IP 封禁',
         'banned_emails' => '封禁邮箱',

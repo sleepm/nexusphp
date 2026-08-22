@@ -14,6 +14,11 @@ class Rule extends NexusModel
         'lang_id' => 'integer',
     ];
 
+    public function language()
+    {
+        return $this->belongsTo(Language::class, 'lang_id');
+    }
+
     protected static function booted()
     {
         static::saved(function () {
