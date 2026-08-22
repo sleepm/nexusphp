@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 83 |
+| 已完成迁移 | 84 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 52 |
+| 待迁移页面 | 51 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -169,7 +169,7 @@
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
 | offers.php | 905 | ✅ | P2 | Offer 管理。`OfferController::web()` 迁移遗留 `public/offers.php`（列表/搜索/排序/详情/评论/投票/增删改/allow-finish，Eloquent 查询），渲染 Blade `offer/index`、`offer/details`、`offer/message`，路由 `/offers.php`（GET+POST，auth.nexus），遗留文件已删；`OfferPageTest` 覆盖 |
-| viewrequests.php | 498 | ⬜ | P2 | 求种列表。`Request.php` Model 已有 |
+| viewrequests.php | 498 | ✅ | P2 | 求种列表。`RequestController::web()` 迁移遗留 `public/viewrequests.php`（action 分发 `list`/`view`/`new`/`newmessage`/`edit`/`takeedit`/`takeadded`/`res`/`takeres`/`addamount`/`delete`/`confirm`/`message`/`search`，`finished` 过滤 yes/no/all/ing/my + `query` 搜索 + 分页、供种 `resreq`、完成确认派发魔力值/PM、评论留言），渲染 Blade `request/index`、`request/details`、`request/message`，路由 `/viewrequests.php`（GET+POST，auth.nexus），遗留文件已删；`RequestPageTest` 覆盖 |
 | takeupload（请求相关） | — | — | — | 见种子操作 |
 | suggest.php | 27 | ⬜ | P3 | 建议 |
 

@@ -127,6 +127,14 @@ Route::match(['get', 'post'], '/offers.php', [\App\Http\Controllers\OfferControl
     ->middleware('auth.nexus:nexus');
 
 // =============================================================
+// 求种管理（viewrequests.php）—— 替代 public/viewrequests.php
+// GET/POST: list / view / new / newmessage / edit / takeedit / takeadded /
+// res / takeres / addamount / delete / confirm / message / search
+// =============================================================
+Route::match(['get', 'post'], '/viewrequests.php', [\App\Http\Controllers\RequestController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// =============================================================
 // 积分中心（Phase 2 P1）—— mybonus
 // =============================================================
 Route::get('/mybonus.php', [\App\Http\Controllers\BonusController::class, 'web'])
