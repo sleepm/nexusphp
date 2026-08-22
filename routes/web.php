@@ -260,6 +260,14 @@ Route::get('/rules.php', [\App\Http\Controllers\RulesController::class, 'web']);
 // FAQ 页（faq.php）—— 公开页，按语言渲染 faq 表（镜像 public/faq.php）
 Route::get('/faq.php', [\App\Http\Controllers\FaqController::class, 'web']);
 
+// 下载文件格式 / 视频格式帮助页（formats.php / videoformats.php）—— 需登录
+// （镜像 public/formats.php / public/videoformats.php，静态指南页）
+Route::get('/formats.php', [\App\Http\Controllers\FormatsController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+Route::get('/videoformats.php', [\App\Http\Controllers\FormatsController::class, 'video'])
+    ->middleware('auth.nexus:nexus');
+
 // =============================================================
 // 首页与主列表（Phase 2 P2）—— topten / usersearch / userhistory
 // =============================================================
