@@ -405,6 +405,25 @@ Route::match(['get', 'post'], '/cheaterbox.php', fn () => redirect()->route('fil
 Route::match(['get', 'post'], '/bans.php', fn () => redirect()->route('filament.admin.resources.system.bans.index'))
     ->name('bans.index');
 
+// =============================================================
+// IP 工具（第 11 节 P2/P3）—— ipsearch / ipcheck / iphistory / testip
+// =============================================================
+// IP 历史搜索（userprofile 权限，镜像 public/ipsearch.php）
+Route::get('/ipsearch.php', [\App\Http\Controllers\IpSearchController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// 重复 IP 用户（MODERATOR+，镜像 public/ipcheck.php）
+Route::get('/ipcheck.php', [\App\Http\Controllers\IpCheckController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// 单用户 IP 历史（userprofile 权限，镜像 public/iphistory.php）
+Route::get('/iphistory.php', [\App\Http\Controllers\IpHistoryController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// IP 封禁测试（MODERATOR+，镜像 public/testip.php）
+Route::match(['get', 'post'], '/testip.php', [\App\Http\Controllers\TestIpController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // banned email management — mirrors public/bannedemails.php, now handled by Filament BannedEmailsResource
 Route::match(['get', 'post'], '/bannedemails.php', fn () => redirect()->route('filament.admin.resources.system.banned-emails.index'))
     ->name('bannedemails.index');

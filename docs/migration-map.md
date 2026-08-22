@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 105 |
+| 已完成迁移 | 109 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 30 |
+| 待迁移页面 | 26 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -209,10 +209,10 @@
 | formats.php | 215 | ✅ | P3 | 下载文件格式帮助页（静态指南）。`FormatsController::web()` 迁移遗留 `public/formats.php`（Compression/Multimedia/CD Image/Other Files 分节说明），渲染 Blade `formats`（`layouts.guest`），路由 `/formats.php`（auth.nexus），遗留文件已删；`FormatsPageTest` 覆盖 |
 | videoformats.php | 204 | ✅ | P3 | 视频格式/发布类型帮助页（静态指南）。`FormatsController::video()` 迁移遗留 `public/videoformats.php`（CAM/TS/TC/SCR/DVDRip 等 + Scene Tags 说明），渲染 Blade `videoformats`（`layouts.guest`），路由 `/videoformats.php`（auth.nexus），遗留文件已删；`FormatsPageTest` 覆盖 |
 | allagents.php | 16 | ✅ | P3 | `AgentAllowResource` / `AgentDenyResource` ✅，路由 `/allagents.php` 重定向到 Filament `agent-allows`，遗留文件已删；`AllAgentsPageTest` 覆盖 |
-| ipsearch.php | 170 | ⬜ | P2 | IP 搜索 |
-| ipcheck.php | 97 | ⬜ | P3 | IP 检查 |
-| iphistory.php | 90 | ⬜ | P3 | IP 历史 |
-| testip.php | 47 | ⬜ | P3 | IP 测试 |
+| ipsearch.php | 170 | ✅ | P2 | IP 历史搜索。`IpSearchController::web()` 迁移遗留 `public/ipsearch.php`（`userprofile` 权限门、`?ip=` 精确/CIDR/掩码匹配 `users.ip` 与 `iplog` UNION 分页、order 排序、IP Nums 汇总），路由 `/ipsearch.php`（GET，auth.nexus），遗留文件已删；`IpSearchPageTest` 覆盖 |
+| ipcheck.php | 97 | ✅ | P3 | 重复 IP 用户。`IpCheckController::web()` 迁移遗留 `public/ipcheck.php`（MODERATOR 门槛、按 `enabled='yes'` 用户 `GROUP BY ip` 列出 dupl>1 的 IP 及用户/邮箱/注册/最后访问/流量/分享率/Peer 数），路由 `/ipcheck.php`（GET，auth.nexus），遗留文件已删；`IpCheckPageTest` 覆盖 |
+| iphistory.php | 90 | ✅ | P3 | IP 历史。`IpHistoryController::web()` 迁移遗留 `public/iphistory.php`（`userprofile` 权限门、`users.ip` + `iplog` 去重并按 access 倒序分页、hostname 反查、`?ip=` 跳转 ipsearch 并标记 Dupe），路由 `/iphistory.php`（GET，auth.nexus），遗留文件已删；`IpHistoryPageTest` 覆盖 |
+| testip.php | 47 | ✅ | P3 | IP 封禁测试。`TestIpController::web()` 迁移遗留 `public/testip.php`（MODERATOR 门槛、POST/GET `?ip=` 经 `bans.first <= long(ip) <= last` 查禁段并展示），路由 `/testip.php`（GET+POST，auth.nexus），遗留文件已删；`TestIpPageTest` 覆盖 |
 | location.php | 247 | ⬜ | P3 | 地区管理 |
 | nowarn.php | 53 | ⬜ | P3 | 撤销警告 |
 | warned.php | 68 | ⬜ | P3 | 警告列表 |
