@@ -391,6 +391,14 @@ Route::match(['get', 'post'], '/cheaterbox.php', fn () => redirect()->route('fil
 Route::match(['get', 'post'], '/bans.php', fn () => redirect()->route('filament.admin.resources.system.bans.index'))
     ->name('bans.index');
 
+// banned email management — mirrors public/bannedemails.php, now handled by Filament BannedEmailsResource
+Route::match(['get', 'post'], '/bannedemails.php', fn () => redirect()->route('filament.admin.resources.system.banned-emails.index'))
+    ->name('bannedemails.index');
+
+// allowed email management — mirrors public/allowedemails.php, now handled by Filament AllowedEmailsResource
+Route::match(['get', 'post'], '/allowedemails.php', fn () => redirect()->route('filament.admin.resources.system.allowed-emails.index'))
+    ->name('allowedemails.index');
+
 // pre-download notice gate — mirrors public/downloadnotice.php
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');

@@ -542,4 +542,12 @@ return [
         'addedby' => '封禁人',
         'remove' => '移除',
     ],
+    'banned_email' => [
+        'value' => '封禁的邮箱地址',
+        'value_help' => '输入被封禁的邮箱地址列表（以空格分隔）。要封禁特定地址请输入 "email@domain.com"，要封禁整个域名请输入 "@domain.com"。',
+    ],
+    'allowed_email' => [
+        'value' => '允许的邮箱地址',
+        'value_help' => '输入被允许的邮箱地址列表（以空格分隔）。要允许特定地址请输入 "email@domain.com"，要允许整个域名请输入 "@domain.com"。',
+    ],
 ];

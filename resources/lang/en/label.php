@@ -534,4 +534,12 @@ Note: In 1.8, the 'searchbox_name' part can be omitted, i.e. the rule is 'pic/ca
         'addedby' => 'By',
         'remove' => 'Remove',
     ],
+    'banned_email' => [
+        'value' => 'Banned email addresses',
+        'value_help' => 'Enter a list of banned email addresses (separated by spaces). To ban a specific address enter "email@domain.com", to ban an entire domain enter "@domain.com".',
+    ],
+    'allowed_email' => [
+        'value' => 'Allowed email addresses',
+        'value_help' => 'Enter a list of allowed email addresses (separated by spaces). To allow a specific address enter "email@domain.com", to allow an entire domain enter "@domain.com".',
+    ],
 ];

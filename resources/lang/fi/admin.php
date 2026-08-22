@@ -55,6 +55,8 @@ return [
         'links' => 'Links',
         'cheaters' => 'Cheaters',
         'bans' => 'Bans',
+        'banned_emails' => 'Banned Emails',
+        'allowed_emails' => 'Allowed Emails',
     ],
     'resources' => [
         'agent_allow' => [

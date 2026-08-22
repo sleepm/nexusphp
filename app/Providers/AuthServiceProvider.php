@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Auth\NexusWebGuard;
 use App\Auth\NexusWebUserProvider;
+use App\Models\AllowedEmail;
 use App\Models\AudioCodec;
 use App\Models\Ban;
+use App\Models\BannedEmail;
 use App\Models\Category;
 use App\Models\Cheater;
 use App\Models\Codec;
@@ -24,7 +26,9 @@ use App\Models\Advertisement;
 use App\Models\Faq;
 use App\Models\Link;
 use App\Policies\AdvertisementPolicy;
+use App\Policies\AllowedEmailPolicy;
 use App\Policies\BanPolicy;
+use App\Policies\BannedEmailPolicy;
 use App\Policies\CheaterPolicy;
 use App\Policies\CodecPolicy;
 use App\Policies\FaqPolicy;
@@ -62,6 +66,8 @@ class AuthServiceProvider extends ServiceProvider
         Link::class => LinkPolicy::class,
         Cheater::class => CheaterPolicy::class,
         Ban::class => BanPolicy::class,
+        BannedEmail::class => BannedEmailPolicy::class,
+        AllowedEmail::class => AllowedEmailPolicy::class,
     ];
 
     /**

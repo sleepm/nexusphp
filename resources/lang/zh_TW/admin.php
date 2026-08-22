@@ -57,6 +57,8 @@ return [
         'links' => '链接',
         'cheaters' => '作弊检测',
         'bans' => 'IP 封禁',
+        'banned_emails' => '封禁信箱',
+        'allowed_emails' => '允許信箱',
     ],
     'resources' => [
         'agent_allow' => [

@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 92 |
+| 已完成迁移 | 94 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 43 |
+| 待迁移页面 | 41 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -197,8 +197,8 @@
 | cheaters.php | 111 | ✅ | P2 | `Cheater`（需新建）Filament Resource：作弊值统计页（`CheatStats`）+ 路由 `/cheaters.php` 重定向 |
 | cheaterbox.php | 84 | ✅ | P3 | 同上（`CheaterResource` 列表：`ListCheaters`，批量 set-dealt/delete），路由 `/cheaterbox.php` 重定向；`CheaterPageTest` 覆盖 |
 | bans.php | 71 | ✅ | P2 | `BansResource`（新建）Filament Resource：列表/新增/编辑 IP 封禁，路由 `/bans.php` 重定向；`BansPageTest` 覆盖 |
-| bannedemails.php | 29 | ⬜ | P3 | `BannedEmailsResource`（需新建） |
-| allowedemails.php | 32 | ⬜ | P3 | `AllowedEmailsResource`（需新建） |
+| bannedemails.php | 29 | ✅ | P3 | `BannedEmailsResource`（新建）Filament Resource：单条记录管理封禁邮箱地址（`value` 文本域，空格分隔），路由 `/bannedemails.php` 重定向；`BannedEmailsPageTest` 覆盖 |
+| allowedemails.php | 32 | ✅ | P3 | `AllowedEmailsResource`（新建）Filament Resource：单条记录管理允许邮箱地址（`value` 文本域，空格分隔），路由 `/allowedemails.php` 重定向；`AllowedEmailsPageTest` 覆盖 |
 | adduser.php | 70 | ⬜ | P2 | `UserResource` ✅（部分） |
 | delacctadmin.php | 36 | ⬜ | P3 | 用户禁用，并入 `UserResource` |
 | deletedisabled.php | 45 | ⬜ | P3 | 同上 |
