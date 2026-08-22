@@ -428,6 +428,17 @@ Route::get('/iphistory.php', [\App\Http\Controllers\IpHistoryController::class, 
 Route::match(['get', 'post'], '/testip.php', [\App\Http\Controllers\TestIpController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// warned users list + warning removal (admin) — mirrors public/warned.php / public/nowarn.php
+Route::get('/warned.php', [\App\Http\Controllers\WarnedController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+Route::post('/nowarn.php', [\App\Http\Controllers\NowarnController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// unconfirmed users (admin) — mirrors public/unco.php
+Route::get('/unco.php', [\App\Http\Controllers\UncoController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // banned email management — mirrors public/bannedemails.php, now handled by Filament BannedEmailsResource
 Route::match(['get', 'post'], '/bannedemails.php', fn () => redirect()->route('filament.admin.resources.system.banned-emails.index'))
     ->name('bannedemails.index');
