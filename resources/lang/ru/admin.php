@@ -49,6 +49,8 @@ return [
         'message_templates' => 'Шаблоны сообщений',
         'tracker_url' => 'URL трекера',
         'activity_logs' => 'Журнал активности',
+        'advertisements' => 'Реклама',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

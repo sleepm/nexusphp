@@ -51,6 +51,8 @@ return [
         'announce_logs' => '匯報記錄',
         'announce_monitor' => '匯報監控',
         'activity_logs' => '操作日志',
+        'advertisements' => '廣告',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

@@ -365,6 +365,14 @@ Route::match(['get', 'post'], '/freeleech.php', [\App\Http\Controllers\Freeleech
 Route::get('/catmanage.php', fn () => redirect()->route('filament.admin.resources.section.categories.index'))
     ->name('catmanage.index');
 
+// advertisement management (admin) — mirrors public/admanage.php, now handled by Filament AdvertisementResource
+Route::get('/admanage.php', fn () => redirect()->route('filament.admin.resources.system.advertisements.index'))
+    ->name('admanage.index');
+
+// FAQ management (admin) — mirrors public/faqmanage.php, now handled by Filament FaqResource
+Route::get('/faqmanage.php', fn () => redirect()->route('filament.admin.resources.system.faqs.index'))
+    ->name('faqmanage.index');
+
 // pre-download notice gate — mirrors public/downloadnotice.php
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');

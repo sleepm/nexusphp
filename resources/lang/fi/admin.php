@@ -49,6 +49,8 @@ return [
         'message_templates' => 'Viestin pohjat',
         'tracker_url' => 'Seurantapalvelimen URL',
         'activity_logs' => 'Aktiviteetti Lokit',
+        'advertisements' => 'Mainokset',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

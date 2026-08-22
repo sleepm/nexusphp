@@ -49,6 +49,8 @@ return [
         'message_templates' => 'Şabloane de mesaje',
         'tracker_url' => 'URL urmaritor',
         'activity_logs' => 'Jurnal de activitate',
+        'advertisements' => 'Publicitate',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

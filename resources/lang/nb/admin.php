@@ -49,6 +49,8 @@ return [
         'message_templates' => 'Melding maler',
         'tracker_url' => 'Sporingsagent URL',
         'activity_logs' => 'Aktivitetslogg',
+        'advertisements' => 'Annonser',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

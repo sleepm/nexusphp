@@ -49,6 +49,8 @@ return [
         'message_templates' => 'Bericht sjabloon',
         'tracker_url' => 'Tracker URL',
         'activity_logs' => 'Activiteiten logs',
+        'advertisements' => 'Advertenties',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

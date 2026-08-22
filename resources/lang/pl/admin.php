@@ -49,6 +49,8 @@ return [
         'message_templates' => 'Szablony wiadomości',
         'tracker_url' => 'URL trackera',
         'activity_logs' => 'Dzienniki aktywności',
+        'advertisements' => 'Reklamy',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

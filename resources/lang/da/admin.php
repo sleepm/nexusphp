@@ -49,6 +49,8 @@ return [
         'message_templates' => 'Besked skabeloner',
         'tracker_url' => 'Tracker URL',
         'activity_logs' => 'Aktivitetslogs',
+        'advertisements' => 'Annoncer',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

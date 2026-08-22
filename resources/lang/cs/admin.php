@@ -49,6 +49,8 @@ return [
         'message_templates' => 'Šablony zpráv',
         'tracker_url' => 'URL Trackeru',
         'activity_logs' => 'Záznamy aktivit',
+        'advertisements' => 'Inzerce',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

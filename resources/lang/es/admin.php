@@ -49,6 +49,8 @@ return [
         'message_templates' => 'Plantillas de mensaje',
         'tracker_url' => 'URL del rastreador',
         'activity_logs' => 'Registros de actividad',
+        'advertisements' => 'Anuncios',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

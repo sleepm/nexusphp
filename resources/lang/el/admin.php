@@ -49,6 +49,8 @@ return [
         'message_templates' => 'Πρότυπα μηνυμάτων',
         'tracker_url' => 'Url Ανιχνευτή',
         'activity_logs' => 'Καταγραφή Δραστηριοτήτων',
+        'advertisements' => 'Διαφημίσεις',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

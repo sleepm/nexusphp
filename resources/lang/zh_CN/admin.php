@@ -49,6 +49,8 @@ return [
         'announce_logs' => '汇报记录',
         'announce_monitor' => '汇报监控',
         'activity_logs' => '操作日志',
+        'advertisements' => '广告',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

@@ -188,8 +188,8 @@
 | 页面 | 行数 | 状态 | 优先级 | 已有 Filament 对应 |
 | --- | --- | --- | --- | --- |
 | catmanage.php | 836 | ✅ | P1 | `Section\CategoryResource` ✅（Section/Icon/SecondIcon/Source/Media/Codec/Standard/Processing/Team/AudioCodec Resource 全覆盖，`/catmanage.php` 重定向到 Filament，遗留文件已删；`CatManagePageTest` 覆盖） |
-| admanage.php | 427 | ⬜ | P2 | `Advertisement`（需新建 Resource） |
-| faqmanage.php | 118 | ⬜ | P2 | `FaqResource`（需新建） |
+| admanage.php | 427 | ✅ | P2 | `Advertisement`（`System\AdvertisementResource` ✅，列表/创建/编辑 + 类型化参数 + `code` 自动生成，`/admanage.php` 重定向到 Filament，遗留文件已删；`AdManagePageTest` 覆盖） |
+| faqmanage.php | 118 | ✅ | P2 | `FaqResource`（`System\FaqResource` ✅，categ/item 增删改 + 自动 link_id/order + `faq` 缓存清理，`/faqmanage.php` 重定向到 Filament，遗留文件已删；`FaqManagePageTest` 覆盖） |
 | forummanage.php | 302 | ✅ | P2 | `ForumManageController`（已落地） |
 | linksmanage.php | 167 | ⬜ | P2 | `LinksResource`（需新建） |
 | medals.php → medal.php | 148 | ⬜ | P1 | `MedalResource` ✅ |

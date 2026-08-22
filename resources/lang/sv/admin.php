@@ -49,6 +49,8 @@ return [
         'message_templates' => 'Mallar för meddelande',
         'tracker_url' => 'Spårare URL',
         'activity_logs' => 'Aktivitetsloggar',
+        'advertisements' => 'Annonser',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [

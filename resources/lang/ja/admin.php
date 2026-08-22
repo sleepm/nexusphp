@@ -49,6 +49,8 @@ return [
         'message_templates' => 'メッセージ・テンプレート',
         'tracker_url' => 'トラッカーURL',
         'activity_logs' => '活動ログ',
+        'advertisements' => '広告',
+        'faq' => 'FAQ',
     ],
     'resources' => [
         'agent_allow' => [
