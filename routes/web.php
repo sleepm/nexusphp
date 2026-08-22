@@ -399,6 +399,18 @@ Route::match(['get', 'post'], '/bannedemails.php', fn () => redirect()->route('f
 Route::match(['get', 'post'], '/allowedemails.php', fn () => redirect()->route('filament.admin.resources.system.allowed-emails.index'))
     ->name('allowedemails.index');
 
+// add user (admin) — mirrors public/adduser.php, now handled by Filament UserResource create page
+Route::match(['get', 'post'], '/adduser.php', fn () => redirect()->route('filament.admin.resources.user.users.create'))
+    ->name('adduser.index');
+
+// delete account (admin) — mirrors public/delacctadmin.php, now handled by Filament UserResource
+Route::match(['get', 'post'], '/delacctadmin.php', fn () => redirect()->route('filament.admin.resources.user.users.index'))
+    ->name('delacctadmin.index');
+
+// delete disabled accounts (SYSOP) — mirrors public/deletedisabled.php, now handled by Filament UserResource
+Route::match(['get', 'post'], '/deletedisabled.php', fn () => redirect()->route('filament.admin.resources.user.users.index'))
+    ->name('deletedisabled.index');
+
 // pre-download notice gate — mirrors public/downloadnotice.php
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');
