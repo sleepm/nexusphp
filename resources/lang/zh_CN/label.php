@@ -28,6 +28,7 @@ return [
     'price' => '价格',
     'deadline' => '截止时间',
     'permanent' => '永久有效',
+    'user_ban_log' => ['label' => '封禁日志', 'uid' => 'UID'],
     'operator' => '操作者',
     'action' => '操作',
     'submit' => '提交',

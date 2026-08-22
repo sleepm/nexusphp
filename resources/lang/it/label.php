@@ -28,6 +28,7 @@ return [
     'price' => 'Prezzo',
     'deadline' => 'Scadenza',
     'permanent' => 'Permanente',
+    'user_ban_log' => ['label' => 'User ban logs', 'uid' => 'UID'],
     'operator' => 'Operatore',
     'action' => 'Azione',
     'submit' => 'Invia',

@@ -28,6 +28,7 @@ return [
     'price' => 'Quantidade',
     'deadline' => 'Prazo',
     'permanent' => 'Permanente',
+    'user_ban_log' => ['label' => 'User ban logs', 'uid' => 'UID'],
     'operator' => 'Operador',
     'action' => 'Acão',
     'submit' => 'submeter',

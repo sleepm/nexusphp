@@ -28,6 +28,7 @@ return [
     'price' => 'Hinta',
     'deadline' => 'Määräaika',
     'permanent' => 'Pysyvä',
+    'user_ban_log' => ['label' => 'User ban logs', 'uid' => 'UID'],
     'operator' => 'Operaattori',
     'action' => 'Toiminto',
     'submit' => 'Lähetä',

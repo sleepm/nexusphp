@@ -28,6 +28,7 @@ return [
     'price' => 'Τιμή',
     'deadline' => 'Προθεσμία',
     'permanent' => 'Μόνιμο',
+    'user_ban_log' => ['label' => 'User ban logs', 'uid' => 'UID'],
     'operator' => 'Χειριστής',
     'action' => 'Ενέργεια',
     'submit' => 'Υποβολή',

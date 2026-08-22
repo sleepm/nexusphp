@@ -28,6 +28,7 @@ return [
     'price' => '価格',
     'deadline' => '期限',
     'permanent' => '恒久的',
+    'user_ban_log' => ['label' => 'User ban logs', 'uid' => 'UID'],
     'operator' => '演算子',
     'action' => 'アクション',
     'submit' => '送信',

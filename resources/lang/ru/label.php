@@ -28,6 +28,7 @@ return [
     'price' => 'Цена',
     'deadline' => 'Срок сдачи',
     'permanent' => 'Постоянно',
+    'user_ban_log' => ['label' => 'User ban logs', 'uid' => 'UID'],
     'operator' => 'Оператор',
     'action' => 'Действие',
     'submit' => 'Отправить',

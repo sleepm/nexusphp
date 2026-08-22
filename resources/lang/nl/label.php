@@ -28,6 +28,7 @@ return [
     'price' => 'Prijs',
     'deadline' => 'Deadline',
     'permanent' => 'Permanent',
+    'user_ban_log' => ['label' => 'User ban logs', 'uid' => 'UID'],
     'operator' => 'Operator',
     'action' => 'actie',
     'submit' => 'Bevestigen',

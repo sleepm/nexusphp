@@ -57,6 +57,7 @@ return [
         'bans' => 'Bans',
         'banned_emails' => 'Banned Emails',
         'allowed_emails' => 'Allowed Emails',
+        'user_ban_log' => 'User ban logs',
     ],
     'resources' => [
         'agent_allow' => [

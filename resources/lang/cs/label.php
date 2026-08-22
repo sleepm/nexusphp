@@ -28,6 +28,7 @@ return [
     'price' => 'Cena',
     'deadline' => 'Lhůta',
     'permanent' => 'Trvalé',
+    'user_ban_log' => ['label' => 'User ban logs', 'uid' => 'UID'],
     'operator' => 'Operátor',
     'action' => 'Akce',
     'submit' => 'Odeslat',

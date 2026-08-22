@@ -28,6 +28,7 @@ return [
     'price' => 'Pris',
     'deadline' => 'Tidsfrist',
     'permanent' => 'Permanent',
+    'user_ban_log' => ['label' => 'User ban logs', 'uid' => 'UID'],
     'operator' => 'Operatør',
     'action' => 'Handling',
     'submit' => 'Send',
