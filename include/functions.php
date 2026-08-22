@@ -2512,6 +2512,7 @@ function stdhead($title = "", $msgalert = true, $script = "", $place = "")
 
 	$Cache->setLanguage($CURLANGDIR);
 
+	require_once ROOT_PATH . 'classes/class_advertisement.php';
 	$Advertisement = new ADVERTISEMENT($CURUSER['id'] ?? 0);
 	$cssupdatedate = $cssdate_tweak;
 	// Variable for Start Time

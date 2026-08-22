@@ -92,7 +92,11 @@ class RssSearchAjaxTest extends TestCase
 
     private function makeTorrent(User $owner, string $name = 'P2 Search Torrent'): Torrent
     {
-        $categoryId = Category::query()->value('id');
+        $browseMode = (int) get_setting('main.browsecat', 0);
+        $categoryId = Category::query()->when($browseMode, fn ($q) => $q->where('mode', $browseMode))->value('id');
+        if (!$categoryId) {
+            $categoryId = Category::query()->value('id');
+        }
         if (!$categoryId) {
             $categoryId = 1;
         }

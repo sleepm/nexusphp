@@ -14,6 +14,8 @@ use Tests\TestCase;
  */
 class TagPageTest extends TestCase
 {
+    private array $createdUserIds = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -21,6 +23,14 @@ class TagPageTest extends TestCase
         $this->disableCookieEncryption();
         app(\Spatie\Activitylog\ActivityLogStatus::class)->disable();
         $_SERVER['HTTP_USER_AGENT'] = 'PHPUnit';
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->createdUserIds !== []) {
+            \Illuminate\Support\Facades\DB::table('users')->whereIn('id', $this->createdUserIds)->delete();
+        }
+        parent::tearDown();
     }
 
     private function makeUser(): User
@@ -47,6 +57,7 @@ class TagPageTest extends TestCase
             'last_access' => now(),
             'commentpm' => 'no',
         ]);
+        $this->createdUserIds[] = $user->id;
 
         return $user;
     }
