@@ -135,6 +135,24 @@ Route::match(['get', 'post'], '/viewrequests.php', [\App\Http\Controllers\Reques
     ->middleware('auth.nexus:nexus');
 
 // =============================================================
+// 举报 / 举报处理 / 投诉 / 建议（Phase 5）—— 替代 public/report.php、
+// public/reports.php + public/takeupdate.php、public/complains.php、public/suggest.php
+// =============================================================
+// 举报提交/确认页（GET 显示确认表单，POST 提交举报）
+Route::match(['get', 'post'], '/report.php', [\App\Http\Controllers\ReportController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// 举报处理（admin）：GET 列出举报，POST 批量标记已处理/删除（含 legacy takeupdate.php）
+Route::match(['get', 'post'], '/reports.php', [\App\Http\Controllers\ReportsController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// 投诉（公开页，禁用用户可通过邮箱创建投诉；admin 管理；内部校验登录状态）
+Route::match(['get', 'post'], '/complains.php', [\App\Http\Controllers\ComplainController::class, 'web']);
+
+// 种子名联想（公开文本接口，suggest 表按关键词计数排序，供 js/suggest.js 使用）
+Route::get('/suggest.php', [\App\Http\Controllers\SuggestController::class, 'web']);
+
+// =============================================================
 // 积分中心（Phase 2 P1）—— mybonus
 // =============================================================
 Route::get('/mybonus.php', [\App\Http\Controllers\BonusController::class, 'web'])

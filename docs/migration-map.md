@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 84 |
+| 已完成迁移 | 88 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 51 |
+| 待迁移页面 | 47 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -171,15 +171,15 @@
 | offers.php | 905 | ✅ | P2 | Offer 管理。`OfferController::web()` 迁移遗留 `public/offers.php`（列表/搜索/排序/详情/评论/投票/增删改/allow-finish，Eloquent 查询），渲染 Blade `offer/index`、`offer/details`、`offer/message`，路由 `/offers.php`（GET+POST，auth.nexus），遗留文件已删；`OfferPageTest` 覆盖 |
 | viewrequests.php | 498 | ✅ | P2 | 求种列表。`RequestController::web()` 迁移遗留 `public/viewrequests.php`（action 分发 `list`/`view`/`new`/`newmessage`/`edit`/`takeedit`/`takeadded`/`res`/`takeres`/`addamount`/`delete`/`confirm`/`message`/`search`，`finished` 过滤 yes/no/all/ing/my + `query` 搜索 + 分页、供种 `resreq`、完成确认派发魔力值/PM、评论留言），渲染 Blade `request/index`、`request/details`、`request/message`，路由 `/viewrequests.php`（GET+POST，auth.nexus），遗留文件已删；`RequestPageTest` 覆盖 |
 | takeupload（请求相关） | — | — | — | 见种子操作 |
-| suggest.php | 27 | ⬜ | P3 | 建议 |
+| suggest.php | 27 | ✅ | P3 | 种子名联想。`SuggestController::web()` 迁移遗留 `public/suggest.php`（公开文本接口，`suggest` 表按关键词计数排序、>25 字跳过、最多 5 条，返回 `keyword\r\ncount` 文本，供 `js/suggest.js` 搜索框自动补全），路由 `/suggest.php`，遗留文件已删；`SuggestPageTest` 覆盖 |
 
 ## 10. 举报 / 投诉 / 申诉
 
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
-| report.php | 237 | ⬜ | P2 | 举报。`Complain.php` Model 已有 |
-| reports.php | 154 | ⬜ | P2 | 举报处理（admin） |
-| complains.php | 181 | ⬜ | P2 | 投诉 |
+| report.php | 237 | ✅ | P2 | 举报。`ReportController::web()` 迁移遗留 `public/report.php`（GET 显示确认表单，POST 提交举报，支持 torrent/user/offer/request/post/comment/subtitle 类型，去重检查、缓存失效，Elquent 查询），路由 `/report.php`（GET+POST，auth.nexus），遗留文件已删；`ReportPageTest` 覆盖 |
+| reports.php | 154 | ✅ | P2 | 举报处理（admin）。`ReportsController::web()` 迁移遗留 `public/reports.php`（分页列表，批量标记已处理/删除，合并 `public/takeupdate.php` 逻辑），路由 `/reports.php`（GET+POST，auth.nexus），遗留文件已删；`ReportsPageTest` 覆盖 |
+| complains.php | 181 | ✅ | P2 | 投诉。`ComplainController::web()` 迁移遗留 `public/complains.php`（公开页，禁用用户可创建投诉；admin 管理列表/查看/回复/关闭；内部校验登录状态），路由 `/complains.php`（GET+POST），遗留文件已删；`ComplainsPageTest` 覆盖 |
 
 ## 11. 管理后台（→ Filament）
 
