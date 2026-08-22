@@ -379,6 +379,18 @@ Route::get('/faqmanage.php', fn () => redirect()->route('filament.admin.resource
 Route::match(['get', 'post'], '/linksmanage.php', [\App\Http\Controllers\LinksController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// cheat analysis — mirrors public/cheaters.php, now handled by Filament CheaterResource
+Route::get('/cheaters.php', fn () => redirect()->route('filament.admin.resources.system.cheaters.stats'))
+    ->name('cheaters.stats');
+
+// cheater suspect box — mirrors public/cheaterbox.php, now handled by Filament CheaterResource
+Route::match(['get', 'post'], '/cheaterbox.php', fn () => redirect()->route('filament.admin.resources.system.cheaters.index'))
+    ->name('cheaterbox.index');
+
+// IP ban management — mirrors public/bans.php, now handled by Filament BansResource
+Route::match(['get', 'post'], '/bans.php', fn () => redirect()->route('filament.admin.resources.system.bans.index'))
+    ->name('bans.index');
+
 // pre-download notice gate — mirrors public/downloadnotice.php
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');

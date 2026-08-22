@@ -53,6 +53,8 @@ return [
         'faq' => 'FAQ',
 
         'links' => '链接',
+        'cheaters' => '作弊检测',
+        'bans' => 'IP 封禁',
     ],
     'resources' => [
         'agent_allow' => [

@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 89 |
+| 已完成迁移 | 92 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 46 |
+| 待迁移页面 | 43 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -194,9 +194,9 @@
 | linksmanage.php | 167 | ✅ | P2 | `LinksResource`（新建，`System\LinksResource` ✅ 列表/创建/编辑 + 删除 + `index_links` 缓存清理，`/linksmanage.php` 无 action 重定向到 Filament；`?action=apply`/POST `newapply` 保留用户申请友链流程：`LinksController::web()` + Blade `links/apply`，校验并写入 `staffmessages`，遗留文件已删；`LinksManagePageTest` 覆盖） |
 | medals.php → medal.php | 148 | ⬜ | P1 | `MedalResource` ✅ |
 | tags.php | 303 | ✅ | P1 | `TagResource` ✅ |
-| cheaters.php | 111 | ⬜ | P2 | `Cheater`（需新建） |
-| cheaterbox.php | 84 | ⬜ | P3 | 同上 |
-| bans.php | 71 | ⬜ | P2 | `BansResource`（需新建） |
+| cheaters.php | 111 | ✅ | P2 | `Cheater`（需新建）Filament Resource：作弊值统计页（`CheatStats`）+ 路由 `/cheaters.php` 重定向 |
+| cheaterbox.php | 84 | ✅ | P3 | 同上（`CheaterResource` 列表：`ListCheaters`，批量 set-dealt/delete），路由 `/cheaterbox.php` 重定向；`CheaterPageTest` 覆盖 |
+| bans.php | 71 | ✅ | P2 | `BansResource`（新建）Filament Resource：列表/新增/编辑 IP 封禁，路由 `/bans.php` 重定向；`BansPageTest` 覆盖 |
 | bannedemails.php | 29 | ⬜ | P3 | `BannedEmailsResource`（需新建） |
 | allowedemails.php | 32 | ⬜ | P3 | `AllowedEmailsResource`（需新建） |
 | adduser.php | 70 | ⬜ | P2 | `UserResource` ✅（部分） |

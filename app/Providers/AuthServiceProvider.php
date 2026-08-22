@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Auth\NexusWebGuard;
 use App\Auth\NexusWebUserProvider;
 use App\Models\AudioCodec;
+use App\Models\Ban;
 use App\Models\Category;
+use App\Models\Cheater;
 use App\Models\Codec;
 use App\Models\Icon;
 use App\Models\Media;
@@ -22,6 +24,8 @@ use App\Models\Advertisement;
 use App\Models\Faq;
 use App\Models\Link;
 use App\Policies\AdvertisementPolicy;
+use App\Policies\BanPolicy;
+use App\Policies\CheaterPolicy;
 use App\Policies\CodecPolicy;
 use App\Policies\FaqPolicy;
 use App\Policies\LinkPolicy;
@@ -56,6 +60,8 @@ class AuthServiceProvider extends ServiceProvider
         Advertisement::class => AdvertisementPolicy::class,
         Faq::class => FaqPolicy::class,
         Link::class => LinkPolicy::class,
+        Cheater::class => CheaterPolicy::class,
+        Ban::class => BanPolicy::class,
     ];
 
     /**

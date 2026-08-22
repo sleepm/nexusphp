@@ -520,5 +520,26 @@ return [
         'options_help' => '类型为单选、多选、下拉时必填，一行一个，格式：选项值|选项描述文本',
         'is_single_row' => '展示时单独一行',
         'display' => '自定义展示',
-    ]
+    ],
+    'cheater' => [
+        'label' => '作弊用户',
+        'hit' => '命中',
+        'ann_time' => '汇报间隔',
+        'seeders' => '做种数',
+        'leechers' => '下载数',
+        'dealtwith' => '已处理',
+        'dealtby' => '处理人',
+        'cheat_value' => '作弊值',
+        'cheat_spread' => '作弊分布',
+        'registered' => '注册时间',
+        'yes' => '是',
+        'no' => '否',
+    ],
+    'ban' => [
+        'label' => 'IP 封禁',
+        'first' => '起始 IP',
+        'last' => '结束 IP',
+        'addedby' => '封禁人',
+        'remove' => '移除',
+    ],
 ];

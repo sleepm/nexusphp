@@ -53,6 +53,8 @@ return [
         'faq' => 'FAQ',
 
         'links' => 'Links',
+        'cheaters' => 'Cheaters',
+        'bans' => 'Bans',
     ],
     'resources' => [
         'agent_allow' => [
