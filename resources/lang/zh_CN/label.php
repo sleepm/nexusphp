@@ -555,4 +555,14 @@ return [
         'value' => '允许的邮箱地址',
         'value_help' => '输入被允许的邮箱地址列表（以空格分隔）。要允许特定地址请输入 "email@domain.com"，要允许整个域名请输入 "@domain.com"。',
     ],
+    'location' => [
+        'flagpic' => '旗帜图片',
+        'flagpic_help' => 'pic/location/ 目录下的旗帜图片文件名，留空则无旗帜。',
+        'main' => '主地区',
+        'sub' => '子地区',
+        'theory_upspeed' => '理论上传速度',
+        'practical_upspeed' => '实际上传速度',
+        'theory_downspeed' => '理论下载速度',
+        'practical_downspeed' => '实际下载速度',
+    ],
 ];

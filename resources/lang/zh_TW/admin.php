@@ -59,6 +59,7 @@ return [
         'bans' => 'IP 封禁',
         'banned_emails' => '封禁信箱',
         'allowed_emails' => '允許信箱',
+        'locations' => '地區管理',
         'user_ban_log' => '封禁記錄',
     ],
     'resources' => [

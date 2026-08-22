@@ -213,7 +213,7 @@
 | ipcheck.php | 97 | ✅ | P3 | 重复 IP 用户。`IpCheckController::web()` 迁移遗留 `public/ipcheck.php`（MODERATOR 门槛、按 `enabled='yes'` 用户 `GROUP BY ip` 列出 dupl>1 的 IP 及用户/邮箱/注册/最后访问/流量/分享率/Peer 数），路由 `/ipcheck.php`（GET，auth.nexus），遗留文件已删；`IpCheckPageTest` 覆盖 |
 | iphistory.php | 90 | ✅ | P3 | IP 历史。`IpHistoryController::web()` 迁移遗留 `public/iphistory.php`（`userprofile` 权限门、`users.ip` + `iplog` 去重并按 access 倒序分页、hostname 反查、`?ip=` 跳转 ipsearch 并标记 Dupe），路由 `/iphistory.php`（GET，auth.nexus），遗留文件已删；`IpHistoryPageTest` 覆盖 |
 | testip.php | 47 | ✅ | P3 | IP 封禁测试。`TestIpController::web()` 迁移遗留 `public/testip.php`（MODERATOR 门槛、POST/GET `?ip=` 经 `bans.first <= long(ip) <= last` 查禁段并展示），路由 `/testip.php`（GET+POST，auth.nexus），遗留文件已删；`TestIpPageTest` 覆盖 |
-| location.php | 247 | ⬜ | P3 | 地区管理 |
+| location.php | 247 | ✅ | P3 | `LocationResource`（新建，`System\LocationResource` ✅ 地区 CRUD：名称/主副地区/起止 IP/理论实际上下行速率/旗帜图片，路由 `/location.php` 重定向到 Filament，遗留文件已删；`LocationPageTest` 覆盖） |
 | nowarn.php | 53 | ⬜ | P3 | 撤销警告 |
 | warned.php | 68 | ⬜ | P3 | 警告列表 |
 | unco.php | 53 | ⬜ | P3 | 作弊未达标用户 |

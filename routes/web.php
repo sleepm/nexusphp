@@ -405,6 +405,10 @@ Route::match(['get', 'post'], '/cheaterbox.php', fn () => redirect()->route('fil
 Route::match(['get', 'post'], '/bans.php', fn () => redirect()->route('filament.admin.resources.system.bans.index'))
     ->name('bans.index');
 
+// location management (SYSOP) — mirrors public/location.php, now handled by Filament LocationResource
+Route::match(['get', 'post'], '/location.php', fn () => redirect()->route('filament.admin.resources.system.locations.index'))
+    ->name('locations.index');
+
 // =============================================================
 // IP 工具（第 11 节 P2/P3）—— ipsearch / ipcheck / iphistory / testip
 // =============================================================

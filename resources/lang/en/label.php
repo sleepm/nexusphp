@@ -547,4 +547,14 @@ Note: In 1.8, the 'searchbox_name' part can be omitted, i.e. the rule is 'pic/ca
         'value' => 'Allowed email addresses',
         'value_help' => 'Enter a list of allowed email addresses (separated by spaces). To allow a specific address enter "email@domain.com", to allow an entire domain enter "@domain.com".',
     ],
+    'location' => [
+        'flagpic' => 'Flag Picture',
+        'flagpic_help' => 'File name of the flag image located under pic/location/, leave empty for none.',
+        'main' => 'Main Location',
+        'sub' => 'Sub Location',
+        'theory_upspeed' => 'Theory Up Speed',
+        'practical_upspeed' => 'Practical Up Speed',
+        'theory_downspeed' => 'Theory Down Speed',
+        'practical_downspeed' => 'Practical Down Speed',
+    ],
 ];

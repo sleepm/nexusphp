@@ -58,6 +58,7 @@ return [
         'bans' => 'IP 封禁',
         'banned_emails' => '封禁邮箱',
         'allowed_emails' => '允许邮箱',
+        'locations' => '地区管理',
         'user_ban_log' => '封禁日志',
     ],
     'resources' => [
