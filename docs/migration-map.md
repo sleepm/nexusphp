@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 88 |
+| 已完成迁移 | 89 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 47 |
+| 待迁移页面 | 46 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -187,7 +187,7 @@
 
 | 页面 | 行数 | 状态 | 优先级 | 已有 Filament 对应 |
 | --- | --- | --- | --- | --- |
-| catmanage.php | 836 | ⬜ | P1 | `Section\CategoryResource` ✅ |
+| catmanage.php | 836 | ✅ | P1 | `Section\CategoryResource` ✅（Section/Icon/SecondIcon/Source/Media/Codec/Standard/Processing/Team/AudioCodec Resource 全覆盖，`/catmanage.php` 重定向到 Filament，遗留文件已删；`CatManagePageTest` 覆盖） |
 | admanage.php | 427 | ⬜ | P2 | `Advertisement`（需新建 Resource） |
 | faqmanage.php | 118 | ⬜ | P2 | `FaqResource`（需新建） |
 | forummanage.php | 302 | ✅ | P2 | `ForumManageController`（已落地） |

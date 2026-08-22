@@ -361,6 +361,10 @@ Route::get('/bitbucketlog.php', [\App\Http\Controllers\BitbucketController::clas
 Route::match(['get', 'post'], '/freeleech.php', [\App\Http\Controllers\FreeleechController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// category management (admin) — mirrors public/catmanage.php, now handled by Filament Section resources
+Route::get('/catmanage.php', fn () => redirect()->route('filament.admin.resources.section.categories.index'))
+    ->name('catmanage.index');
+
 // pre-download notice gate — mirrors public/downloadnotice.php
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');

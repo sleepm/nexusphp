@@ -75,13 +75,13 @@ class AdminpanelTableSeeder extends Seeder
                 'url' => 'modrules.php',
                 'info' => 'Edit/Add/Delete RULES Page',
             ),
-            8 =>
-            array (
-                'id' => 11,
-                'name' => 'Category Manage',
-                'url' => 'catmanage.php',
-                'info' => 'Manage torrents categories at your site',
-            ),
+            //            8 =>
+//            array (
+//                'id' => 11,
+//                'name' => 'Category Manage',
+//                'url' => 'catmanage.php',
+//                'info' => 'Manage torrents categories at your site',
+//            ),
             9 =>
             array (
                 'id' => 12,
