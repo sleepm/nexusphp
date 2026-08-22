@@ -20,9 +20,11 @@ use App\Models\TorrentCustomField;
 use App\Models\User;
 use App\Models\Advertisement;
 use App\Models\Faq;
+use App\Models\Link;
 use App\Policies\AdvertisementPolicy;
 use App\Policies\CodecPolicy;
 use App\Policies\FaqPolicy;
+use App\Policies\LinkPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -53,6 +55,7 @@ class AuthServiceProvider extends ServiceProvider
 
         Advertisement::class => AdvertisementPolicy::class,
         Faq::class => FaqPolicy::class,
+        Link::class => LinkPolicy::class,
     ];
 
     /**

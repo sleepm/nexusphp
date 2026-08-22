@@ -51,6 +51,8 @@ return [
         'activity_logs' => 'Journaux d\'activité',
         'advertisements' => 'Publicités',
         'faq' => 'FAQ',
+
+        'links' => 'Links',
     ],
     'resources' => [
         'agent_allow' => [

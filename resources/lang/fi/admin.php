@@ -51,6 +51,8 @@ return [
         'activity_logs' => 'Aktiviteetti Lokit',
         'advertisements' => 'Mainokset',
         'faq' => 'FAQ',
+
+        'links' => 'Links',
     ],
     'resources' => [
         'agent_allow' => [

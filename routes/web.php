@@ -373,6 +373,12 @@ Route::get('/admanage.php', fn () => redirect()->route('filament.admin.resources
 Route::get('/faqmanage.php', fn () => redirect()->route('filament.admin.resources.system.faqs.index'))
     ->name('faqmanage.index');
 
+// link management — mirrors public/linksmanage.php
+// (?action=apply + POST newapply = link-exchange application flow; plain GET = admin,
+// redirected to Filament LinksResource)
+Route::match(['get', 'post'], '/linksmanage.php', [\App\Http\Controllers\LinksController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // pre-download notice gate — mirrors public/downloadnotice.php
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');

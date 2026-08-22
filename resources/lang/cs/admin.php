@@ -51,6 +51,8 @@ return [
         'activity_logs' => 'Záznamy aktivit',
         'advertisements' => 'Inzerce',
         'faq' => 'FAQ',
+
+        'links' => 'Links',
     ],
     'resources' => [
         'agent_allow' => [

@@ -51,6 +51,8 @@ return [
         'activity_logs' => 'Activity Logs',
         'advertisements' => 'Advertisements',
         'faq' => 'FAQ',
+
+        'links' => 'Links',
     ],
     'resources' => [
         'agent_allow' => [

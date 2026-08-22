@@ -51,6 +51,8 @@ return [
         'activity_logs' => '活動ログ',
         'advertisements' => '広告',
         'faq' => 'FAQ',
+
+        'links' => 'Links',
     ],
     'resources' => [
         'agent_allow' => [

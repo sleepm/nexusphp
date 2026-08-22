@@ -51,6 +51,8 @@ return [
         'activity_logs' => 'Jurnal de activitate',
         'advertisements' => 'Publicitate',
         'faq' => 'FAQ',
+
+        'links' => 'Links',
     ],
     'resources' => [
         'agent_allow' => [

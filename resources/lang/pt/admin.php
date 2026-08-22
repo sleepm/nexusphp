@@ -51,6 +51,8 @@ return [
         'activity_logs' => 'Registros de atividades',
         'advertisements' => 'Anúncios',
         'faq' => 'FAQ',
+
+        'links' => 'Links',
     ],
     'resources' => [
         'agent_allow' => [

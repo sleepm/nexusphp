@@ -51,6 +51,8 @@ return [
         'activity_logs' => 'Καταγραφή Δραστηριοτήτων',
         'advertisements' => 'Διαφημίσεις',
         'faq' => 'FAQ',
+
+        'links' => 'Links',
     ],
     'resources' => [
         'agent_allow' => [

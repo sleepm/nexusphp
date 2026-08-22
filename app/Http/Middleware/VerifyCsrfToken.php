@@ -54,5 +54,7 @@ class VerifyCsrfToken extends Middleware
         "tags.php",
         // legacy offers.php new_offer/allow_offer/finish_offer/take_off_edit/delete forms post without a CSRF token
         "offers.php",
+        // legacy linksmanage.php link-exchange application form posts without a CSRF token
+        "linksmanage.php",
     ];
 }

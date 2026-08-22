@@ -53,6 +53,8 @@ return [
         'activity_logs' => '操作日志',
         'advertisements' => '廣告',
         'faq' => 'FAQ',
+
+        'links' => '链接',
     ],
     'resources' => [
         'agent_allow' => [

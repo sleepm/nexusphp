@@ -191,7 +191,7 @@
 | admanage.php | 427 | ✅ | P2 | `Advertisement`（`System\AdvertisementResource` ✅，列表/创建/编辑 + 类型化参数 + `code` 自动生成，`/admanage.php` 重定向到 Filament，遗留文件已删；`AdManagePageTest` 覆盖） |
 | faqmanage.php | 118 | ✅ | P2 | `FaqResource`（`System\FaqResource` ✅，categ/item 增删改 + 自动 link_id/order + `faq` 缓存清理，`/faqmanage.php` 重定向到 Filament，遗留文件已删；`FaqManagePageTest` 覆盖） |
 | forummanage.php | 302 | ✅ | P2 | `ForumManageController`（已落地） |
-| linksmanage.php | 167 | ⬜ | P2 | `LinksResource`（需新建） |
+| linksmanage.php | 167 | ✅ | P2 | `LinksResource`（新建，`System\LinksResource` ✅ 列表/创建/编辑 + 删除 + `index_links` 缓存清理，`/linksmanage.php` 无 action 重定向到 Filament；`?action=apply`/POST `newapply` 保留用户申请友链流程：`LinksController::web()` + Blade `links/apply`，校验并写入 `staffmessages`，遗留文件已删；`LinksManagePageTest` 覆盖） |
 | medals.php → medal.php | 148 | ⬜ | P1 | `MedalResource` ✅ |
 | tags.php | 303 | ✅ | P1 | `TagResource` ✅ |
 | cheaters.php | 111 | ⬜ | P2 | `Cheater`（需新建） |
