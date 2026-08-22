@@ -5,10 +5,11 @@ namespace App\Models;
 
 class Offer extends NexusModel
 {
-    protected $fillable = ['userid', 'name', 'descr', 'comments', 'added'];
+    protected $fillable = ['userid', 'name', 'descr', 'comments', 'added', 'category', 'yeah', 'against', 'allowed', 'allowedtime'];
 
     protected $casts = [
-        'added' => 'datetime'
+        'added' => 'datetime',
+        'allowedtime' => 'datetime',
     ];
 
     public function user()

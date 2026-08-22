@@ -120,6 +120,13 @@ Route::get('/myhr.php', [\App\Http\Controllers\HitAndRunController::class, 'show
     ->middleware('auth.nexus:nexus');
 
 // =============================================================
+// Offer 管理（offers.php）—— 替代 public/offers.php
+// GET: 列表/详情/投票列表/编辑表单/删除确认；POST: new_offer/allow_offer/finish_offer/take_off_edit
+// =============================================================
+Route::match(['get', 'post'], '/offers.php', [\App\Http\Controllers\OfferController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// =============================================================
 // 积分中心（Phase 2 P1）—— mybonus
 // =============================================================
 Route::get('/mybonus.php', [\App\Http\Controllers\BonusController::class, 'web'])
