@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 112 |
+| 已完成迁移 | 113 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 23 |
+| 待迁移页面 | 22 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -217,7 +217,7 @@
 | nowarn.php | 53 | ✅ | P3 | 撤销警告。`NowarnController::web()` 迁移遗留 `public/nowarn.php`（POST `nowarned`+`usernw[]`/`desact[]`，MODERATOR 门槛，空选择提示，移除警告 / 禁用账号后重定向 `warned.php`），路由 `/nowarn.php`（POST，auth.nexus，CSRF 豁免），遗留文件已删；`NowarnPageTest` 覆盖 |
 | warned.php | 68 | ✅ | P3 | 警告列表。`WarnedController::web()` 迁移遗留 `public/warned.php`（MODERATOR 门槛，`warned='yes'`+`enabled='yes'` 用户按分享率排序，移除警告/禁用账号复选框表单，ADMINISTRATOR+ 显示 Apply Changes 按钮），路由 `/warned.php`（GET，auth.nexus），遗留文件已删；`WarnedPageTest` 覆盖 |
 | unco.php | 53 | ✅ | P3 | 未确认用户列表。`UncoController::web()` 迁移遗留 `public/unco.php`（MODERATOR 门槛，`status='pending'` 用户按用户名排序，逐行表单提交 `modtask.php` action=confirmuser，`?status=1` 更新提示），路由 `/unco.php`（GET，auth.nexus），遗留文件已删；`UncoPageTest` 覆盖 |
-| log.php | 451 | ⬜ | P2 | 站点日志。`SiteLog` Model 已有 |
+| log.php | 451 | ✅ | P2 | 站点日志。`LogController::web()` 迁移遗留 `public/log.php`（action 分发 `dailylog`/`chronicle`/`funbox`/`news`/`poll`：dailylog 按 `confilog` 权限过滤 security_level + 文本搜索 + 行染色，chronicle 增删改（chrmanage 门槛）、funbox/news 标题/正文搜索、poll 历史投票列表 + 删除确认；`SiteLog`/`Chronicle`/`Fun`/`News`/`Poll` Eloquent 查询 + `partials.pagination`），路由 `/log.php`（GET+POST，auth.nexus，CSRF 豁免），遗留文件已删；`LogPageTest` 覆盖 |
 | stats.php | 122 | ⬜ | P3 | 统计。`DashboardController` + Widgets 已有 |
 | mysql_stats.php | 370 | 🔒 | 保留 | MySQL 状态页，转 ops 工具 |
 | clearcache.php | 32 | ⬜ | P3 | 缓存清理，`clearcache` CLI/按钮化 |

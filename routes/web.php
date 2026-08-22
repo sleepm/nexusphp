@@ -428,6 +428,10 @@ Route::get('/iphistory.php', [\App\Http\Controllers\IpHistoryController::class, 
 Route::match(['get', 'post'], '/testip.php', [\App\Http\Controllers\TestIpController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// site log (daily log / chronicle / funbox / news / previous polls) — mirrors public/log.php
+Route::match(['get', 'post'], '/log.php', [\App\Http\Controllers\LogController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // warned users list + warning removal (admin) — mirrors public/warned.php / public/nowarn.php
 Route::get('/warned.php', [\App\Http\Controllers\WarnedController::class, 'web'])
     ->middleware('auth.nexus:nexus');
