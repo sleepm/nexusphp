@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 99 |
+| 已完成迁移 | 101 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 36 |
+| 待迁移页面 | 34 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -232,8 +232,8 @@
 
 | 页面 | 行数 | 状态 | 优先级 | 目标 / 备注 |
 | --- | --- | --- | --- | --- |
-| rules.php | 30 | ⬜ | P1 | 规则。改静态 Blade 页 |
-| faq.php | 108 | ⬜ | P1 | FAQ。`Faq.php` Model 已有 |
+| rules.php | 30 | ✅ | P1 | 规则。`RulesController::web()` 迁移遗留 `public/rules.php`（公开页，按 guest 语言渲染 `rules` 表，语言非 rule_lang 时回退 English id 6，`format_comment()` 渲染正文），路由 `/rules.php`，遗留文件已删；`RulesPageTest` 覆盖 |
+| faq.php | 108 | ✅ | P1 | FAQ。`FaqController::web()` 迁移遗留 `public/faq.php`（公开页，欢迎语 + 目录 + 分类/条目，`Faq` Eloquent 模型按 lang_id 查询），路由 `/faq.php`，遗留文件已删；`FaqPageTest` 覆盖 |
 | faqactions.php | 206 | ⬜ | P2 | FAQ 管理（admin → Filament） |
 | useragreement.php | 101 | ⬜ | P2 | 用户协议 |
 | aboutnexus.php | 65 | ⬜ | P3 | 关于 |

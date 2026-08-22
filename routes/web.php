@@ -254,6 +254,12 @@ Route::match(['get', 'post'], '/modtask.php', [\App\Http\Controllers\ModTaskCont
 // BB 标签帮助页（tags.php）—— 公开页，POST test 表单回传自身（镜像 public/tags.php）
 Route::match(['get', 'post'], '/tags.php', [\App\Http\Controllers\TagController::class, 'web']);
 
+// 站点规则页（rules.php）—— 公开页，按语言渲染 rules 表（镜像 public/rules.php）
+Route::get('/rules.php', [\App\Http\Controllers\RulesController::class, 'web']);
+
+// FAQ 页（faq.php）—— 公开页，按语言渲染 faq 表（镜像 public/faq.php）
+Route::get('/faq.php', [\App\Http\Controllers\FaqController::class, 'web']);
+
 // =============================================================
 // 首页与主列表（Phase 2 P2）—— topten / usersearch / userhistory
 // =============================================================
