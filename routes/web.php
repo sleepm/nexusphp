@@ -382,8 +382,12 @@ Route::get('/userdetails.php', [\App\Http\Controllers\UserController::class, 'we
     ->middleware('auth.nexus:nexus');
 
 // invitation centre (invite.php) — invitee/sent/tmp lists + ?type=new invite form
-// (the form posts to legacy takeinvite.php; "Confirm Users" posts to takeconfirm.php)
+// (the invite form posts to takeinvite.php; "Confirm Users" posts to takeconfirm.php)
 Route::match(['get', 'post'], '/invite.php', [\App\Http\Controllers\InviteController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// invite submission (mirrors public/takeinvite.php)
+Route::post('/takeinvite.php', [\App\Http\Controllers\InviteController::class, 'webTakeInvite'])
     ->middleware('auth.nexus:nexus');
 
 // torrent list (browse) and special section

@@ -9,14 +9,15 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Nexus\Database\NexusLock;
 
 /**
  * Invitation centre — replaces legacy public/invite.php.
  *
  * GET /invite.php?id=.. shows the invitee / sent / temporary invite lists for a
- * user (or a confirm form when ?type=new). The invite form posts to the legacy
- * public/takeinvite.php, and the "Confirm Users" form posts to takeconfirm.php
- * (handled by AuthenticateController::confirmUser).
+ * user (or a confirm form when ?type=new). The invite form posts to
+ * takeinvite.php (handled by webTakeInvite()), and the "Confirm Users" form
+ * posts to takeconfirm.php (handled by AuthenticateController::confirmUser).
  */
 class InviteController extends Controller
 {
@@ -379,6 +380,194 @@ FORM;
     }
 
     // -------------------------------------------------------------- bootstrap
+
+    /**
+     * Invite submission. Mirrors legacy public/takeinvite.php so the invite
+     * form rendered by web() (which posts to takeinvite.php) keeps working
+     * under the Laravel router instead of the procedural script.
+     *
+     * POST /takeinvite.php
+     */
+    public function webTakeInvite(Request $request)
+    {
+        /** @var \App\Models\User $currentUser */
+        $currentUser = Auth::guard('nexus')->user();
+        if (! $currentUser) {
+            abort(401);
+        }
+        $curUser = $currentUser->toArray();
+        if (($curUser['parked'] ?? '') == 'yes') {
+            abort(403, 'Your account is parked.');
+        }
+        $id = (int) $curUser['id'];
+        $lang = get_legacy_lang_file('takeinvite');
+
+        $GLOBALS['CURUSER'] = $curUser;
+        $GLOBALS['lang_takeinvite'] = $lang;
+        $GLOBALS['lang_functions'] = get_legacy_lang_file('functions');
+        $GLOBALS['CURLANGDIR'] = get_langfolder_cookie();
+        $GLOBALS['BASEURL'] = Setting::getBaseUrl();
+        $GLOBALS['SITENAME'] = Setting::getSiteName();
+        $GLOBALS['SITEEMAIL'] = (string) get_setting('main.SITEEMAIL', '');
+        $GLOBALS['REPORTMAIL'] = (string) get_setting('main.reportemail', '');
+        $GLOBALS['invite_timeout'] = (string) get_setting('main.invite_timeout', '7');
+        $GLOBALS['smtptype'] = get_setting('smtp.smtptype', '');
+        $GLOBALS['restrictemaildomain'] = get_setting('main.restrictemail', 'no');
+
+        $lockName = sprintf('takeinvite:%s', $id);
+        $lock = new NexusLock($lockName, 10);
+        if (! $lock->get()) {
+            return $this->inviteFailed(nexus_trans('nexus.do_not_repeat'), nexus_trans('nexus.do_not_repeat'));
+        }
+        try {
+            $sendText = (new UserRepository())->getInviteBtnText($id);
+        } catch (\Exception $exception) {
+            $lock->release();
+            return $this->inviteFailed($lang['std_error'], $exception->getMessage());
+        }
+        unset($sendText);
+
+        $bark = function (string $message) use ($lock) {
+            $lock->release();
+            return $this->inviteFailed($GLOBALS['lang_takeinvite']['head_invitation_failed'] ?? 'Invitation failed!', $message);
+        };
+
+        if (get_setting('main.invitesystem') == 'no') {
+            return $bark($GLOBALS['lang_functions']['std_invite_system_disabled'] ?? '');
+        }
+        $maxusers = (int) get_setting('main.maxusers', 50000);
+        if (User::query()->count() >= $maxusers) {
+            return $bark($GLOBALS['lang_functions']['std_account_limit_reached'] ?? '');
+        }
+
+        $email = unesc(htmlspecialchars(trim((string) $request->input('email', ''))));
+        $email = safe_email($email);
+        $preRegisterUsername = (string) $request->input('pre_register_username', '');
+        $isPreRegisterEmailAndUsername = get_setting('system.is_invite_pre_email_and_username') == 'yes';
+
+        if (strlen($preRegisterUsername) > 12) {
+            return $bark($lang['std_username_too_long']);
+        }
+        if (! $email) {
+            return $bark($lang['std_must_enter_email']);
+        }
+        if (! check_email($email)) {
+            return $bark($lang['std_invalid_email_address']);
+        }
+        if (EmailBanned($email)) {
+            return $bark($lang['std_email_address_banned']);
+        }
+        if (! EmailAllowed($email)) {
+            return $bark($lang['std_wrong_email_address_domains'] . allowedemails());
+        }
+
+        $body = str_replace('<br />', '<br />', nl2br(trim(strip_tags((string) $request->input('body', '')))));
+        if (! $body) {
+            return $bark($lang['std_must_enter_personal_message']);
+        }
+
+        if ($isPreRegisterEmailAndUsername) {
+            if (empty($preRegisterUsername)) {
+                return $bark(nexus_trans('invite.require_pre_register_username'));
+            }
+            if (! validusername($preRegisterUsername)) {
+                return $bark(nexus_trans('user.username_invalid', ['username' => $preRegisterUsername]));
+            }
+            $exists = User::query()->where('username', $preRegisterUsername)->exists();
+            if ($exists) {
+                return $bark(nexus_trans('user.username_already_exists', ['username' => $preRegisterUsername]));
+            }
+        }
+
+        // check if email addy is already in use
+        if (User::query()->where('email', $email)->exists()) {
+            return $bark($lang['std_email_address'] . htmlspecialchars($email) . $lang['std_is_in_use']);
+        }
+        if (Invite::query()->where('invitee', $email)->exists()) {
+            return $bark($lang['std_invitation_already_sent_to'] . htmlspecialchars($email) . $lang['std_await_user_registeration']);
+        }
+
+        $username = User::query()->where('id', $id)->value('username');
+
+        $hashRecord = null;
+        if (empty($request->input('hash'))) {
+            return $bark($lang['std_must_select_invite'] ?? 'Please select an invite to use.');
+        }
+        if ($request->input('hash') == 'permanent') {
+            $passhash = (string) User::query()->where('id', $id)->value('passhash');
+            $hash = md5(mt_rand(1, 10000) . $curUser['username'] . TIMENOW . $passhash);
+        } else {
+            $hashRecord = Invite::query()->where('inviter', $id)->where('hash', $request->input('hash'))->first();
+            if (! $hashRecord) {
+                return $bark($lang['hash_not_exists'] ?? 'hash not exists');
+            }
+            if ($hashRecord->invitee != '') {
+                return $bark('hash ' . $lang['std_is_in_use']);
+            }
+            if ($hashRecord->expired_at->lt(now())) {
+                return $bark($lang['hash_expired'] ?? 'hash expired');
+            }
+            $hash = (string) $request->input('hash');
+        }
+
+        $title = $GLOBALS['SITENAME'] . $lang['mail_tilte'];
+
+        $signupUrl = getSchemeAndHttpHost() . '/signup.php?type=invite&invitenumber=' . $hash;
+        $siteName = Setting::getSiteName();
+        $mailTwo = sprintf($lang['mail_two'], $siteName, $siteName);
+        $mailFour = sprintf($lang['mail_four'], $siteName);
+        $mailSix = sprintf($lang['mail_six'], $GLOBALS['REPORTMAIL'], $siteName);
+        $inviteTimeout = $GLOBALS['invite_timeout'];
+        $message = <<<EOD
+{$lang['mail_one']}{$username}{$mailTwo}
+<b><a href="javascript:void(null)" onclick="window.open($signupUrl)">{$lang['mail_here']}</a></b><br />
+$signupUrl
+<br />{$lang['mail_three']}$inviteTimeout{$mailFour}{$username}{$lang['mail_five']}<br />
+$body
+<br /><br />{$mailSix}
+EOD;
+
+        $sendResult = sent_mail($email, $GLOBALS['SITENAME'], $GLOBALS['SITEEMAIL'], $title, $message, 'invitesignup', false, false, '');
+        if ($sendResult === true) {
+            if (isset($hashRecord)) {
+                $update = [
+                    'invitee' => $email,
+                    'time_invited' => now(),
+                    'valid' => Invite::VALID_YES,
+                ];
+                if ($isPreRegisterEmailAndUsername) {
+                    $update['pre_register_email'] = $email;
+                    $update['pre_register_username'] = $preRegisterUsername;
+                }
+                $hashRecord->update($update);
+            } else {
+                $insert = [
+                    'inviter' => $id,
+                    'invitee' => $email,
+                    'hash' => $hash,
+                    'time_invited' => now()->toDateTimeString(),
+                ];
+                if ($isPreRegisterEmailAndUsername) {
+                    $insert['pre_register_email'] = $email;
+                    $insert['pre_register_username'] = $preRegisterUsername;
+                }
+                Invite::query()->insert($insert);
+                User::query()->where('id', $id)->decrement('invites');
+            }
+        }
+        $lock->release();
+
+        return redirect('invite.php?id=' . htmlspecialchars((string) $id) . '&sent=1');
+    }
+
+    private function inviteFailed(string $heading, string $message)
+    {
+        return view('error.notification', [
+            'pageTitle' => $heading,
+            'heading' => htmlspecialchars($heading),
+            'message' => htmlspecialchars($message),
+        ]);
+    }
 
     private function bootstrap(Request $request): array
     {

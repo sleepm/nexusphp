@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 134 |
+| 已完成迁移 | 135 |
 | 保留 legacy（tracker/特殊脚本） | 7 |
-| 待迁移页面 | 5 |
+| 待迁移页面 | 4 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 54 个（多数仅 API，路由未启用） |
@@ -51,6 +51,7 @@
 | self-enable.php | 62 | ✅ | P2 | `showSelfEnable()` / `selfEnable()` + Blade `auth/self-enable`（auth.nexus:nexus） |
 | checkuser.php | 62 | ✅ | P2 | `showCheckUser()` + Blade `auth/checkuser`（auth.nexus:nexus-web） |
 | maxlogin.php | 165 | ✅ | P3 | `showMaxLogin()` + Blade `auth/maxlogin`（auth.nexus:nexus-web） |
+| takeinvite.php | 141 | ✅ | P3 | 发送邀请。`InviteController::webTakeInvite()` 迁移遗留 `public/takeinvite.php`（NexusLock 防重、invitesystem/maxusers 检查、`getInviteBtnText()` 权限门槛、邮箱/预注册用户名/正文校验、permanent 或临时 hash 校验、`sent_mail()` 发送邀请邮件 + `Invite` 记录与 `users.invites` 扣减，成功重定向 `invite.php?id=..&sent=1`，失败渲染 Blade `error/notification`），路由 `/takeinvite.php`（POST，auth.nexus，CSRF 豁免），遗留文件已删；`TakeInvitePageTest` 覆盖 |
 
 ## 2. 首页与主列表（高流量只读）
 
