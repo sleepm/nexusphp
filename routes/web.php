@@ -339,6 +339,10 @@ Route::get('/viewfilelist.php', [\App\Http\Controllers\FileController::class, 'w
 Route::get('/viewnfo.php', [\App\Http\Controllers\ViewNfoController::class, 'show'])
     ->middleware('auth.nexus:nexus');
 
+// bencoded torrent structure tree — mirrors public/torrent_info.php
+Route::get('/torrent_info.php', [\App\Http\Controllers\TorrentInfoController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // =============================================================
 // RSS（Phase 2 P2）—— getrss form + torrentrss XML feed
 // =============================================================

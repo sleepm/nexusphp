@@ -11,8 +11,8 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 136 |
-| 保留 legacy（tracker/特殊脚本） | 7 |
+| 已完成迁移 | 137 |
+| 保留 legacy（tracker/特殊脚本） | 6 |
 | 待迁移页面 | 3 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
@@ -69,7 +69,7 @@
 | viewpeerlist.php | 239 | ✅ | P3 | Peer 列表片段，`PeerController::web()` 移植 `dltable()`/`get_location_column()`，text/xml |
 | viewfilelist.php | 26 | ✅ | P3 | 文件列表片段，`FileController::web()`，text/xml |
 | viewnfo.php | 88 | ✅ | P3 | `ViewNfoController::show()` NFO 查看（magic/latin-1/fonthack），`code_new()` + `format_urls()` |
-| torrent_info.php | 99 | 🔒 | 保留 | tracker 结构信息，保留 legacy 或转 API |
+| torrent_info.php | 99 | ✅ | P3 | `TorrentInfoController::web()` 迁移遗留 `public/torrent_info.php`（`auth.nexus` 中间件 + `torrentstructure` 权限门，`Torrent` Eloquent 查询、`Bencode::load()` 解析种子文件、递归生成可折叠树结构，渲染 Blade `torrent_info`），路由 `/torrent_info.php`，遗留文件已删；`TorrentInfoPageTest` 覆盖 |
 
 ## 3. RSS / 搜索 / Ajax
 
@@ -265,7 +265,6 @@
 | cron.php | 13 | 定时入口（CLI） |
 | docleanup.php | 30 | 清理任务（CLI），可迁移为 Laravel Command |
 | email-gateway.php | 68 | 邮件网关 |
-| torrent_info.php | 99 | 结构信息 |
 
 ---
 
