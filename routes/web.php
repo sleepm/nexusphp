@@ -511,6 +511,10 @@ Route::match(['get', 'post'], '/clearcache.php', [\App\Http\Controllers\ClearCac
 Route::match(['get', 'post'], '/mailtest.php', [\App\Http\Controllers\MailTestController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// website settings (SYSOP) — mirrors public/settings.php (menu + sub-forms + save)
+Route::match(['get', 'post'], '/settings.php', [\App\Http\Controllers\SettingsController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // banned email management — mirrors public/bannedemails.php, now handled by Filament BannedEmailsResource
 Route::match(['get', 'post'], '/bannedemails.php', fn () => redirect()->route('filament.admin.resources.system.banned-emails.index'))
     ->name('bannedemails.index');
