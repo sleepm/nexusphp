@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 119 |
+| 已完成迁移 | 122 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 16 |
+| 待迁移页面 | 13 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -239,9 +239,9 @@
 | aboutnexus.php | 65 | ✅ | P3 | 关于。`AboutNexusController::web()` 迁移遗留 `public/aboutnexus.php`（版本/关于/授权/翻译状态（language 表）/样式表（stylesheets 表）/联系方式），渲染 Blade `aboutnexus`（`layouts.guest`），路由 `/aboutnexus.php`，遗留文件已删；`AboutNexusPageTest` 覆盖 |
 | staff.php | 216 | ✅ | P2 | 管理团队页。`StaffController::web()` 迁移遗留 `public/staff.php`（staffmem 权限门、一线支持/影评人/版主/管理组/VIP 分节，在线状态/国旗/PM 链接，Eloquent 查询 + 15 分钟缓存），渲染 Blade `staff`，路由 `/staff.php`，遗留文件已删；`StaffPageTest` 覆盖 |
 | news.php | 130 | ✅ | P1 | 新闻管理。`NewsController::web()` 迁移遗留 `public/news.php`（newsmanage 权限门，action 分发 add/edit/delete + 默认提交表单，compose 编辑器，`news_created` 事件 + `recent_news` 缓存清理），路由 `/news.php`（GET+POST，auth.nexus），遗留文件已删；`NewsPageTest` 覆盖 |
-| ok.php | 60 | ⬜ | P3 | 通用提示页，并入 Blade `error/notification` 视图 |
-| preview.php | 9 | ⬜ | P3 | 预览 |
-| magic.php | 40 | ⬜ | P3 | 通用跳转 |
+| ok.php | 60 | ✅ | P3 | 通用提示页。`ToolController::notification()` 迁移遗留 `public/ok.php`（`?type=adminactivate\|inviter\|signup\|sysop\|confirmed\|confirm` 分发、`get_legacy_lang_file('ok')` 文案、登录态决定自动登录/禁用 Cookie 措辞），渲染 Blade `error/notification`（`layouts.guest`），路由 `/ok.php`（GET，公开页），遗留文件已删；`NotificationPageTest` 覆盖 |
+| preview.php | 9 | ✅ | P3 | BB 代码预览。`PreviewController::web()` 迁移遗留 `public/preview.php`（POST `body=..` 经 `format_comment()` 渲染 HTML 片段，供 `js/common.js preview()` / `textbbcode` 编辑器预览注入），渲染 Blade `preview` 片段，路由 `/preview.php`（POST，auth.nexus，CSRF 豁免），遗留文件已删；`PreviewPageTest` 覆盖 |
+| magic.php | 40 | ✅ | P3 | 赠魔。`RewardController::web()` 迁移遗留 `public/magic.php`（登录用户 POST `id`+`value` 给种子加魔力值：`getBonusRewardOptions` 校验、余额检查、非本人、去重、每日次数上限，`Reward` 插入 + `User::increment/decrement` 转账 + `BonusLogs::add` 双方流水，JSON `success/fail` 响应），路由 `/magic.php`（POST，auth.nexus，CSRF 豁免），遗留文件已删；`MagicPageTest` 覆盖 |
 | special.php | 3 | ✅ | P3 | 特殊区占位页，改走 `TorrentController::browse()`（`/special.php` 路由 `section=special`），遗留文件已删 |
 | smilies.php | 9 | ⬜ | P3 | 表情列表 |
 | moresmilies.php | 45 | ⬜ | P3 | 表情扩展 |

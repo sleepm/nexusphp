@@ -40,6 +40,10 @@ class VerifyCsrfToken extends Middleware
         // legacy AJAX (public/js/common.js ajax.post) sends no CSRF token
         "thanks.php",
         "ajax.php",
+        // legacy BB preview (public/js/common.js preview()) and magic reward
+        // (saveMagicValue()) post without a CSRF token
+        "preview.php",
+        "magic.php",
         // legacy donated.php update form posts to donated.php without a CSRF token
         "donated.php",
         // legacy staffbox.php answer/bulk-action forms post to staffbox.php without a CSRF token

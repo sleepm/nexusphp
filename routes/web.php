@@ -92,6 +92,22 @@ Route::any('/maxlogin.php', [\App\Http\Controllers\AuthenticateController::class
 Route::get("/error", [\App\Http\Controllers\ToolController::class, "error"]);
 
 // =============================================================
+// 通用提示 / 预览 / 赠魔（静态与信息页收尾，第 12 节 P3）
+// 替代 public/ok.php / public/preview.php / public/magic.php
+// =============================================================
+// 通用提示页（ok.php）：公开页，?type=adminactivate|inviter|signup|sysop|confirmed|confirm
+Route::get('/ok.php', [\App\Http\Controllers\ToolController::class, 'notification']);
+
+// BB 代码预览（preview.php）：POST body=.. 返回 format_comment() HTML 片段（textbbcode 编辑器预览）
+Route::post('/preview.php', [\App\Http\Controllers\PreviewController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// 赠魔（magic.php）：登录用户 POST id+value 给种子加魔力值，返回 JSON
+Route::post('/magic.php', [\App\Http\Controllers\RewardController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+
+// =============================================================
 // 轻量互动（Phase 2 P0）—— comment / bookmark / thanks / attendance
 // =============================================================
 Route::match(['get', 'post'], '/comment.php', [\App\Http\Controllers\CommentController::class, 'web'])
