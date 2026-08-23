@@ -366,6 +366,10 @@ Route::get('/opensearch.php', [\App\Http\Controllers\OpenSearchController::class
 Route::get('/details.php', [\App\Http\Controllers\TorrentController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// IMDb / PT-Gen info backfill (updateextinfo, mirrors public/retriver.php)
+Route::get('/retriver.php', [\App\Http\Controllers\RetriverController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // user details page
 Route::get('/userdetails.php', [\App\Http\Controllers\UserController::class, 'web'])
     ->middleware('auth.nexus:nexus');

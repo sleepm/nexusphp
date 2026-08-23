@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 124 |
+| 已完成迁移 | 125 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 11 |
+| 待迁移页面 | 10 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -245,7 +245,7 @@
 | special.php | 3 | ✅ | P3 | 特殊区占位页，改走 `TorrentController::browse()`（`/special.php` 路由 `section=special`），遗留文件已删 |
 | smilies.php | 9 | ✅ | P3 | 表情列表。`SmiliesController::web()` 迁移遗留 `public/smilies.php`（两列表格列出 `[emN]` 与对应图片），路由 `/smilies.php`（auth.nexus），遗留文件已删；`SmiliesPageTest` 覆盖 |
 | moresmilies.php | 45 | ✅ | P3 | 表情扩展。`SmiliesController::more()` 迁移遗留 `public/moresmilies.php`（弹窗 3 列网格，`?form=`/`?text=` 经 htmlspecialchars 传给 `SmileIT()` JS 插入 opener 文本框，parked 403），路由 `/moresmilies.php`（auth.nexus），遗留文件已删；`SmiliesPageTest` 覆盖 |
-| retriver.php | 69 | ⬜ | P3 | IMDb/信息回填（admin） |
+| retriver.php | 69 | ✅ | P3 | IMDb/信息回填（admin）。`RetriverController::web()` 迁移遗留 `public/retriver.php`（`updateextinfo` 权限门、`siteid=1` 走 `TorrentRepository::fetchImdb()`、`siteid=imdb|douban|bangumi` 走 `PTGen::updateTorrentPtGen()`，成功后重定向 `details.php?id=..`），路由 `/retriver.php`（GET，auth.nexus），遗留文件已删 |
 | image.php | 22 | 🔒 | 保留 | 图片代理，保留 legacy 或转专用 Route |
 
 ## 13. Tracker / CLI / 特殊脚本（保留 legacy）
