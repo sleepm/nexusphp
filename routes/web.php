@@ -460,6 +460,10 @@ Route::get('/stats.php', [\App\Http\Controllers\StatsController::class, 'web'])
 Route::match(['get', 'post'], '/clearcache.php', [\App\Http\Controllers\ClearCacheController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// SMTP mail test (SYSOP, mirrors public/mailtest.php)
+Route::match(['get', 'post'], '/mailtest.php', [\App\Http\Controllers\MailTestController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // banned email management — mirrors public/bannedemails.php, now handled by Filament BannedEmailsResource
 Route::match(['get', 'post'], '/bannedemails.php', fn () => redirect()->route('filament.admin.resources.system.banned-emails.index'))
     ->name('bannedemails.index');
