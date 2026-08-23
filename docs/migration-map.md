@@ -226,7 +226,7 @@
 | take-increment-bulk.php | 80 | ⬜ | P3 | 批量增减（并入 `UserResource` 批量操作） |
 | increment-bulk.php | 79 | ⬜ | P3 | 同上 |
 | uploaders.php | 126 | ⬜ | P3 | 上传者统计 |
-| subtitles.php | 405 | ⬜ | P2 | 字幕管理（需新建） |
+| subtitles.php | 405 | ✅ | P2 | 字幕管理。`SubtitleController::web()` 迁移遗留 `public/subtitles.php`（上传表单 + 按 search/letter/lang_id 筛选分页列表、`action=upload` 文件上传、`?delete=` 确认/执行删除），`Sub` Eloquent 模型，路由 `/subtitles.php`（GET+POST，auth.nexus），遗留文件已删；`SubtitlesPageTest` 覆盖 |
 
 ## 12. 静态 / 信息页
 

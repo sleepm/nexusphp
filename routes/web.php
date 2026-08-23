@@ -508,6 +508,10 @@ Route::match(['get', 'post'], '/allagents.php', fn () => redirect()->route('fila
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// subtitle management (upload form + paginated list, delete confirm/exec) — mirrors public/subtitles.php
+Route::match(['get', 'post'], '/subtitles.php', [\App\Http\Controllers\SubtitleController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // promotion link page + click tracking — mirrors public/promotionlink.php
 // (the ?key= click path is public so guests can visit a shared promotion link)
 Route::get('/promotionlink.php', [\App\Http\Controllers\PromotionLinkController::class, 'web']);
