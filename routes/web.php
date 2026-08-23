@@ -243,8 +243,11 @@ Route::match(['get', 'post'], '/staffbox.php', [\App\Http\Controllers\StaffBoxCo
 Route::get('/staffpanel.php', [\App\Http\Controllers\StaffPanelController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
-// contact-staff compose form (GET, mirrors public/contactstaff.php; posts to legacy takecontact.php)
+// contact-staff compose form (GET, mirrors public/contactstaff.php; posts to takecontact.php)
 Route::get('/contactstaff.php', [\App\Http\Controllers\ContactStaffController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+// contact-staff submission (POST, mirrors public/takecontact.php); GET mirrors the legacy stderr() 400
+Route::match(['get', 'post'], '/takecontact.php', [\App\Http\Controllers\ContactStaffController::class, 'webTakeContact'])
     ->middleware('auth.nexus:nexus');
 
 // mass e-mail gateway (GET/POST, mirrors public/massmail.php)
