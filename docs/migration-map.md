@@ -11,8 +11,8 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 128 |
-| 保留 legacy（tracker/特殊脚本） | 13 |
+| 已完成迁移 | 130 |
+| 保留 legacy（tracker/特殊脚本） | 11 |
 | 待迁移页面 | 9 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
@@ -99,8 +99,8 @@
 | download.php | 212 | ✅ | P1 | 种子下载。`DownloadController::web()` 迁移遗留 `public/download.php`（`?downhash=UID.HASH` / `?passkey=` 匿名下载供 RSS 客户端、`?id=` 登录下载；parked/downloadpos 门、firsttime/client/ratio 下载须知跳转、banned/approval/access 门、`hits` 自增、`IpLogRepository::saveToCache` + last_access 刷新、torrent 文件 announce/comment/creation date 重写为 Eloquent 查询），路由 `/download.php`（GET，匿名/登录在 Controller 内分流），遗留文件已删；`DownloadPageTest` 覆盖 |
 | downloadnotice.php | 161 | ✅ | P3 | 下载须知。`DownloadNoticeController::web()` 迁移遗留 `public/downloadnotice.php`（GET 渲染 firsttime/client/ratio 须知页面，POST `id`+`type`+`hidenotice` 更新 `users.showdlnotice`/`showclienterror` 后重定向 `download.php?id=..&letdown=1`），路由 `/downloadnotice.php`（GET+POST，auth.nexus），遗留文件已删；`DownloadNoticePageTest` 覆盖 |
 | downloadsubs.php | 63 | 🔒 | 保留 | 字幕下载 |
-| getattachment.php | 57 | 🔒 | 保留 | 附件下载，`AttachmentController` 可承接 |
-| attachment.php | 291 | 🔒 | 保留 | 附件展示 |
+| getattachment.php | 57 | ✅ | P3 | 附件下载。`AttachmentController::webDownload()` 迁移遗留 `public/getattachment.php`（`?id=`+`dlkey=` 校验、local 文件流式下载 + remote driver 重定向、`downloads` 自增 + `attachment_*_content` 缓存失效），路由 `/getattachment.php`（GET，auth.nexus），遗留文件已删；`AttachmentPageTest` 覆盖 |
+| attachment.php | 291 | ✅ | P3 | 附件上传 iframe。`AttachmentController::webUpload()` 迁移遗留 `public/attachment.php`（上传表单 + 数量/大小/扩展名校验、local 存储含缩略图/水印管线、remote 图床驱动、`attachments` 表 Eloquent 插入、`parent.tag_extimage`/`preview_custom_field_image_*` JS 回调），渲染 Blade `attachment`，路由 `/attachment.php`（GET+POST，auth.nexus），遗留文件已删；`AttachmentPageTest` 覆盖 |
 | bitbucket-upload.php | 93 | 🔒 | 保留 | 附件上传 |
 | bitbucketlog.php | 53 | ✅ | P3 | 附件记录。`BitbucketController::web()` 迁移遗留 `public/bitbucketlog.php`（管理员查看附件图片列表、分页、`?delete=ID` 删除行+文件），路由 `/bitbucketlog.php`（GET，auth.nexus），遗留文件已删；`BitbucketLogPageTest` 覆盖 |
 | torrentrss/getrss | — | — | — | （见 RSS 节） |

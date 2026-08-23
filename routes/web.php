@@ -423,6 +423,13 @@ Route::post('/delete.php', [\App\Http\Controllers\TorrentController::class, 'web
 Route::get('/bitbucketlog.php', [\App\Http\Controllers\BitbucketController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// attachment upload iframe + file download — mirrors public/attachment.php / public/getattachment.php
+Route::match(['get', 'post'], '/attachment.php', [\App\Http\Controllers\AttachmentController::class, 'webUpload'])
+    ->middleware('auth.nexus:nexus');
+
+Route::get('/getattachment.php', [\App\Http\Controllers\AttachmentController::class, 'webDownload'])
+    ->middleware('auth.nexus:nexus');
+
 // site-wide freeleech switcher (admin) — mirrors public/freeleech.php
 Route::match(['get', 'post'], '/freeleech.php', [\App\Http\Controllers\FreeleechController::class, 'web'])
     ->middleware('auth.nexus:nexus');
