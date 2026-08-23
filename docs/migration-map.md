@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 122 |
+| 已完成迁移 | 124 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 13 |
+| 待迁移页面 | 11 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -243,8 +243,8 @@
 | preview.php | 9 | ✅ | P3 | BB 代码预览。`PreviewController::web()` 迁移遗留 `public/preview.php`（POST `body=..` 经 `format_comment()` 渲染 HTML 片段，供 `js/common.js preview()` / `textbbcode` 编辑器预览注入），渲染 Blade `preview` 片段，路由 `/preview.php`（POST，auth.nexus，CSRF 豁免），遗留文件已删；`PreviewPageTest` 覆盖 |
 | magic.php | 40 | ✅ | P3 | 赠魔。`RewardController::web()` 迁移遗留 `public/magic.php`（登录用户 POST `id`+`value` 给种子加魔力值：`getBonusRewardOptions` 校验、余额检查、非本人、去重、每日次数上限，`Reward` 插入 + `User::increment/decrement` 转账 + `BonusLogs::add` 双方流水，JSON `success/fail` 响应），路由 `/magic.php`（POST，auth.nexus，CSRF 豁免），遗留文件已删；`MagicPageTest` 覆盖 |
 | special.php | 3 | ✅ | P3 | 特殊区占位页，改走 `TorrentController::browse()`（`/special.php` 路由 `section=special`），遗留文件已删 |
-| smilies.php | 9 | ⬜ | P3 | 表情列表 |
-| moresmilies.php | 45 | ⬜ | P3 | 表情扩展 |
+| smilies.php | 9 | ✅ | P3 | 表情列表。`SmiliesController::web()` 迁移遗留 `public/smilies.php`（两列表格列出 `[emN]` 与对应图片），路由 `/smilies.php`（auth.nexus），遗留文件已删；`SmiliesPageTest` 覆盖 |
+| moresmilies.php | 45 | ✅ | P3 | 表情扩展。`SmiliesController::more()` 迁移遗留 `public/moresmilies.php`（弹窗 3 列网格，`?form=`/`?text=` 经 htmlspecialchars 传给 `SmileIT()` JS 插入 opener 文本框，parked 403），路由 `/moresmilies.php`（auth.nexus），遗留文件已删；`SmiliesPageTest` 覆盖 |
 | retriver.php | 69 | ⬜ | P3 | IMDb/信息回填（admin） |
 | image.php | 22 | 🔒 | 保留 | 图片代理，保留 legacy 或转专用 Route |
 

@@ -298,6 +298,15 @@ Route::get('/formats.php', [\App\Http\Controllers\FormatsController::class, 'web
 Route::get('/videoformats.php', [\App\Http\Controllers\FormatsController::class, 'video'])
     ->middleware('auth.nexus:nexus');
 
+// 表情列表 / 表情扩展（smilies.php / moresmilies.php）—— 需登录
+// （镜像 public/smilies.php / public/moresmilies.php）
+Route::get('/smilies.php', [\App\Http\Controllers\SmiliesController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// moresmilies.php 为弹窗页（winop() 通过 window.open 打开），需登录 + 非 parked
+Route::get('/moresmilies.php', [\App\Http\Controllers\SmiliesController::class, 'more'])
+    ->middleware('auth.nexus:nexus');
+
 // =============================================================
 // 首页与主列表（Phase 2 P2）—— topten / usersearch / userhistory
 // =============================================================
