@@ -234,7 +234,7 @@
 | --- | --- | --- | --- | --- |
 | rules.php | 30 | ✅ | P1 | 规则。`RulesController::web()` 迁移遗留 `public/rules.php`（公开页，按 guest 语言渲染 `rules` 表，语言非 rule_lang 时回退 English id 6，`format_comment()` 渲染正文），路由 `/rules.php`，遗留文件已删；`RulesPageTest` 覆盖 |
 | faq.php | 108 | ✅ | P1 | FAQ。`FaqController::web()` 迁移遗留 `public/faq.php`（公开页，欢迎语 + 目录 + 分类/条目，`Faq` Eloquent 模型按 lang_id 查询），路由 `/faq.php`，遗留文件已删；`FaqPageTest` 覆盖 |
-| faqactions.php | 206 | ⬜ | P2 | FAQ 管理（admin → Filament） |
+| faqactions.php | 206 | ✅ | P2 | FAQ 管理（admin → Filament），`FaqResource` 已覆盖全部 CRUD，`/faqactions.php` 重定向到 Filament |
 | useragreement.php | 101 | ⬜ | P2 | 用户协议 |
 | aboutnexus.php | 65 | ⬜ | P3 | 关于 |
 | staff.php | 216 | ⬜ | P2 | 管理团队页 |

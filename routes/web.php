@@ -387,6 +387,11 @@ Route::get('/admanage.php', fn () => redirect()->route('filament.admin.resources
 Route::get('/faqmanage.php', fn () => redirect()->route('filament.admin.resources.system.faqs.index'))
     ->name('faqmanage.index');
 
+// FAQ management actions — mirrors public/faqactions.php (reorder/edit/delete/add),
+// all covered by the Filament FaqResource, so the legacy entry point redirects there.
+Route::match(['get', 'post'], '/faqactions.php', fn () => redirect()->route('filament.admin.resources.system.faqs.index'))
+    ->name('faqactions.index');
+
 // link management — mirrors public/linksmanage.php
 // (?action=apply + POST newapply = link-exchange application flow; plain GET = admin,
 // redirected to Filament LinksResource)
