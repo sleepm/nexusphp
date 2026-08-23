@@ -456,6 +456,10 @@ Route::get('/task.php', [\App\Http\Controllers\TaskController::class, 'web'])
 Route::get('/stats.php', [\App\Http\Controllers\StatsController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// uploader statistics (uploader+, mirrors public/uploaders.php)
+Route::get('/uploaders.php', [\App\Http\Controllers\UploadersController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // cache clearing (moderator+, mirrors public/clearcache.php)
 Route::match(['get', 'post'], '/clearcache.php', [\App\Http\Controllers\ClearCacheController::class, 'web'])
     ->middleware('auth.nexus:nexus');

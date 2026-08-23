@@ -225,7 +225,7 @@
 | task.php | 116 | ✅ | P3 | 任务列表。`TaskController::web()` 迁移遗留 `public/task.php`（`Exam::TYPE_TASK`+`STATUS_ENABLED` 任务表，Eloquent 分页 + `withCount('onGoingUsers')` 已领人数/上限、当前用户进行中任务标记 "Already claimed" 禁用领取按钮，领取走 `ajax.php` action=claimTask），渲染 Blade `task`，路由 `/task.php`（GET，auth.nexus），遗留文件已删；`TaskPageTest` 覆盖 |
 | take-increment-bulk.php | 80 | ✅ | P3 | 批量增减。并入 `UserResource` 批量操作（`change_bonus_etc`：uploaded/downloaded/invites/seedbonus/attendance_card/tmp_invites 增减、GB 换算、临时邀请 `duration`、原因说明，SYSOP 门槛），复用 `UserRepository::incrementDecrement()` / `addTemporaryInvite()`，路由 `/increment-bulk.php`、`/take-increment-bulk.php` 重定向到 Filament `user.users.index`，遗留文件已删；`IncrementBulkPageTest` 覆盖 |
 | increment-bulk.php | 79 | ✅ | P3 | 同上 |
-| uploaders.php | 126 | ⬜ | P3 | 上传者统计 |
+| uploaders.php | 126 | ✅ | P3 | 上传者统计。`UploadersController::web()` 迁移遗留 `public/uploaders.php`（UPLOADER+ 门槛、年/月选择 + 月度上传统计表：用户名/体积/数量/最后上传时间与种子，无上传者零行补充，username/torrent_size/torrent_count 排序），路由 `/uploaders.php`（GET，auth.nexus），遗留文件已删；`UploadersPageTest` 覆盖 |
 | subtitles.php | 405 | ✅ | P2 | 字幕管理。`SubtitleController::web()` 迁移遗留 `public/subtitles.php`（上传表单 + 按 search/letter/lang_id 筛选分页列表、`action=upload` 文件上传、`?delete=` 确认/执行删除），`Sub` Eloquent 模型，路由 `/subtitles.php`（GET+POST，auth.nexus），遗留文件已删；`SubtitlesPageTest` 覆盖 |
 
 ## 12. 静态 / 信息页
