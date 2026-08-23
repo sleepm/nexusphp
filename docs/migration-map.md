@@ -11,12 +11,12 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 130 |
-| 保留 legacy（tracker/特殊脚本） | 11 |
-| 待迁移页面 | 9 |
+| 已完成迁移 | 134 |
+| 保留 legacy（tracker/特殊脚本） | 7 |
+| 待迁移页面 | 5 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
-| 已有 Controller | 50 个（多数仅 API，路由未启用） |
+| 已有 Controller | 54 个（多数仅 API，路由未启用） |
 
 **完成判定标准（DoD）：**
 1. 页面逻辑已由 Controller 方法承载，路由注册于 `routes/web.php` 或 `routes/admin.php`
@@ -82,7 +82,7 @@
 | getusertorrentlistajax.php | 363 | ✅ | P2 | `GetUserTorrentListAjaxController::web()` 用户种子列表（上传/做种/下载），权限分级 |
 | getextinfoajax.php | 27 | ✅ | P3 | `ExtInfoAjaxController::show()` IMDb 工具提示 XML 片段，`parse_imdb_id()` + 复用 `getimdb()`，按 imdb id + mode 缓存 1 天 |
 | opensearch.php | 57 | ✅ | P3 | `OpenSearchController::index()` OpenSearch 1.1 描述 XML，站点设置驱动，缓存 1 天 |
-| page.php | 29 | 🔒 | 保留 | 动态页面（可能被插件使用） |
+| page.php | 29 | ✅ | P3 | 动态页面/插件视图加载。`PageController::web()` 迁移遗留 `public/page.php`（`?view=` 加载 `resources/views/$view.php` 或 `?plugin=` 走 `Plugin::getById()->getNexusView()`，保留点号转斜杠/补 `.php` 后缀逻辑，缺参 400、未知视图/插件 404，输出捕获返回 Response），路由 `/page.php`，遗留文件已删；`PagePageTest` 覆盖 |
 
 ## 4. 种子操作（写）
 
@@ -98,7 +98,7 @@
 | delete.php | 97 | ✅ | P2 | 删除种子。`TorrentController::webDelete()` 迁移遗留 `public/delete.php`（POST `id`+`reasontype`+`reason[]`、`torrent-delete` 权限门、ES 删除、`deletetorrent()`、带删除理由的站点日志、上传者魔力值扣除、PM 通知上传者、删除成功页），路由 `/delete.php`（POST，auth.nexus，CSRF 豁免），遗留文件已删；`DeletePageTest` 覆盖 |
 | download.php | 212 | ✅ | P1 | 种子下载。`DownloadController::web()` 迁移遗留 `public/download.php`（`?downhash=UID.HASH` / `?passkey=` 匿名下载供 RSS 客户端、`?id=` 登录下载；parked/downloadpos 门、firsttime/client/ratio 下载须知跳转、banned/approval/access 门、`hits` 自增、`IpLogRepository::saveToCache` + last_access 刷新、torrent 文件 announce/comment/creation date 重写为 Eloquent 查询），路由 `/download.php`（GET，匿名/登录在 Controller 内分流），遗留文件已删；`DownloadPageTest` 覆盖 |
 | downloadnotice.php | 161 | ✅ | P3 | 下载须知。`DownloadNoticeController::web()` 迁移遗留 `public/downloadnotice.php`（GET 渲染 firsttime/client/ratio 须知页面，POST `id`+`type`+`hidenotice` 更新 `users.showdlnotice`/`showclienterror` 后重定向 `download.php?id=..&letdown=1`），路由 `/downloadnotice.php`（GET+POST，auth.nexus），遗留文件已删；`DownloadNoticePageTest` 覆盖 |
-| downloadsubs.php | 63 | 🔒 | 保留 | 字幕下载 |
+| downloadsubs.php | 63 | ✅ | P2 | 字幕下载。`DownloadSubsController::web()` 迁移遗留 `public/downloadsubs.php`（guest 重定向首页、`?subid=`+`?torrentid=` 校验、`Sub` Eloquent 查询、`hits` 自增、`main.subspath` 路径 + UA 感知的 Content-Disposition，文件内容 + Content-Length/Content-Type 响应），路由 `/downloadsubs.php`（GET，内部登录校验，guest 重定向首页），遗留文件已删；`DownloadSubsPageTest` 覆盖 |
 | getattachment.php | 57 | ✅ | P3 | 附件下载。`AttachmentController::webDownload()` 迁移遗留 `public/getattachment.php`（`?id=`+`dlkey=` 校验、local 文件流式下载 + remote driver 重定向、`downloads` 自增 + `attachment_*_content` 缓存失效），路由 `/getattachment.php`（GET，auth.nexus），遗留文件已删；`AttachmentPageTest` 覆盖 |
 | attachment.php | 291 | ✅ | P3 | 附件上传 iframe。`AttachmentController::webUpload()` 迁移遗留 `public/attachment.php`（上传表单 + 数量/大小/扩展名校验、local 存储含缩略图/水印管线、remote 图床驱动、`attachments` 表 Eloquent 插入、`parent.tag_extimage`/`preview_custom_field_image_*` JS 回调），渲染 Blade `attachment`，路由 `/attachment.php`（GET+POST，auth.nexus），遗留文件已删；`AttachmentPageTest` 覆盖 |
 | bitbucket-upload.php | 93 | 🔒 | 保留 | 附件上传 |
@@ -190,6 +190,7 @@
 | --- | --- | --- | --- | --- |
 | catmanage.php | 836 | ✅ | P1 | `Section\CategoryResource` ✅（Section/Icon/SecondIcon/Source/Media/Codec/Standard/Processing/Team/AudioCodec Resource 全覆盖，`/catmanage.php` 重定向到 Filament，遗留文件已删；`CatManagePageTest` 覆盖） |
 | admanage.php | 427 | ✅ | P2 | `Advertisement`（`System\AdvertisementResource` ✅，列表/创建/编辑 + 类型化参数 + `code` 自动生成，`/admanage.php` 重定向到 Filament，遗留文件已删；`AdManagePageTest` 覆盖） |
+| adredir.php | 25 | ✅ | P3 | 广告点击跳转。`AdRedirController::web()` 迁移遗留 `public/adredir.php`（`auth.nexus` 登录 + parked 403、`advertisement.enablead` 开关、`?id=`+`?url=` 校验、广告存在性、首次点击 `adclickbonus` 魔力奖励、`adclicks` Eloquent 插入，成功重定向 `url`），路由 `/adredir.php`（GET，auth.nexus），遗留文件已删；`AdRedirPageTest` 覆盖 |
 | faqmanage.php | 118 | ✅ | P2 | `FaqResource`（`System\FaqResource` ✅，categ/item 增删改 + 自动 link_id/order + `faq` 缓存清理，`/faqmanage.php` 重定向到 Filament，遗留文件已删；`FaqManagePageTest` 覆盖） |
 | forummanage.php | 302 | ✅ | P2 | `ForumManageController`（已落地） |
 | linksmanage.php | 167 | ✅ | P2 | `LinksResource`（新建，`System\LinksResource` ✅ 列表/创建/编辑 + 删除 + `index_links` 缓存清理，`/linksmanage.php` 无 action 重定向到 Filament；`?action=apply`/POST `newapply` 保留用户申请友链流程：`LinksController::web()` + Blade `links/apply`，校验并写入 `staffmessages`，遗留文件已删；`LinksManagePageTest` 覆盖） |
@@ -248,7 +249,7 @@
 | smilies.php | 9 | ✅ | P3 | 表情列表。`SmiliesController::web()` 迁移遗留 `public/smilies.php`（两列表格列出 `[emN]` 与对应图片），路由 `/smilies.php`（auth.nexus），遗留文件已删；`SmiliesPageTest` 覆盖 |
 | moresmilies.php | 45 | ✅ | P3 | 表情扩展。`SmiliesController::more()` 迁移遗留 `public/moresmilies.php`（弹窗 3 列网格，`?form=`/`?text=` 经 htmlspecialchars 传给 `SmileIT()` JS 插入 opener 文本框，parked 403），路由 `/moresmilies.php`（auth.nexus），遗留文件已删；`SmiliesPageTest` 覆盖 |
 | retriver.php | 69 | ✅ | P3 | IMDb/信息回填（admin）。`RetriverController::web()` 迁移遗留 `public/retriver.php`（`updateextinfo` 权限门、`siteid=1` 走 `TorrentRepository::fetchImdb()`、`siteid=imdb|douban|bangumi` 走 `PTGen::updateTorrentPtGen()`，成功后重定向 `details.php?id=..`），路由 `/retriver.php`（GET，auth.nexus），遗留文件已删 |
-| image.php | 22 | 🔒 | 保留 | 图片代理，保留 legacy 或转专用 Route |
+| image.php | 22 | ✅ | P3 | 验证码图片代理。`ImageController::web()` 迁移遗留 `public/image.php`（`?action=regimage` 校验 + `captcha_manager()->driver('image')->outputImage()`，输出捕获后返回 image/png Response），路由 `/image.php`，遗留文件已删；`ImagePageTest` 覆盖 |
 
 ## 13. Tracker / CLI / 特殊脚本（保留 legacy）
 
@@ -261,7 +262,6 @@
 | cron.php | 13 | 定时入口（CLI） |
 | docleanup.php | 30 | 清理任务（CLI），可迁移为 Laravel Command |
 | email-gateway.php | 68 | 邮件网关 |
-| adredir.php | 25 | 广告跳转 |
 | torrent_info.php | 99 | 结构信息 |
 
 ---

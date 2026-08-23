@@ -606,6 +606,23 @@ Route::get('/mybar.php', [\App\Http\Controllers\MyBarController::class, 'web']);
 Route::get('/cc98bar.php/{tail?}', [\App\Http\Controllers\Cc98BarController::class, 'web'])
     ->where('tail', '.*');
 
+// =============================================================
+// 广告跳转 / 字幕下载 / 验证码图片 / 动态页面（收尾清理）
+// 替代 public/adredir.php / public/downloadsubs.php / public/image.php / public/page.php
+// =============================================================
+// 广告点击跳转 + 点击记录/魔力奖励（adredir.php）
+Route::get('/adredir.php', [\App\Http\Controllers\AdRedirController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// 字幕文件下载（downloadsubs.php）—— 内部处理登录态，guest 重定向到首页（legacy 行为）
+Route::get('/downloadsubs.php', [\App\Http\Controllers\DownloadSubsController::class, 'web']);
+
+// 验证码图片输出（image.php?action=regimage）
+Route::get('/image.php', [\App\Http\Controllers\ImageController::class, 'web']);
+
+// 动态页面 / 插件视图加载（page.php?view=..&plugin=..）
+Route::get('/page.php', [\App\Http\Controllers\PageController::class, 'web']);
+
 Route::group(['prefix' => 'web', 'middleware' => ['auth.nexus:nexus-web']], function () {
     Route::get('torrent-approval-page', [\App\Http\Controllers\TorrentController::class, 'approvalPage']);
     Route::get('torrent-approval-logs', [\App\Http\Controllers\TorrentController::class, 'approvalLogs']);
