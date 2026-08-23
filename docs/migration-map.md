@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 115 |
+| 已完成迁移 | 119 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 20 |
+| 待迁移页面 | 16 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -235,10 +235,10 @@
 | rules.php | 30 | ✅ | P1 | 规则。`RulesController::web()` 迁移遗留 `public/rules.php`（公开页，按 guest 语言渲染 `rules` 表，语言非 rule_lang 时回退 English id 6，`format_comment()` 渲染正文），路由 `/rules.php`，遗留文件已删；`RulesPageTest` 覆盖 |
 | faq.php | 108 | ✅ | P1 | FAQ。`FaqController::web()` 迁移遗留 `public/faq.php`（公开页，欢迎语 + 目录 + 分类/条目，`Faq` Eloquent 模型按 lang_id 查询），路由 `/faq.php`，遗留文件已删；`FaqPageTest` 覆盖 |
 | faqactions.php | 206 | ✅ | P2 | FAQ 管理（admin → Filament），`FaqResource` 已覆盖全部 CRUD，`/faqactions.php` 重定向到 Filament |
-| useragreement.php | 101 | ⬜ | P2 | 用户协议 |
-| aboutnexus.php | 65 | ⬜ | P3 | 关于 |
-| staff.php | 216 | ⬜ | P2 | 管理团队页 |
-| news.php | 130 | ⬜ | P1 | 新闻列表。`NewsController` + Repository 已有 |
+| useragreement.php | 101 | ✅ | P2 | 用户协议。`UserAgreementController::web()` 迁移遗留 `public/useragreement.php`（公开静态协议页，站点名/URL 插值），渲染 Blade `useragreement`（`layouts.guest`），路由 `/useragreement.php`，遗留文件已删；`UserAgreementPageTest` 覆盖 |
+| aboutnexus.php | 65 | ✅ | P3 | 关于。`AboutNexusController::web()` 迁移遗留 `public/aboutnexus.php`（版本/关于/授权/翻译状态（language 表）/样式表（stylesheets 表）/联系方式），渲染 Blade `aboutnexus`（`layouts.guest`），路由 `/aboutnexus.php`，遗留文件已删；`AboutNexusPageTest` 覆盖 |
+| staff.php | 216 | ✅ | P2 | 管理团队页。`StaffController::web()` 迁移遗留 `public/staff.php`（staffmem 权限门、一线支持/影评人/版主/管理组/VIP 分节，在线状态/国旗/PM 链接，Eloquent 查询 + 15 分钟缓存），渲染 Blade `staff`，路由 `/staff.php`，遗留文件已删；`StaffPageTest` 覆盖 |
+| news.php | 130 | ✅ | P1 | 新闻管理。`NewsController::web()` 迁移遗留 `public/news.php`（newsmanage 权限门，action 分发 add/edit/delete + 默认提交表单，compose 编辑器，`news_created` 事件 + `recent_news` 缓存清理），路由 `/news.php`（GET+POST，auth.nexus），遗留文件已删；`NewsPageTest` 覆盖 |
 | ok.php | 60 | ⬜ | P3 | 通用提示页，并入 Blade `error/notification` 视图 |
 | preview.php | 9 | ⬜ | P3 | 预览 |
 | magic.php | 40 | ⬜ | P3 | 通用跳转 |

@@ -260,6 +260,20 @@ Route::get('/rules.php', [\App\Http\Controllers\RulesController::class, 'web']);
 // FAQ 页（faq.php）—— 公开页，按语言渲染 faq 表（镜像 public/faq.php）
 Route::get('/faq.php', [\App\Http\Controllers\FaqController::class, 'web']);
 
+// 用户协议页（useragreement.php）—— 公开静态页（镜像 public/useragreement.php）
+Route::get('/useragreement.php', [\App\Http\Controllers\UserAgreementController::class, 'web']);
+
+// 关于页（aboutnexus.php）—— 公开页，版本/翻译/样式表/联系方式（镜像 public/aboutnexus.php）
+Route::get('/aboutnexus.php', [\App\Http\Controllers\AboutNexusController::class, 'web']);
+
+// 管理团队页（staff.php）—— 需 staffmem 权限（镜像 public/staff.php）
+Route::get('/staff.php', [\App\Http\Controllers\StaffController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// 新闻管理（news.php）—— 需 newsmanage 权限，action 分发 add/edit/delete（镜像 public/news.php）
+Route::match(['get', 'post'], '/news.php', [\App\Http\Controllers\NewsController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // 下载文件格式 / 视频格式帮助页（formats.php / videoformats.php）—— 需登录
 // （镜像 public/formats.php / public/videoformats.php，静态指南页）
 Route::get('/formats.php', [\App\Http\Controllers\FormatsController::class, 'web'])
