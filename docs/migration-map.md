@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 135 |
+| 已完成迁移 | 136 |
 | 保留 legacy（tracker/特殊脚本） | 7 |
-| 待迁移页面 | 4 |
+| 待迁移页面 | 3 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 54 个（多数仅 API，路由未启用） |
@@ -95,6 +95,7 @@
 | edit.php | 331 | ✅ | P1 | 编辑种子表单。`TorrentController::webEdit()` 迁移遗留 `public/edit.php`，渲染 Blade `torrent/edit`（名称/描述/分类/质量/自定义字段/HR/标签/Pick/删除区等整页），路由 `/edit.php` |
 | takeedit.php | 312 | ✅ | P1 | 编辑提交，`TorrentController::webTakeEdit()` 迁移遗留 `public/takeedit.php`，POST 路由 `/takeedit.php`（`auth.nexus`），保留 legacy 表单字段（`*_sel[mode]`/`tags[mode]`/`hr[mode]`/`custom_fields[mode]`），`torrent_updated` 事件 + 操作日志；`TakeEditPageTest` 覆盖 |
 | takeflush.php | 29 | ✅ | P3 | 清空 peer。`FlushController::web()` 迁移遗留 `public/takeflush.php`（GET `?id=`，本人或 MODERATOR+ 门槛，`deadtime()`（`main.anninterthree`*1.3）后 `Peer::where('last_action','<')` 删除 ghost peer 并统计条数，成功/无权分别渲染 Blade `error/notification`），路由 `/takeflush.php`（GET，auth.nexus），遗留文件已删；`FlushPageTest` 覆盖 |
+| takereseed.php | 43 | ✅ | P3 | 请求续种。`ReseedController::web()` 迁移遗留 `public/takereseed.php`（GET `?reseedid=`，`user_can('askreseed')` 权限门，`Peer` 计数判断「未死种」、`last_reseed` 15 分钟内已请求则拒绝，否则 `Snatch`（finished=yes）逐用户按 `get_user_locale()` 本地化 `nexus_trans('torrent.msg_reseed_*')` 组装 PM 并 `Message::add()`，随后 `Torrent::update()` 打 `last_reseed` 戳，成功/失败渲染 Blade `error/notification`），路由 `/takereseed.php`（GET，auth.nexus），遗留文件已删；`ReseedPageTest` 覆盖 |
 | fastdelete.php | 67 | ✅ | P2 | 快速删除（admin）。`TorrentController::webFastDelete()` 迁移遗留 `public/fastdelete.php`（`id`+`sure=1` 确认页、ES 删除、`deletetorrent()`、上传者魔力值扣除、操作日志、PM 通知上传者，成功重定向 `torrents.php`），路由 `/fastdelete.php`（GET，auth.nexus），遗留文件已删；`FastDeletePageTest` 覆盖 |
 | delete.php | 97 | ✅ | P2 | 删除种子。`TorrentController::webDelete()` 迁移遗留 `public/delete.php`（POST `id`+`reasontype`+`reason[]`、`torrent-delete` 权限门、ES 删除、`deletetorrent()`、带删除理由的站点日志、上传者魔力值扣除、PM 通知上传者、删除成功页），路由 `/delete.php`（POST，auth.nexus，CSRF 豁免），遗留文件已删；`DeletePageTest` 覆盖 |
 | download.php | 212 | ✅ | P1 | 种子下载。`DownloadController::web()` 迁移遗留 `public/download.php`（`?downhash=UID.HASH` / `?passkey=` 匿名下载供 RSS 客户端、`?id=` 登录下载；parked/downloadpos 门、firsttime/client/ratio 下载须知跳转、banned/approval/access 门、`hits` 自增、`IpLogRepository::saveToCache` + last_access 刷新、torrent 文件 announce/comment/creation date 重写为 Eloquent 查询），路由 `/download.php`（GET，匿名/登录在 Controller 内分流），遗留文件已删；`DownloadPageTest` 覆盖 |

@@ -426,6 +426,10 @@ Route::get('/fastdelete.php', [\App\Http\Controllers\TorrentController::class, '
 Route::get('/takeflush.php', [\App\Http\Controllers\FlushController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// reseed request — PMs users who completed the torrent (mirrors public/takereseed.php)
+Route::get('/takereseed.php', [\App\Http\Controllers\ReseedController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // torrent deletion (owner or staff) — mirrors public/delete.php
 Route::post('/delete.php', [\App\Http\Controllers\TorrentController::class, 'webDelete'])
     ->middleware('auth.nexus:nexus');
