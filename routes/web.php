@@ -418,6 +418,10 @@ Route::post('/takeamountupload.php', [\App\Http\Controllers\TorrentController::c
 Route::get('/fastdelete.php', [\App\Http\Controllers\TorrentController::class, 'webFastDelete'])
     ->middleware('auth.nexus:nexus');
 
+// ghost-peer cleanup (owner or staff) — mirrors public/takeflush.php
+Route::get('/takeflush.php', [\App\Http\Controllers\FlushController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // torrent deletion (owner or staff) — mirrors public/delete.php
 Route::post('/delete.php', [\App\Http\Controllers\TorrentController::class, 'webDelete'])
     ->middleware('auth.nexus:nexus');
