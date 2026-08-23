@@ -47,6 +47,10 @@ Route::match(['get', 'post'], '/fun.php', [\App\Http\Controllers\FunController::
 Route::match(['get', 'post'], '/friends.php', [\App\Http\Controllers\FriendsController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// 个人控制面板（usercp.php）—— 首页/个人/种子/论坛/安全设置（镜像 public/usercp.php）
+Route::match(['get', 'post'], '/usercp.php', [\App\Http\Controllers\UserCpController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // =============================================================
 // 认证与会话（Auth）—— Phase 1 迁移，替代 public/login.php 等遗留页面
 // =============================================================

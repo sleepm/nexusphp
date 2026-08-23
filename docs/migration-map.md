@@ -60,6 +60,7 @@
 | details.php | 759 | ✅ | P0 | 种子详情。`TorrentController::web()` 迁移遗留 `public/details.php`，渲染 Blade `torrent/details`（下载/魔力值/感谢/字幕/描述/评论等整页），路由 `/details.php` |
 | torrents.php | 1344 | ✅ | P0 | 种子列表/搜索/特殊区。`TorrentController::browse()` 迁移遗留 `public/torrents.php`，渲染 Blade `torrent/browse`（搜索/分类/子类筛选、排序、分页、热门搜索），内含 `torrenttable()` 兼容层与 `UC_*` 常量引导；路由 `/torrents.php` 与 `/special.php`（`section=special`） |
 | userdetails.php | 685 | ✅ | P1 | 用户详情。`UserController::web()` 迁移遗留 `public/userdetails.php`，渲染 Blade `user/details`（个人信息/分享率/H&R/Claim/魔力值等整页，含管理组编辑框），路由 `/userdetails.php` |
+| usercp.php | 1264 | ✅ | P1 | 用户控制面板。`UserCpController::web()` 迁移遗留 `public/usercp.php`（action 分发 personal/tracker/forum/security + 首页概览：加入日期/IP/头像/passkey/邀请/魔力/评论/论坛帖子/最近阅读主题；个人设置保存、Tracker 订阅与浏览偏好保存、论坛偏好保存、安全设置含旧密码挑战/两步验证绑定解绑/passkey 重置/邮箱修改，Eloquent 查询），渲染 Blade `usercp`（`layouts.guest` + 输出捕获），路由 `/usercp.php`（GET+POST，auth.nexus），遗留文件已删；`UserCpPageTest` 覆盖 |
 | topten.php | 767 | ✅ | P2 | `ToptenController` 排行榜（type 1/2/3/5/6），数据缓存 60 分钟 |
 | usersearch.php | 859 | ✅ | P2 | `UserSearchController` 管理组用户搜索（>=MODERATOR），筛选闭包参数化 |
 | userhistory.php | 263 | ✅ | P2 | `UserHistoryController` 帖子/评论历史，`viewhistory` 权限 |
