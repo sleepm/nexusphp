@@ -443,6 +443,14 @@ Route::post('/nowarn.php', [\App\Http\Controllers\NowarnController::class, 'web'
 Route::get('/unco.php', [\App\Http\Controllers\UncoController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// site statistics (moderator+, mirrors public/stats.php)
+Route::get('/stats.php', [\App\Http\Controllers\StatsController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
+// cache clearing (moderator+, mirrors public/clearcache.php)
+Route::match(['get', 'post'], '/clearcache.php', [\App\Http\Controllers\ClearCacheController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // banned email management — mirrors public/bannedemails.php, now handled by Filament BannedEmailsResource
 Route::match(['get', 'post'], '/bannedemails.php', fn () => redirect()->route('filament.admin.resources.system.banned-emails.index'))
     ->name('bannedemails.index');

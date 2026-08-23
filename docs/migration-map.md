@@ -218,9 +218,9 @@
 | warned.php | 68 | ✅ | P3 | 警告列表。`WarnedController::web()` 迁移遗留 `public/warned.php`（MODERATOR 门槛，`warned='yes'`+`enabled='yes'` 用户按分享率排序，移除警告/禁用账号复选框表单，ADMINISTRATOR+ 显示 Apply Changes 按钮），路由 `/warned.php`（GET，auth.nexus），遗留文件已删；`WarnedPageTest` 覆盖 |
 | unco.php | 53 | ✅ | P3 | 未确认用户列表。`UncoController::web()` 迁移遗留 `public/unco.php`（MODERATOR 门槛，`status='pending'` 用户按用户名排序，逐行表单提交 `modtask.php` action=confirmuser，`?status=1` 更新提示），路由 `/unco.php`（GET，auth.nexus），遗留文件已删；`UncoPageTest` 覆盖 |
 | log.php | 451 | ✅ | P2 | 站点日志。`LogController::web()` 迁移遗留 `public/log.php`（action 分发 `dailylog`/`chronicle`/`funbox`/`news`/`poll`：dailylog 按 `confilog` 权限过滤 security_level + 文本搜索 + 行染色，chronicle 增删改（chrmanage 门槛）、funbox/news 标题/正文搜索、poll 历史投票列表 + 删除确认；`SiteLog`/`Chronicle`/`Fun`/`News`/`Poll` Eloquent 查询 + `partials.pagination`），路由 `/log.php`（GET+POST，auth.nexus，CSRF 豁免），遗留文件已删；`LogPageTest` 覆盖 |
-| stats.php | 122 | ⬜ | P3 | 统计。`DashboardController` + Widgets 已有 |
+| stats.php | 122 | ✅ | P3 | 统计。`StatsController::web()` 迁移遗留 `public/stats.php`（MODERATOR 门槛、Uploader Activity（class=3 与 class>3 用户分组）+ Category Activity 两张表、`uporder`/`catorder` 排序、百分比列，Eloquent Query Builder + 旧版 helper 渲染），路由 `/stats.php`（GET，auth.nexus），遗留文件已删；`StatsPageTest` 覆盖 |
 | mysql_stats.php | 370 | 🔒 | 保留 | MySQL 状态页，转 ops 工具 |
-| clearcache.php | 32 | ⬜ | P3 | 缓存清理，`clearcache` CLI/按钮化 |
+| clearcache.php | 32 | ✅ | P3 | 缓存清理。`ClearCacheController::web()` 迁移遗留 `public/clearcache.php`（MODERATOR 门槛、cache name + multilang 表单，POST 经 `$GLOBALS['Cache']->delete_value()` 清 legacy 缓存 + `Cache::forget()` 清 Laravel 缓存，空名报错），路由 `/clearcache.php`（GET+POST，auth.nexus），遗留文件已删；`ClearCachePageTest` 覆盖 |
 | mailtest.php | 45 | ⬜ | P3 | 邮件测试，并入 `SettingResource` |
 | task.php | 116 | ⬜ | P3 | 任务列表 |
 | take-increment-bulk.php | 80 | ⬜ | P3 | 批量增减（并入 `UserResource` 批量操作） |
