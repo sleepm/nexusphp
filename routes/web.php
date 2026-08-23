@@ -558,6 +558,11 @@ Route::match(['get', 'post'], '/fields.php', fn () => redirect()->route('filamen
 Route::match(['get', 'post'], '/allagents.php', fn () => redirect()->route('filament.admin.resources.system.agent-allows.index'))
     ->name('allagents.index');
 
+// torrent file download — mirrors public/download.php
+// (?downhash= / ?passkey= are anonymous for RSS clients; ?id= requires a session,
+// checked internally so the route stays reachable without the auth.nexus middleware)
+Route::get('/download.php', [\App\Http\Controllers\DownloadController::class, 'web']);
+
 // pre-download notice gate — mirrors public/downloadnotice.php
 Route::match(['get', 'post'], '/downloadnotice.php', [\App\Http\Controllers\DownloadNoticeController::class, 'web'])
     ->middleware('auth.nexus:nexus');

@@ -11,8 +11,8 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 125 |
-| 保留 legacy（tracker/特殊脚本） | 15 |
+| 已完成迁移 | 126 |
+| 保留 legacy（tracker/特殊脚本） | 14 |
 | 待迁移页面 | 10 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
@@ -95,7 +95,7 @@
 | takeflush.php | 29 | ⬜ | P3 | 清空 peer |
 | fastdelete.php | 67 | ✅ | P2 | 快速删除（admin）。`TorrentController::webFastDelete()` 迁移遗留 `public/fastdelete.php`（`id`+`sure=1` 确认页、ES 删除、`deletetorrent()`、上传者魔力值扣除、操作日志、PM 通知上传者，成功重定向 `torrents.php`），路由 `/fastdelete.php`（GET，auth.nexus），遗留文件已删；`FastDeletePageTest` 覆盖 |
 | delete.php | 97 | ✅ | P2 | 删除种子。`TorrentController::webDelete()` 迁移遗留 `public/delete.php`（POST `id`+`reasontype`+`reason[]`、`torrent-delete` 权限门、ES 删除、`deletetorrent()`、带删除理由的站点日志、上传者魔力值扣除、PM 通知上传者、删除成功页），路由 `/delete.php`（POST，auth.nexus，CSRF 豁免），遗留文件已删；`DeletePageTest` 覆盖 |
-| download.php | 212 | 🔒 | 保留 | 种子下载，保留 legacy 或转专有 Route（涉及 Passkey 校验） |
+| download.php | 212 | ✅ | P1 | 种子下载。`DownloadController::web()` 迁移遗留 `public/download.php`（`?downhash=UID.HASH` / `?passkey=` 匿名下载供 RSS 客户端、`?id=` 登录下载；parked/downloadpos 门、firsttime/client/ratio 下载须知跳转、banned/approval/access 门、`hits` 自增、`IpLogRepository::saveToCache` + last_access 刷新、torrent 文件 announce/comment/creation date 重写为 Eloquent 查询），路由 `/download.php`（GET，匿名/登录在 Controller 内分流），遗留文件已删；`DownloadPageTest` 覆盖 |
 | downloadnotice.php | 161 | ✅ | P3 | 下载须知。`DownloadNoticeController::web()` 迁移遗留 `public/downloadnotice.php`（GET 渲染 firsttime/client/ratio 须知页面，POST `id`+`type`+`hidenotice` 更新 `users.showdlnotice`/`showclienterror` 后重定向 `download.php?id=..&letdown=1`），路由 `/downloadnotice.php`（GET+POST，auth.nexus），遗留文件已删；`DownloadNoticePageTest` 覆盖 |
 | downloadsubs.php | 63 | 🔒 | 保留 | 字幕下载 |
 | getattachment.php | 57 | 🔒 | 保留 | 附件下载，`AttachmentController` 可承接 |
