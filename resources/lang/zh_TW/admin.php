@@ -78,6 +78,7 @@ return [
                 'disable_modal_title' => '禁用用戶',
                 'disable_two_step_authentication' => '取消兩步登錄驗證',
                 'change_bonus_etc_btn' => '修改上傳量等',
+                'change_bonus_etc_bulk_btn' => '批量增減上傳量等',
                 'change_bonus_etc_action_increment' => '增加',
                 'change_bonus_etc_action_decrement' => '減少',
                 'change_bonus_etc_field_label' => '類別',

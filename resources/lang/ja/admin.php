@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'ユーザーを無効にする',
                 'disable_two_step_authentication' => '2段階認証をキャンセル',
                 'change_bonus_etc_btn' => '変更アップロードなど',
+                'change_bonus_etc_bulk_btn' => '一括変更アップロードなど',
                 'change_bonus_etc_action_increment' => '増分',
                 'change_bonus_etc_action_decrement' => 'Decrement',
                 'change_bonus_etc_field_label' => 'フィールド',

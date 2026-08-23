@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Dezactivare utilizator',
                 'disable_two_step_authentication' => 'Anulează autentificarea în doi pași',
                 'change_bonus_etc_btn' => 'Schimbare încărcată etc.',
+                'change_bonus_etc_bulk_btn' => 'Schimbare în masă încărcată etc.',
                 'change_bonus_etc_action_increment' => 'Creștere',
                 'change_bonus_etc_action_decrement' => 'Scădere',
                 'change_bonus_etc_field_label' => 'Câmp',

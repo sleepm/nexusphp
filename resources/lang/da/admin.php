@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Deaktivér bruger',
                 'disable_two_step_authentication' => 'Annuller totrinsgodkendelse',
                 'change_bonus_etc_btn' => 'Skift uploadet osv.',
+                'change_bonus_etc_bulk_btn' => 'Masse-skift uploadet osv.',
                 'change_bonus_etc_action_increment' => 'Tillæg',
                 'change_bonus_etc_action_decrement' => 'Formindsk',
                 'change_bonus_etc_field_label' => 'Felt',

@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Desativar o usuário',
                 'disable_two_step_authentication' => 'Cancelar autenticação em duas etapas',
                 'change_bonus_etc_btn' => 'Alteração Enviada, etc.',
+                'change_bonus_etc_bulk_btn' => 'Alteração em massa Enviada, etc.',
                 'change_bonus_etc_action_increment' => 'Incremento',
                 'change_bonus_etc_action_decrement' => 'Década',
                 'change_bonus_etc_field_label' => 'Campo',

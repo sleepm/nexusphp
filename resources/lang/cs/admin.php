@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Zakázat uživatele',
                 'disable_two_step_authentication' => 'Zrušit dvoufázové ověření',
                 'change_bonus_etc_btn' => 'Změnit nahrané atd.',
+                'change_bonus_etc_bulk_btn' => 'Hromadně změnit nahrané atd.',
                 'change_bonus_etc_action_increment' => 'Přírůstek',
                 'change_bonus_etc_action_decrement' => 'Dekrementace',
                 'change_bonus_etc_field_label' => 'Pole',

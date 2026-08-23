@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Benutzer deaktivieren',
                 'disable_two_step_authentication' => 'Zwei-Schritt-Authentifizierung abbrechen',
                 'change_bonus_etc_btn' => 'Ändere hochgeladene etc.',
+                'change_bonus_etc_bulk_btn' => 'Massen-Änderung hochgeladene etc.',
                 'change_bonus_etc_action_increment' => 'Erhöhen',
                 'change_bonus_etc_action_decrement' => 'Verkleinern',
                 'change_bonus_etc_field_label' => 'Feld',

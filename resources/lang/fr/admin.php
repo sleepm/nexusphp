@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Désactiver l\'utilisateur',
                 'disable_two_step_authentication' => 'Annuler l\'authentification en deux étapes',
                 'change_bonus_etc_btn' => 'Changer les fichiers téléchargés etc.',
+                'change_bonus_etc_bulk_btn' => 'Changer en masse les fichiers téléchargés etc.',
                 'change_bonus_etc_action_increment' => 'Incrément',
                 'change_bonus_etc_action_decrement' => 'Décrémenter',
                 'change_bonus_etc_field_label' => 'Champ',

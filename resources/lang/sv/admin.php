@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Inaktivera användare',
                 'disable_two_step_authentication' => 'Avbryt tvåstegsautentisering',
                 'change_bonus_etc_btn' => 'Ändra uppladdad etc.',
+                'change_bonus_etc_bulk_btn' => 'Massändra uppladdad etc.',
                 'change_bonus_etc_action_increment' => 'Ökning',
                 'change_bonus_etc_action_decrement' => 'Minskning',
                 'change_bonus_etc_field_label' => 'Fält',

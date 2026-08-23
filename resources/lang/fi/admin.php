@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Poista käyttäjä käytöstä',
                 'disable_two_step_authentication' => 'Peruuta kaksivaiheinen todennus',
                 'change_bonus_etc_btn' => 'Vaihda ladattu jne.',
+                'change_bonus_etc_bulk_btn' => 'Massavaihto ladattu jne.',
                 'change_bonus_etc_action_increment' => 'Lisäys',
                 'change_bonus_etc_action_decrement' => 'Vähennys',
                 'change_bonus_etc_field_label' => 'Kenttä',

@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 113 |
+| 已完成迁移 | 115 |
 | 保留 legacy（tracker/特殊脚本） | 15 |
-| 待迁移页面 | 22 |
+| 待迁移页面 | 20 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 50 个（多数仅 API，路由未启用） |
@@ -223,8 +223,8 @@
 | clearcache.php | 32 | ✅ | P3 | 缓存清理。`ClearCacheController::web()` 迁移遗留 `public/clearcache.php`（MODERATOR 门槛、cache name + multilang 表单，POST 经 `$GLOBALS['Cache']->delete_value()` 清 legacy 缓存 + `Cache::forget()` 清 Laravel 缓存，空名报错），路由 `/clearcache.php`（GET+POST，auth.nexus），遗留文件已删；`ClearCachePageTest` 覆盖 |
 | mailtest.php | 45 | ✅ | P3 | 邮件测试，`MailTestController::web()` + Blade `mailtest`，SYSOP 门槛，路由 `/mailtest.php`；遗留文件已删；`MailTestPageTest` 覆盖 |
 | task.php | 116 | ✅ | P3 | 任务列表。`TaskController::web()` 迁移遗留 `public/task.php`（`Exam::TYPE_TASK`+`STATUS_ENABLED` 任务表，Eloquent 分页 + `withCount('onGoingUsers')` 已领人数/上限、当前用户进行中任务标记 "Already claimed" 禁用领取按钮，领取走 `ajax.php` action=claimTask），渲染 Blade `task`，路由 `/task.php`（GET，auth.nexus），遗留文件已删；`TaskPageTest` 覆盖 |
-| take-increment-bulk.php | 80 | ⬜ | P3 | 批量增减（并入 `UserResource` 批量操作） |
-| increment-bulk.php | 79 | ⬜ | P3 | 同上 |
+| take-increment-bulk.php | 80 | ✅ | P3 | 批量增减。并入 `UserResource` 批量操作（`change_bonus_etc`：uploaded/downloaded/invites/seedbonus/attendance_card/tmp_invites 增减、GB 换算、临时邀请 `duration`、原因说明，SYSOP 门槛），复用 `UserRepository::incrementDecrement()` / `addTemporaryInvite()`，路由 `/increment-bulk.php`、`/take-increment-bulk.php` 重定向到 Filament `user.users.index`，遗留文件已删；`IncrementBulkPageTest` 覆盖 |
+| increment-bulk.php | 79 | ✅ | P3 | 同上 |
 | uploaders.php | 126 | ⬜ | P3 | 上传者统计 |
 | subtitles.php | 405 | ✅ | P2 | 字幕管理。`SubtitleController::web()` 迁移遗留 `public/subtitles.php`（上传表单 + 按 search/letter/lang_id 筛选分页列表、`action=upload` 文件上传、`?delete=` 确认/执行删除），`Sub` Eloquent 模型，路由 `/subtitles.php`（GET+POST，auth.nexus），遗留文件已删；`SubtitlesPageTest` 覆盖 |
 

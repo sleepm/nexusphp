@@ -488,6 +488,13 @@ Route::match(['get', 'post'], '/deletedisabled.php', fn () => redirect()->route(
 Route::match(['get', 'post'], '/users.php', fn () => redirect()->route('filament.admin.resources.user.users.index'))
     ->name('users.index');
 
+// bulk bonus/upload/etc increment (admin) — mirrors public/increment-bulk.php and
+// public/take-increment-bulk.php, now handled by the UserResource bulk action
+Route::match(['get', 'post'], '/increment-bulk.php', fn () => redirect()->route('filament.admin.resources.user.users.index'))
+    ->name('increment-bulk.index');
+Route::match(['get', 'post'], '/take-increment-bulk.php', fn () => redirect()->route('filament.admin.resources.user.users.index'))
+    ->name('take-increment-bulk.index');
+
 // user ban log (admin) — mirrors public/user-ban-log.php, now handled by Filament UserBanLogResource
 Route::match(['get', 'post'], '/user-ban-log.php', fn () => redirect()->route('filament.admin.resources.system.user-ban-logs.index'))
     ->name('user-ban-log.index');

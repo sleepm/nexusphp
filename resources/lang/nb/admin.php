@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Deaktivere brukeren',
                 'disable_two_step_authentication' => 'Avbryt 2-trinnsinnlogging',
                 'change_bonus_etc_btn' => 'Endre opplastet etc.',
+                'change_bonus_etc_bulk_btn' => 'Masseendring opplastet etc.',
                 'change_bonus_etc_action_increment' => 'Økning',
                 'change_bonus_etc_action_decrement' => 'Redusert',
                 'change_bonus_etc_field_label' => 'Felt',

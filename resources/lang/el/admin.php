@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Απενεργοποίηση χρήστη',
                 'disable_two_step_authentication' => 'Ακύρωση ελέγχου ταυτότητας δύο βημάτων',
                 'change_bonus_etc_btn' => 'Αλλαγή Ανεβασμένων κτλ.',
+                'change_bonus_etc_bulk_btn' => 'Μαζική αλλαγή Ανεβασμένων κτλ.',
                 'change_bonus_etc_action_increment' => 'Προσαλοδότηση',
                 'change_bonus_etc_action_decrement' => 'Μείωση',
                 'change_bonus_etc_field_label' => 'Πεδίο',

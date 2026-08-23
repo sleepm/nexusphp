@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Отключить пользователя',
                 'disable_two_step_authentication' => 'Отменить двухэтапную аутентификацию',
                 'change_bonus_etc_btn' => 'Изменить загруженные и т.д.',
+                'change_bonus_etc_bulk_btn' => 'Массово изменить загруженные и т.д.',
                 'change_bonus_etc_action_increment' => 'Прирост',
                 'change_bonus_etc_action_decrement' => 'Уменьшить',
                 'change_bonus_etc_field_label' => 'Поле',

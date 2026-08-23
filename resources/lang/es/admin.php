@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Desactivar usuario',
                 'disable_two_step_authentication' => 'Cancelar autenticación en dos pasos',
                 'change_bonus_etc_btn' => 'Cambiar subido, etc.',
+                'change_bonus_etc_bulk_btn' => 'Cambio masivo subido, etc.',
                 'change_bonus_etc_action_increment' => 'Incrementar',
                 'change_bonus_etc_action_decrement' => 'Disminuir',
                 'change_bonus_etc_field_label' => 'Campo',

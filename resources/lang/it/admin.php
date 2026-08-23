@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Disabilita utente',
                 'disable_two_step_authentication' => 'Annulla autenticazione in due passaggi',
                 'change_bonus_etc_btn' => 'Cambia caricato ecc.',
+                'change_bonus_etc_bulk_btn' => 'Cambia in blocco caricato ecc.',
                 'change_bonus_etc_action_increment' => 'Incremento',
                 'change_bonus_etc_action_decrement' => 'Decrementa',
                 'change_bonus_etc_field_label' => 'Campo',

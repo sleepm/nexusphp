@@ -77,6 +77,7 @@ return [
                 'disable_modal_title' => 'Disable user',
                 'disable_two_step_authentication' => 'Cancel two-step authentication',
                 'change_bonus_etc_btn' => 'Change Uploaded etc.',
+                'change_bonus_etc_bulk_btn' => 'Bulk change Uploaded etc.',
                 'change_bonus_etc_action_increment' => 'Increment',
                 'change_bonus_etc_action_decrement' => 'Decrement',
                 'change_bonus_etc_field_label' => 'Field',

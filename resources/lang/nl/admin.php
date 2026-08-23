@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Gebruiker uitschakelen',
                 'disable_two_step_authentication' => 'Tweestapsverificatie annuleren',
                 'change_bonus_etc_btn' => 'Wijziging geupload etc.',
+                'change_bonus_etc_bulk_btn' => 'Massale wijziging geupload etc.',
                 'change_bonus_etc_action_increment' => 'Verhogen',
                 'change_bonus_etc_action_decrement' => 'Vermindering',
                 'change_bonus_etc_field_label' => 'Veld',

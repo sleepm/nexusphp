@@ -76,6 +76,7 @@ return [
                 'disable_modal_title' => 'Wyłącz użytkownika',
                 'disable_two_step_authentication' => 'Anuluj uwierzytelnianie dwuetapowe',
                 'change_bonus_etc_btn' => 'Zmień przesłane itp.',
+                'change_bonus_etc_bulk_btn' => 'Zbiorczo zmień przesłane itp.',
                 'change_bonus_etc_action_increment' => 'Przyrost',
                 'change_bonus_etc_action_decrement' => 'Spadek',
                 'change_bonus_etc_field_label' => 'Pole',

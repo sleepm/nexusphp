@@ -383,9 +383,80 @@ class UserResource extends Resource
                     $rep = self::getRep();
                     $rep->confirmUser($records->pluck('id')->toArray());
                 });
+
+            $actions[] = self::buildBulkChangeBonusEtcAction();
         }
 
         return $actions;
+    }
+
+    /**
+     * Bulk increment/decrement of uploaded/downloaded/bonus/invites/attendance
+     * card/temporary invite for the selected users, mirroring the legacy
+     * public/increment-bulk.php + public/take-increment-bulk.php pages.
+     */
+    private static function buildBulkChangeBonusEtcAction(): BulkAction
+    {
+        return BulkAction::make('change_bonus_etc')
+            ->label(__('admin.resources.user.actions.change_bonus_etc_bulk_btn'))
+            ->modalHeading(__('admin.resources.user.actions.change_bonus_etc_bulk_btn'))
+            ->icon('heroicon-o-arrow-trending-up')
+            ->form([
+                Radio::make('field')
+                    ->options([
+                        'uploaded' => __('label.user.uploaded'),
+                        'downloaded' => __('label.user.downloaded'),
+                        'invites' => __('label.user.invites'),
+                        'seedbonus' => __('label.user.seedbonus'),
+                        'attendance_card' => __('label.user.attendance_card'),
+                        'tmp_invites' => __('label.user.tmp_invites'),
+                    ])
+                    ->label(__('admin.resources.user.actions.change_bonus_etc_field_label'))
+                    ->inline()
+                    ->required()
+                    ->reactive()
+                ,
+                Radio::make('action')
+                    ->options([
+                        'Increment' => __("admin.resources.user.actions.change_bonus_etc_action_increment"),
+                        'Decrement' => __("admin.resources.user.actions.change_bonus_etc_action_decrement"),
+                    ])
+                    ->label(__('admin.resources.user.actions.change_bonus_etc_action_label'))
+                    ->inline()
+                    ->required()
+                ,
+                TextInput::make('value')
+                    ->integer()
+                    ->required()
+                    ->label(__('admin.resources.user.actions.change_bonus_etc_value_label'))
+                    ->helperText(__('admin.resources.user.actions.change_bonus_etc_value_help'))
+                ,
+                TextInput::make('duration')
+                    ->integer()
+                    ->label(__('admin.resources.user.actions.change_bonus_etc_duration_label'))
+                    ->helperText(__('admin.resources.user.actions.change_bonus_etc_duration_help'))
+                    ->hidden(fn (Get $get) => $get('field') != 'tmp_invites')
+                ,
+                TextInput::make('reason')
+                    ->label(__('admin.resources.user.actions.change_bonus_etc_reason_label'))
+                ,
+            ])
+            ->action(function (Collection $records, array $data) {
+                $rep = self::getRep();
+                try {
+                    foreach ($records as $record) {
+                        if ($data['field'] == 'tmp_invites') {
+                            $rep->addTemporaryInvite(Auth::user(), $record->id, $data['action'], $data['value'], $data['duration'] ?: null, $data['reason'] ?? '');
+                        } else {
+                            $rep->incrementDecrement(Auth::user(), $record->id, $data['action'], $data['field'], $data['value'], $data['reason'] ?? '');
+                        }
+                    }
+                    send_admin_success_notification();
+                } catch (Exception $exception) {
+                    send_admin_fail_notification($exception->getMessage());
+                }
+            })
+            ->deselectRecordsAfterCompletion();
     }
 
 }
