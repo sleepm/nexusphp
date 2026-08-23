@@ -222,7 +222,7 @@
 | mysql_stats.php | 370 | 🔒 | 保留 | MySQL 状态页，转 ops 工具 |
 | clearcache.php | 32 | ✅ | P3 | 缓存清理。`ClearCacheController::web()` 迁移遗留 `public/clearcache.php`（MODERATOR 门槛、cache name + multilang 表单，POST 经 `$GLOBALS['Cache']->delete_value()` 清 legacy 缓存 + `Cache::forget()` 清 Laravel 缓存，空名报错），路由 `/clearcache.php`（GET+POST，auth.nexus），遗留文件已删；`ClearCachePageTest` 覆盖 |
 | mailtest.php | 45 | ⬜ | P3 | 邮件测试，并入 `SettingResource` |
-| task.php | 116 | ⬜ | P3 | 任务列表 |
+| task.php | 116 | ✅ | P3 | 任务列表。`TaskController::web()` 迁移遗留 `public/task.php`（`Exam::TYPE_TASK`+`STATUS_ENABLED` 任务表，Eloquent 分页 + `withCount('onGoingUsers')` 已领人数/上限、当前用户进行中任务标记 "Already claimed" 禁用领取按钮，领取走 `ajax.php` action=claimTask），渲染 Blade `task`，路由 `/task.php`（GET，auth.nexus），遗留文件已删；`TaskPageTest` 覆盖 |
 | take-increment-bulk.php | 80 | ⬜ | P3 | 批量增减（并入 `UserResource` 批量操作） |
 | increment-bulk.php | 79 | ⬜ | P3 | 同上 |
 | uploaders.php | 126 | ⬜ | P3 | 上传者统计 |

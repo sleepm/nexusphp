@@ -448,6 +448,10 @@ Route::post('/nowarn.php', [\App\Http\Controllers\NowarnController::class, 'web'
 Route::get('/unco.php', [\App\Http\Controllers\UncoController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// task list (claimable tasks) — mirrors public/task.php
+Route::get('/task.php', [\App\Http\Controllers\TaskController::class, 'web'])
+    ->middleware('auth.nexus:nexus');
+
 // site statistics (moderator+, mirrors public/stats.php)
 Route::get('/stats.php', [\App\Http\Controllers\StatsController::class, 'web'])
     ->middleware('auth.nexus:nexus');
