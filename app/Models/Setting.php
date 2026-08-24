@@ -233,7 +233,7 @@ class Setting extends NexusModel
 
     public static function getSiteName(): string
     {
-        return self::get("basic.SITENAME");
+        return self::get("basic.SITENAME", PROJECTNAME);
     }
 
     public static function getTorrentSaveDir(): string
