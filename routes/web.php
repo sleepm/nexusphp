@@ -243,6 +243,11 @@ Route::match(['get', 'post'], '/staffbox.php', [\App\Http\Controllers\StaffBoxCo
 Route::get('/staffpanel.php', [\App\Http\Controllers\StaffPanelController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// cleanup runner — mirrors public/docleanup.php, now a CLI command (cleanup:run)
+Route::get('/docleanup.php', function () {
+    return redirect('/staffpanel.php');
+})->middleware('auth.nexus:nexus');
+
 // contact-staff compose form (GET, mirrors public/contactstaff.php; posts to takecontact.php)
 Route::get('/contactstaff.php', [\App\Http\Controllers\ContactStaffController::class, 'web'])
     ->middleware('auth.nexus:nexus');
