@@ -7,6 +7,7 @@
     $ivEnabled = get_setting('security.iv') == 'yes';
     $smtpType = get_setting('smtp.smtptype');
     $showHelpbox = get_setting('main.showhelpbox') != 'no';
+    $baseUrl = \App\Models\Setting::getBaseUrl();
     $returnto = $request->query('returnto', '');
     $secret = $request->query('secret', '');
     $languages = langlist('site_lang', true);
