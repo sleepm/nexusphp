@@ -11,8 +11,8 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 138 |
-| 保留 legacy（tracker/特殊脚本） | 5 |
+| 已完成迁移 | 139 |
+| 保留 legacy（tracker/特殊脚本） | 4 |
 | 待迁移页面 | 2 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
@@ -103,7 +103,7 @@
 | downloadsubs.php | 63 | ✅ | P2 | 字幕下载。`DownloadSubsController::web()` 迁移遗留 `public/downloadsubs.php`（guest 重定向首页、`?subid=`+`?torrentid=` 校验、`Sub` Eloquent 查询、`hits` 自增、`main.subspath` 路径 + UA 感知的 Content-Disposition，文件内容 + Content-Length/Content-Type 响应），路由 `/downloadsubs.php`（GET，内部登录校验，guest 重定向首页），遗留文件已删；`DownloadSubsPageTest` 覆盖 |
 | getattachment.php | 57 | ✅ | P3 | 附件下载。`AttachmentController::webDownload()` 迁移遗留 `public/getattachment.php`（`?id=`+`dlkey=` 校验、local 文件流式下载 + remote driver 重定向、`downloads` 自增 + `attachment_*_content` 缓存失效），路由 `/getattachment.php`（GET，auth.nexus），遗留文件已删；`AttachmentPageTest` 覆盖 |
 | attachment.php | 291 | ✅ | P3 | 附件上传 iframe。`AttachmentController::webUpload()` 迁移遗留 `public/attachment.php`（上传表单 + 数量/大小/扩展名校验、local 存储含缩略图/水印管线、remote 图床驱动、`attachments` 表 Eloquent 插入、`parent.tag_extimage`/`preview_custom_field_image_*` JS 回调），渲染 Blade `attachment`，路由 `/attachment.php`（GET+POST，auth.nexus），遗留文件已删；`AttachmentPageTest` 覆盖 |
-| bitbucket-upload.php | 93 | 🔒 | 保留 | 附件上传 |
+| bitbucket-upload.php | 93 | ✅ | P3 | 头像上传。`BitbucketController::webUpload()` 迁移遗留 `public/bitbucket-upload.php`（`enablebitbucket` 开关门、256KB 大小/扩展名校验、`getimagesize` 校验、按 150x200 等比缩放、`bitbucket` 目录落盘、`bitbucket` 表 Eloquent 插入、`users.avatar` 更新，成功/失败渲染 Blade `error/notification`），渲染 Blade `bitbucket-upload`，路由 `/bitbucket-upload.php`（GET+POST，auth.nexus），遗留文件已删；`BitbucketUploadPageTest` 覆盖 |
 | bitbucketlog.php | 53 | ✅ | P3 | 附件记录。`BitbucketController::web()` 迁移遗留 `public/bitbucketlog.php`（管理员查看附件图片列表、分页、`?delete=ID` 删除行+文件），路由 `/bitbucketlog.php`（GET，auth.nexus），遗留文件已删；`BitbucketLogPageTest` 覆盖 |
 | torrentrss/getrss | — | — | — | （见 RSS 节） |
 | freeleech.php | 49 | ✅ | P3 | 全站免种开关。`FreeleechController::web()` 迁移遗留 `public/freeleech.php`（action 分发 `setallfree`/`setall2up`/`setall2up_free`/`setallhalf_down`/`setall2up_half_down`/`setallnormal`，`TorrentState::query()->update()` + `flushCache()`），路由 `/freeleech.php`（GET+POST，auth.nexus，CSRF 豁免），遗留文件已删；`FreeleechPageTest` 覆盖 |

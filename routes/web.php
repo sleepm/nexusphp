@@ -445,6 +445,10 @@ Route::post('/delete.php', [\App\Http\Controllers\TorrentController::class, 'web
 Route::get('/bitbucketlog.php', [\App\Http\Controllers\BitbucketController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// BitBucket avatar upload — mirrors public/bitbucket-upload.php
+Route::match(['get', 'post'], '/bitbucket-upload.php', [\App\Http\Controllers\BitbucketController::class, 'webUpload'])
+    ->middleware('auth.nexus:nexus');
+
 // attachment upload iframe + file download — mirrors public/attachment.php / public/getattachment.php
 Route::match(['get', 'post'], '/attachment.php', [\App\Http\Controllers\AttachmentController::class, 'webUpload'])
     ->middleware('auth.nexus:nexus');
