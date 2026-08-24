@@ -248,6 +248,11 @@ Route::get('/docleanup.php', function () {
     return redirect('/staffpanel.php');
 })->middleware('auth.nexus:nexus');
 
+// cron runner — mirrors public/cron.php, now a CLI command (cron:run)
+Route::get('/cron.php', function () {
+    return redirect('/staffpanel.php');
+})->middleware('auth.nexus:nexus');
+
 // contact-staff compose form (GET, mirrors public/contactstaff.php; posts to takecontact.php)
 Route::get('/contactstaff.php', [\App\Http\Controllers\ContactStaffController::class, 'web'])
     ->middleware('auth.nexus:nexus');

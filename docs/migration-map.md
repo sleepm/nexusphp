@@ -11,8 +11,8 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 140 |
-| 保留 legacy（tracker/特殊脚本） | 3 |
+| 已完成迁移 | 141 |
+| 保留 legacy（tracker/特殊脚本） | 2 |
 | 待迁移页面 | 1 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
@@ -262,7 +262,7 @@
 | --- | --- | --- |
 | announce.php | 644 | Tracker 核心，走独立 nginx 规则 + Lua 过滤 |
 | scrape.php | 73 | Tracker scrape |
-| cron.php | 13 | 定时入口（CLI） |
+| cron.php | 13 | ✅ | P3 | 定时入口（CLI），迁移为 Laravel Command `cron:run`（复用 `include/functions.php` 的 `autoclean()`，`include/config.php` 全局初始化 + 缺失设置容错 + `useCronTriggerCleanUp` 门），遗留文件已删；路由 `/cron.php` 重定向到 `/staffpanel.php`（auth.nexus）；`CronRunPageTest` 覆盖 |
 | docleanup.php | 30 | ✅ | P3 | 清理任务（CLI），迁移为 Laravel Command `cleanup:run {--forceall}`（复用 `include/cleanup.php` 的 `docleanup()`，`include/config.php` 全局初始化 + 缺失设置容错），遗留文件已删；路由 `/docleanup.php` 重定向到 `/staffpanel.php`（auth.nexus）；`CleanupRunPageTest` 覆盖 |
 | email-gateway.php | 68 | ✅ | P3 | `EmailGatewayController::web()` 迁移遗留 `public/email-gateway.php`（公开页，无需登录；`?id=` 查询目标管理员，`int_check` → `User::find()` Eloquent 查询，class < MODERATOR 拒绝；GET 渲染表单（from/from_email/subject/message），POST 经 `safe_email`/`check_email` 校验 + `sent_mail()` 发送，成功/失败渲染 Blade `error/notification`），路由 `/email-gateway.php`（GET+POST），遗留文件已删；`EmailGatewayPageTest` 覆盖 |
 
