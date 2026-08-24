@@ -254,6 +254,9 @@ Route::match(['get', 'post'], '/takecontact.php', [\App\Http\Controllers\Contact
 Route::match(['get', 'post'], '/massmail.php', [\App\Http\Controllers\MassMailController::class, 'web'])
     ->middleware('auth.nexus:nexus');
 
+// staff e-mail gateway (public, mirrors public/email-gateway.php)
+Route::match(['get', 'post'], '/email-gateway.php', [\App\Http\Controllers\EmailGatewayController::class, 'web']);
+
 // =============================================================
 // 论坛（forums.php / moforums.php）—— Phase 7 P2 迁移
 // =============================================================

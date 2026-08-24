@@ -66,5 +66,7 @@ class VerifyCsrfToken extends Middleware
         "linksmanage.php",
         // legacy log.php chronicle add/update forms post without a CSRF token
         "log.php",
+        // legacy email-gateway.php form posts to itself without a CSRF token
+        "email-gateway.php",
     ];
 }

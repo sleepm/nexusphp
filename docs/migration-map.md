@@ -11,9 +11,9 @@
 | 统计项 | 数量 |
 | --- | --- |
 | 遗留页面总数 (`public/*.php`) | 150 |
-| 已完成迁移 | 137 |
-| 保留 legacy（tracker/特殊脚本） | 6 |
-| 待迁移页面 | 3 |
+| 已完成迁移 | 138 |
+| 保留 legacy（tracker/特殊脚本） | 5 |
+| 待迁移页面 | 2 |
 | 已有 Filament 资源覆盖（admin） | 约 50 个 Resource |
 | 已有 Repository | 37 个 |
 | 已有 Controller | 54 个（多数仅 API，路由未启用） |
@@ -264,7 +264,7 @@
 | scrape.php | 73 | Tracker scrape |
 | cron.php | 13 | 定时入口（CLI） |
 | docleanup.php | 30 | 清理任务（CLI），可迁移为 Laravel Command |
-| email-gateway.php | 68 | 邮件网关 |
+| email-gateway.php | 68 | ✅ | P3 | `EmailGatewayController::web()` 迁移遗留 `public/email-gateway.php`（公开页，无需登录；`?id=` 查询目标管理员，`int_check` → `User::find()` Eloquent 查询，class < MODERATOR 拒绝；GET 渲染表单（from/from_email/subject/message），POST 经 `safe_email`/`check_email` 校验 + `sent_mail()` 发送，成功/失败渲染 Blade `error/notification`），路由 `/email-gateway.php`（GET+POST），遗留文件已删；`EmailGatewayPageTest` 覆盖 |
 
 ---
 
